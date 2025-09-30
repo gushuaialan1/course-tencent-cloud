@@ -1,0 +1,654 @@
+/**
+ * 知识图谱系统样式
+ * 基于酷瓜云课堂设计风格
+ * 
+ * @copyright 2024 酷瓜云课堂扩展
+ * @author 开发团队
+ */
+
+/* ================================
+   知识图谱编辑器主体样式
+   ================================ */
+
+/* 图谱容器 */
+.kg-graph-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    background: #fafafa;
+    overflow: hidden;
+}
+
+.kg-graph-main {
+    display: flex;
+    height: calc(100vh - 120px);
+    min-height: 600px;
+}
+
+/* 左侧工具面板 */
+.kg-tool-panel {
+    width: 250px;
+    background: #fff;
+    border-right: 1px solid #e6e6e6;
+    display: flex;
+    flex-direction: column;
+}
+
+.kg-tool-panel .layui-card {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.kg-tool-panel .layui-card:not(:last-child) {
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.kg-tool-panel .layui-card-header {
+    background: #f8f8f8;
+    border-bottom: 1px solid #e6e6e6;
+    font-weight: 500;
+    color: #333;
+}
+
+/* 节点工具 */
+.kg-node-tools {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 5px;
+}
+
+.kg-node-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.kg-node-tool:hover {
+    border-color: #009688;
+    background: #f0f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.15);
+}
+
+.kg-node-tool.active {
+    border-color: #009688;
+    background: #e0f2f1;
+}
+
+.kg-node-preview {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+    color: #fff;
+    font-size: 16px;
+}
+
+.kg-concept-node {
+    background: #FF5722;
+}
+
+.kg-topic-node {
+    background: #2196F3;
+    border-radius: 4px;
+}
+
+.kg-skill-node {
+    background: #4CAF50;
+    border-radius: 6px;
+    transform: rotate(45deg);
+}
+
+.kg-skill-node i {
+    transform: rotate(-45deg);
+}
+
+.kg-course-node {
+    background: #009688;
+    border-radius: 8px;
+}
+
+.kg-node-tool span {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 关系工具 */
+.kg-relation-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kg-relation-tool {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.kg-relation-tool:hover {
+    border-color: #009688;
+    background: #f0f9ff;
+}
+
+.kg-relation-tool.active {
+    border-color: #009688;
+    background: #e0f2f1;
+}
+
+.kg-relation-preview {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.kg-relation-tool span {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 中央画布区域 */
+.kg-canvas-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.kg-canvas-toolbar {
+    height: 50px;
+    background: #fff;
+    border-bottom: 1px solid #e6e6e6;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    gap: 10px;
+}
+
+.kg-canvas-toolbar .layui-btn {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+.kg-canvas-content {
+    flex: 1;
+    position: relative;
+    background: #fff;
+}
+
+#knowledge-graph-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* 右侧属性面板 */
+.kg-property-panel {
+    width: 300px;
+    background: #fff;
+    border-left: 1px solid #e6e6e6;
+    display: flex;
+    flex-direction: column;
+}
+
+.kg-property-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.kg-property-empty {
+    text-align: center;
+    color: #999;
+    padding: 40px 20px;
+}
+
+.kg-property-empty i {
+    font-size: 48px;
+    color: #ddd;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* 属性表单 */
+.kg-property-form .layui-form-item {
+    margin-bottom: 15px;
+}
+
+.kg-property-form .layui-form-label {
+    width: 80px;
+    padding: 9px 10px;
+    font-size: 13px;
+}
+
+.kg-property-form .layui-input-block {
+    margin-left: 90px;
+}
+
+.kg-property-form .layui-input,
+.kg-property-form .layui-select,
+.kg-property-form .layui-textarea {
+    font-size: 13px;
+}
+
+/* 小地图 */
+.kg-minimap {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    width: 200px;
+    height: 150px;
+    border: 2px solid #009688;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.kg-minimap-header {
+    height: 30px;
+    background: #009688;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.kg-minimap-close {
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.kg-minimap-close:hover {
+    opacity: 1;
+}
+
+.kg-minimap-canvas {
+    width: 100%;
+    height: 120px;
+    background: #f9f9f9;
+}
+
+/* ================================
+   工具栏按钮样式
+   ================================ */
+
+.kg-btn-group {
+    display: inline-flex;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.kg-btn-group .layui-btn {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    border-right: 1px solid #e6e6e6;
+}
+
+.kg-btn-group .layui-btn:last-child {
+    border-right: none;
+}
+
+.kg-btn-group .layui-btn.active {
+    background: #009688;
+    color: #fff;
+}
+
+/* 缩放控制 */
+.kg-zoom-controls {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 100;
+}
+
+.kg-zoom-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    font-size: 16px;
+    color: #666;
+}
+
+.kg-zoom-btn:hover {
+    background: #009688;
+    color: #fff;
+    border-color: #009688;
+}
+
+/* 状态指示器 */
+.kg-status-bar {
+    height: 30px;
+    background: #f8f8f8;
+    border-top: 1px solid #e6e6e6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    font-size: 12px;
+    color: #666;
+}
+
+.kg-status-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.kg-status-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.kg-status-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.kg-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+}
+
+.kg-status-indicator.saved {
+    background: #4CAF50;
+}
+
+.kg-status-indicator.modified {
+    background: #FF9800;
+}
+
+.kg-status-indicator.error {
+    background: #F44336;
+}
+
+/* ================================
+   图谱节点和边的增强样式
+   ================================ */
+
+/* 节点选择指示器 */
+.cytoscape-container {
+    outline: none;
+}
+
+/* 加载动画 */
+.kg-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.kg-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e6e6e6;
+    border-top: 3px solid #009688;
+    border-radius: 50%;
+    animation: kg-spin 1s linear infinite;
+}
+
+@keyframes kg-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ================================
+   图谱分析面板
+   ================================ */
+
+.kg-analysis-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.kg-analysis-card {
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.kg-analysis-card:hover {
+    border-color: #009688;
+    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.1);
+}
+
+.kg-analysis-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kg-analysis-title i {
+    color: #009688;
+}
+
+.kg-analysis-content {
+    color: #666;
+    line-height: 1.6;
+}
+
+.kg-metric {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.kg-metric:last-child {
+    border-bottom: none;
+}
+
+.kg-metric-label {
+    font-size: 14px;
+    color: #666;
+}
+
+.kg-metric-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+.kg-metric-value.highlight {
+    color: #009688;
+}
+
+.kg-metric-value.warning {
+    color: #FF9800;
+}
+
+.kg-metric-value.error {
+    color: #F44336;
+}
+
+/* ================================
+   响应式设计
+   ================================ */
+
+@media (max-width: 1200px) {
+    .kg-tool-panel {
+        width: 200px;
+    }
+    
+    .kg-property-panel {
+        width: 250px;
+    }
+    
+    .kg-minimap {
+        width: 150px;
+        height: 100px;
+    }
+    
+    .kg-minimap-canvas {
+        height: 70px;
+    }
+}
+
+@media (max-width: 768px) {
+    .kg-graph-main {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .kg-tool-panel {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e6e6e6;
+    }
+    
+    .kg-node-tools {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .kg-property-panel {
+        width: 100%;
+        order: -1;
+        border-left: none;
+        border-bottom: 1px solid #e6e6e6;
+    }
+    
+    .kg-canvas-area {
+        height: 400px;
+        min-height: 400px;
+    }
+    
+    .kg-minimap {
+        display: none;
+    }
+    
+    .kg-zoom-controls {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .kg-zoom-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+/* ================================
+   暗色主题支持（预留）
+   ================================ */
+
+.kg-theme-dark .kg-graph-container {
+    background: #2d2d2d;
+    border-color: #444;
+}
+
+.kg-theme-dark .kg-tool-panel,
+.kg-theme-dark .kg-property-panel,
+.kg-theme-dark .kg-canvas-toolbar {
+    background: #3d3d3d;
+    border-color: #555;
+    color: #fff;
+}
+
+.kg-theme-dark .kg-node-tool,
+.kg-theme-dark .kg-relation-tool {
+    background: #2d2d2d;
+    border-color: #555;
+    color: #fff;
+}
+
+.kg-theme-dark .kg-node-tool:hover,
+.kg-theme-dark .kg-relation-tool:hover {
+    background: #404040;
+    border-color: #009688;
+}
+
+/* ================================
+   打印样式
+   ================================ */
+
+@media print {
+    .kg-tool-panel,
+    .kg-property-panel,
+    .kg-canvas-toolbar,
+    .kg-status-bar,
+    .kg-minimap,
+    .kg-zoom-controls {
+        display: none !important;
+    }
+    
+    .kg-graph-main {
+        flex-direction: column;
+    }
+    
+    .kg-canvas-area {
+        width: 100% !important;
+        height: 80vh !important;
+    }
+}
