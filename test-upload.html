@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试增强上传功能</title>
+    <meta name="csrf-token" content="test-token">
+    <link href="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.css" rel="stylesheet">
+    <link href="public/static/admin/css/resource-enhanced.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .title {
+            color: #009688;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .subtitle {
+            color: #666;
+            margin-top: 10px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid #009688;
+        }
+        .upload-container {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            min-height: 300px;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .feature-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #009688;
+        }
+        .feature-item h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+        .feature-item p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🚀 酷瓜云课堂 - 增强文件上传测试</h1>
+            <p class="subtitle">基于 Uppy.js 的现代化文件上传组件</p>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">📁 上传测试区域</h2>
+            <div class="upload-container">
+                <div id="uppy-dashboard"></div>
+            </div>
+            <div id="upload-status"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">✨ 功能特性</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>🎯 拖拽上传</h4>
+                    <p>支持直接拖拽文件到上传区域，提供现代化的用户体验</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📊 批量上传</h4>
+                    <p>支持同时选择和上传多个文件，提高工作效率</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📈 实时进度</h4>
+                    <p>显示每个文件的上传进度，包括速度和剩余时间</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🔒 文件验证</h4>
+                    <p>支持文件类型和大小限制，确保上传安全性</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🌐 云端存储</h4>
+                    <p>集成腾讯云COS，提供高可用性和安全性</p>
+                </div>
+                <div class="feature-item">
+                    <h4>👁️ 在线预览</h4>
+                    <p>支持PDF、Office文档、图片等多种格式的在线预览</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">📋 支持格式</h2>
+            <div class="status info">
+                <strong>支持的文件类型：</strong><br>
+                • 文档类：PDF (.pdf), Word (.doc, .docx), Excel (.xls, .xlsx), PowerPoint (.ppt, .pptx)<br>
+                • 图片类：JPEG (.jpg, .jpeg), PNG (.png), GIF (.gif)<br>
+                • 音视频：MP4 (.mp4), AVI (.avi), MOV (.mov), MP3 (.mp3), WAV (.wav)<br>
+                • 压缩包：ZIP (.zip), RAR (.rar)<br>
+                • 其他：文本文件 (.txt)
+            </div>
+            <div class="status info">
+                <strong>文件大小限制：</strong> 单个文件最大 100MB
+            </div>
+        </div>
+    </div>
+
+    <script src="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.js"></script>
+    <script>
+        // 状态显示函数
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('upload-status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // 初始化Uppy上传器
+        const uppy = new Uppy.Core({
+            restrictions: {
+                maxFileSize: 100 * 1024 * 1024, // 100MB
+                allowedFileTypes: [
+                    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                    '.txt', '.zip', '.rar', '.jpg', '.jpeg', '.png', '.gif',
+                    '.mp4', '.avi', '.mov', '.mp3', '.wav'
+                ],
+                maxNumberOfFiles: 10
+            },
+            locale: {
+                strings: {
+                    dropPasteFiles: '拖拽文件到这里或者 %{browseFiles}',
+                    browseFiles: '选择文件',
+                    uploadComplete: '上传完成',
+                    uploadFailed: '上传失败',
+                    filesUploadedOfTotal: {
+                        0: '已上传 %{complete} / %{smart_count} 个文件',
+                        1: '已上传 %{complete} / %{smart_count} 个文件'
+                    }
+                }
+            }
+        });
+
+        // 添加Dashboard插件
+        uppy.use(Uppy.Dashboard, {
+            target: '#uppy-dashboard',
+            inline: true,
+            width: '100%',
+            height: 400,
+            showProgressDetails: true,
+            note: '支持拖拽上传，最大文件100MB，支持批量上传',
+            proudlyDisplayPoweredByUppy: false
+        });
+
+        // 添加XHR上传插件
+        uppy.use(Uppy.XHRUpload, {
+            endpoint: '/api/upload/enhanced',
+            formData: true,
+            fieldName: 'files[]',
+            headers: {
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        // 事件监听
+        uppy.on('file-added', (file) => {
+            showStatus(`✅ 文件 "${file.name}" 已添加到上传队列`, 'success');
+            console.log('文件已添加:', file);
+        });
+
+        uppy.on('upload-success', (file, response) => {
+            showStatus(`🎉 文件 "${file.name}" 上传成功！`, 'success');
+            console.log('上传成功:', file.name, response);
+        });
+
+        uppy.on('upload-error', (file, error, response) => {
+            showStatus(`❌ 文件 "${file.name}" 上传失败: ${error.message}`, 'error');
+            console.error('上传失败:', file.name, error);
+        });
+
+        uppy.on('complete', (result) => {
+            const successCount = result.successful.length;
+            const failedCount = result.failed.length;
+            
+            if (failedCount === 0) {
+                showStatus(`🎊 所有文件上传完成！成功上传 ${successCount} 个文件`, 'success');
+            } else {
+                showStatus(`⚠️ 上传完成：成功 ${successCount} 个，失败 ${failedCount} 个`, 'error');
+            }
+            
+            console.log('上传结果:', result);
+        });
+
+        uppy.on('restriction-failed', (file, error) => {
+            let errorMsg = `文件 "${file.name}" `;
+            
+            if (error.type === 'maxFileSize') {
+                errorMsg += '大小超过限制 (100MB)';
+            } else if (error.type === 'allowedFileTypes') {
+                errorMsg += '类型不支持';
+            } else {
+                errorMsg += '不符合上传要求';
+            }
+            
+            showStatus(`🚫 ${errorMsg}`, 'error');
+        });
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('📤 上传组件已初始化，可以开始测试上传功能', 'info');
+        });
+    </script>
+</body>
+</html>

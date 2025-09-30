@@ -16,6 +16,32 @@ class ResourceController extends Controller
 {
 
     /**
+     * @Get("/upload/enhanced", name="admin.resource.upload_enhanced")
+     */
+    public function uploadEnhancedAction()
+    {
+        $courses = []; // 获取课程列表，稍后实现
+        
+        $this->view->setVar('courses', $courses);
+        $this->view->setVar('course_id', $this->request->get('course_id', 'int', 0));
+        
+        return $this->view->pick('resource/upload_enhanced');
+    }
+
+    /**
+     * @Get("/recent", name="admin.resource.recent")
+     */
+    public function recentAction()
+    {
+        $limit = $this->request->get('limit', 'int', 10);
+        
+        // 获取最近上传的资源
+        $recentUploads = []; // 稍后从数据库获取
+        
+        return $this->jsonSuccess($recentUploads);
+    }
+
+    /**
      * @Post("/create", name="admin.resource.create")
      */
     public function createAction()

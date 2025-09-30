@@ -78,6 +78,16 @@ class MyStorage extends Storage
     }
 
     /**
+     * 上传资源文件
+     *
+     * @return UploadModel|bool
+     */
+    public function uploadResourceFile()
+    {
+        return $this->upload('/resource', self::MIME_FILE, UploadModel::TYPE_RESOURCE);
+    }
+
+    /**
      * 上传文件
      *
      * @param string $prefix
