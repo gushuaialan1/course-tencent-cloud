@@ -1,0 +1,376 @@
+/**
+ * 作业系统样式
+ */
+
+/* 题目类型选择器 */
+.kg-question-type-selector {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+}
+
+.kg-type-item {
+    text-align: center;
+    padding: 20px;
+    border: 2px solid #f0f0f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 140px;
+}
+
+.kg-type-item:hover {
+    border-color: #1e9fff;
+    background-color: #f8f9fa;
+}
+
+.kg-type-item i {
+    font-size: 32px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.kg-type-item h4 {
+    margin: 10px 0 5px;
+    font-size: 16px;
+    color: #333;
+}
+
+.kg-type-item p {
+    margin: 0;
+    font-size: 12px;
+    color: #999;
+}
+
+/* 题目项样式 */
+.kg-question-item {
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background: #fff;
+}
+
+.kg-question-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e6e6e6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kg-question-number {
+    font-weight: bold;
+    color: #333;
+}
+
+.kg-question-type {
+    background: #1e9fff;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.kg-question-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.kg-question-content {
+    padding: 16px;
+}
+
+/* 选择题选项样式 */
+.kg-choice-options {
+    margin-bottom: 10px;
+}
+
+.kg-choice-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.kg-option-label {
+    width: 30px;
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+}
+
+.kg-choice-option .layui-input {
+    flex: 1;
+}
+
+.kg-choice-option .layui-form-checkbox {
+    margin: 0;
+}
+
+/* 文件上传区域 */
+.kg-upload-area {
+    border: 2px dashed #d2d2d2;
+    border-radius: 6px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.kg-upload-area:hover {
+    border-color: #1e9fff;
+}
+
+.kg-upload-hint i {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 10px;
+}
+
+.kg-upload-hint p {
+    margin: 5px 0;
+    color: #666;
+}
+
+/* 文件列表 */
+.kg-file-list {
+    margin-top: 15px;
+}
+
+.kg-file-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 10px;
+}
+
+.kg-file-item:last-child {
+    border-bottom: none;
+}
+
+.kg-file-item i {
+    color: #666;
+}
+
+.kg-file-name {
+    flex: 1;
+    color: #333;
+    font-size: 14px;
+}
+
+.kg-file-size {
+    color: #999;
+    font-size: 12px;
+}
+
+/* 快速操作 */
+.kg-quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kg-quick-actions .layui-btn {
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+/* 卡片头部操作 */
+.kg-card-header-actions {
+    float: right;
+}
+
+/* 工具栏 */
+.kg-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.kg-toolbar-left {
+    display: flex;
+    gap: 10px;
+}
+
+.kg-toolbar-text {
+    color: #666;
+    font-size: 14px;
+}
+
+/* 表格操作 */
+.kg-table-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.kg-table-actions .layui-btn {
+    margin: 0;
+}
+
+/* 链接样式 */
+.kg-link {
+    color: #1e9fff;
+    text-decoration: none;
+}
+
+.kg-link:hover {
+    text-decoration: underline;
+}
+
+/* 文本样式 */
+.kg-text-muted {
+    color: #999;
+    font-size: 12px;
+    margin: 0;
+}
+
+.kg-text-info {
+    color: #1e9fff;
+    font-weight: bold;
+}
+
+/* 表单样式增强 */
+.kg-form .layui-form-item {
+    margin-bottom: 0;
+}
+
+.kg-form .layui-inline {
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+
+.kg-form .layui-form-label {
+    width: 80px;
+    text-align: right;
+    padding-left: 0;
+}
+
+.kg-form .layui-input-inline {
+    width: 150px;
+}
+
+/* 状态徽章 */
+.layui-badge {
+    font-size: 12px;
+    padding: 3px 6px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .kg-question-type-selector {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .kg-type-item {
+        width: 100%;
+    }
+    
+    .kg-choice-option {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .kg-option-label {
+        width: auto;
+    }
+    
+    .kg-table-actions {
+        flex-direction: column;
+    }
+    
+    .kg-toolbar {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+}
+
+/* 拖拽排序样式 */
+.kg-question-item.sortable-ghost {
+    opacity: 0.5;
+}
+
+.kg-question-item.sortable-chosen {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* 动画效果 */
+.kg-question-item {
+    transition: all 0.3s ease;
+}
+
+.kg-question-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* 加载状态 */
+.kg-loading {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+.kg-loading i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+/* 空状态 */
+.kg-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.kg-empty i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ddd;
+}
+
+.kg-empty h3 {
+    margin: 15px 0 10px;
+    color: #666;
+    font-weight: normal;
+}
+
+.kg-empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* 成功提示样式 */
+.kg-success-tip {
+    background: #f0f9ff;
+    border: 1px solid #b3e5fc;
+    color: #0277bd;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.kg-success-tip i {
+    margin-right: 5px;
+}
+
+/* 警告提示样式 */
+.kg-warning-tip {
+    background: #fff8e1;
+    border: 1px solid #ffcc02;
+    color: #f57c00;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.kg-warning-tip i {
+    margin-right: 5px;
+}
