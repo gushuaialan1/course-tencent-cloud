@@ -107,11 +107,11 @@ class CreateAssignmentTables extends AbstractMigration
             'null' => true,
             'comment' => '附件列表'
         ])
-        ->addColumn('content', 'longtext', [
+        ->addColumn('content', 'text', [
             'null' => true,
             'comment' => '作业内容(题目详情)'
         ])
-        ->addColumn('reference_answer', 'longtext', [
+        ->addColumn('reference_answer', 'text', [
             'null' => true,
             'comment' => '参考答案'
         ])
@@ -183,7 +183,7 @@ class CreateAssignmentTables extends AbstractMigration
             'null' => false,
             'comment' => '学生ID'
         ])
-        ->addColumn('content', 'longtext', [
+        ->addColumn('content', 'text', [
             'null' => true,
             'comment' => '提交内容'
         ])
