@@ -20,12 +20,33 @@ class ResourceController extends Controller
      */
     public function uploadEnhancedAction()
     {
-        $courses = []; // 获取课程列表，稍后实现
-        
-        $this->view->setVar('courses', $courses);
-        $this->view->setVar('course_id', $this->request->get('course_id', 'int', 0));
-        
-        return $this->view->pick('resource/upload_enhanced');
+        try {
+            // 获取课程列表 - 复用现有服务
+            $courseRepo = new \App\Repos\Course();
+            $courses = $courseRepo->findAll(['published' => 1, 'deleted' => 0]);
+            
+            // 获取上传类型选项
+            $uploadTypes = [
+                'cover' => '封面图',
+                'content' => '内容图',
+                'resource' => '课件资源',
+                'document' => '文档资料',
+                'video' => '视频资源',
+                'audio' => '音频资源',
+            ];
+            
+            $this->view->setVars([
+                'courses' => $courses,
+                'course_id' => $this->request->get('course_id', 'int', 0),
+                'upload_types' => $uploadTypes
+            ]);
+            
+            return $this->view->pick('resource/upload_enhanced');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('获取数据失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/index/index');
+        }
     }
 
     /**
@@ -33,12 +54,33 @@ class ResourceController extends Controller
      */
     public function recentAction()
     {
-        $limit = $this->request->get('limit', 'int', 10);
-        
-        // 获取最近上传的资源
-        $recentUploads = []; // 稍后从数据库获取
-        
-        return $this->jsonSuccess($recentUploads);
+        try {
+            $limit = $this->request->get('limit', 'int', 10);
+            
+            // 获取最近上传的资源
+            $uploads = \App\Models\Upload::find([
+                'conditions' => 'deleted = 0',
+                'order' => 'create_time DESC',
+                'limit' => $limit
+            ]);
+            
+            $recentUploads = [];
+            foreach ($uploads as $upload) {
+                $recentUploads[] = [
+                    'id' => $upload->id,
+                    'name' => $upload->name,
+                    'size' => $upload->size,
+                    'mime' => $upload->mime,
+                    'path' => $upload->path,
+                    'create_time' => date('Y-m-d H:i:s', $upload->create_time)
+                ];
+            }
+            
+            return $this->jsonSuccess($recentUploads);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['msg' => '获取数据失败: ' . $e->getMessage()]);
+        }
     }
 
     /**
