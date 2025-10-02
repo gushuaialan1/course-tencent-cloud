@@ -454,66 +454,6 @@ class KnowledgeGraphController extends Controller
     }
 
     /**
-     * 图谱模板列表
-     * 
-     * @Get("/templates", name="admin.knowledge_graph.templates")
-     */
-    public function templatesAction()
-    {
-        // 预定义的图谱模板
-        $templates = [
-            [
-                'id' => 'basic_cs',
-                'name' => '计算机科学基础',
-                'description' => '包含编程语言、数据结构、算法等基础概念',
-                'preview' => '/static/admin/img/templates/basic_cs.png',
-                'nodes_count' => 15,
-                'category' => '计算机科学'
-            ],
-            [
-                'id' => 'math_foundation',
-                'name' => '数学基础',
-                'description' => '包含微积分、线性代数、概率统计等数学概念',
-                'preview' => '/static/admin/img/templates/math_foundation.png',
-                'nodes_count' => 12,
-                'category' => '数学'
-            ],
-            [
-                'id' => 'web_development',
-                'name' => 'Web开发技术栈',
-                'description' => 'HTML、CSS、JavaScript、框架等Web开发知识',
-                'preview' => '/static/admin/img/templates/web_development.png',
-                'nodes_count' => 20,
-                'category' => 'Web开发'
-            ]
-        ];
-        
-        $this->view->setVar('templates', $templates);
-        
-        return $this->view->pick('knowledge-graph/templates');
-    }
-
-    /**
-     * 应用模板
-     * 
-     * @Post("/apply-template/{courseId:[0-9]+}", name="admin.knowledge_graph.apply_template")
-     */
-    public function applyTemplateAction($courseId)
-    {
-        try {
-            $templateId = $this->request->getPost('template_id');
-            
-            // 这里实现模板应用逻辑
-            // 根据templateId加载预定义的图谱结构
-            
-            return $this->jsonSuccess(['message' => '模板应用成功']);
-            
-        } catch (\Exception $e) {
-            return $this->jsonError(['message' => '应用模板失败: ' . $e->getMessage()]);
-        }
-    }
-
-    /**
      * 图谱分析报告
      * 
      * @Get("/analysis/{courseId:[0-9]+}", name="admin.knowledge_graph.analysis")
