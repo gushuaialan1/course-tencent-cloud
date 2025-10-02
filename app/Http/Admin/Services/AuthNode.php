@@ -266,6 +266,74 @@ class AuthNode extends Service
                     ],
                 ],
                 [
+                    'id' => '1-8',
+                    'title' => '知识图谱',
+                    'type' => 'menu',
+                    'children' => [
+                        [
+                            'id' => '1-8-1',
+                            'title' => '图谱列表',
+                            'type' => 'menu',
+                            'route' => 'admin.knowledge_graph.list',
+                        ],
+                        [
+                            'id' => '1-8-2',
+                            'title' => '图谱分析',
+                            'type' => 'button',
+                            'route' => 'admin.knowledge_graph.analysis',
+                        ],
+                        [
+                            'id' => '1-8-3',
+                            'title' => '图谱模板',
+                            'type' => 'button',
+                            'route' => 'admin.knowledge_graph.templates',
+                        ],
+                    ],
+                ],
+                [
+                    'id' => '1-9',
+                    'title' => '作业管理',
+                    'type' => 'menu',
+                    'children' => [
+                        [
+                            'id' => '1-9-1',
+                            'title' => '作业列表',
+                            'type' => 'menu',
+                            'route' => 'admin.assignment.list',
+                        ],
+                        [
+                            'id' => '1-9-2',
+                            'title' => '创建作业',
+                            'type' => 'menu',
+                            'route' => 'admin.assignment.create',
+                        ],
+                        [
+                            'id' => '1-9-3',
+                            'title' => '搜索作业',
+                            'type' => 'menu',
+                            'route' => 'admin.assignment.search',
+                        ],
+                        [
+                            'id' => '1-9-4',
+                            'title' => '作业统计',
+                            'type' => 'menu',
+                            'route' => 'admin.assignment.stats',
+                        ],
+                        [
+                            'id' => '1-9-5',
+                            'title' => '编辑作业',
+                            'type' => 'button',
+                            'route' => 'admin.assignment.edit',
+                        ],
+                        [
+                            'id' => '1-9-6',
+                            'title' => '作业详情',
+                            'type' => 'button',
+                            'route' => 'admin.assignment.show',
+                        ],
+                    ],
+                ],
+                [
                     'id' => '1-20',
                     'title' => '分类管理',
                     'type' => 'button',
@@ -1207,8 +1275,8 @@ class AuthNode extends Service
                             'type' => 'menu',
                             'route' => 'admin.setting.dingtalk_robot',
                         ],
-                    ]
-                    ,],
+                    ],
+                ],
             ],
         ];
     }
@@ -1229,6 +1297,25 @@ class AuthNode extends Service
                             'title' => '首页缓存',
                             'type' => 'menu',
                             'route' => 'admin.util.index_cache',
+                        ],
+                    ],
+                ],
+                [
+                    'id' => '6-2',
+                    'title' => '资源管理',
+                    'type' => 'menu',
+                    'children' => [
+                        [
+                            'id' => '6-2-1',
+                            'title' => '增强上传',
+                            'type' => 'menu',
+                            'route' => 'admin.resource.upload_enhanced',
+                        ],
+                        [
+                            'id' => '6-2-2',
+                            'title' => '最近文件',
+                            'type' => 'menu',
+                            'route' => 'admin.resource.recent',
                         ],
                     ],
                 ],

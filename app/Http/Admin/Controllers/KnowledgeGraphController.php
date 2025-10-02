@@ -12,6 +12,7 @@ use App\Http\Admin\Controllers\Controller;
 use App\Repos\KnowledgeNode as KnowledgeNodeRepo;
 use App\Repos\KnowledgeRelation as KnowledgeRelationRepo;
 use App\Repos\Course as CourseRepo;
+use App\Repos\KnowledgeGraphTemplate as KnowledgeGraphTemplateRepo;
 
 /**
  * @RoutePrefix("/admin/knowledge-graph")
@@ -691,5 +692,304 @@ class KnowledgeGraphController extends Controller
         $this->response->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
         
         return $csv;
+    }
+
+    /**
+     * 获取模板列表
+     * 
+     * @Get("/templates", name="admin.knowledge_graph.templates")
+     */
+    public function templatesAction()
+    {
+        try {
+            $page = max(1, $this->request->getQuery('page', 'int', 1));
+            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
+            $category = $this->request->getQuery('category', 'string');
+            $difficulty = $this->request->getQuery('difficulty_level', 'string');
+            $keyword = $this->request->getQuery('keyword', 'string');
+
+            $templateRepo = new KnowledgeGraphTemplateRepo();
+            
+            $options = [
+                'limit' => $limit,
+                'offset' => ($page - 1) * $limit
+            ];
+            
+            if ($category) {
+                $options['category'] = $category;
+            }
+            if ($difficulty) {
+                $options['difficulty_level'] = $difficulty;
+            }
+            if ($keyword) {
+                $options['keyword'] = $keyword;
+            }
+            
+            $templates = $templateRepo->findAll($options);
+            $total = $templateRepo->countAll(array_diff_key($options, ['limit' => '', 'offset' => '']));
+            
+            // 获取分类和难度级别选项
+            $categories = \App\Models\KnowledgeGraphTemplate::getCategories();
+            $difficultyLevels = \App\Models\KnowledgeGraphTemplate::getDifficultyLevels();
+            
+            // 获取统计信息
+            $statistics = $templateRepo->getStatistics();
+            
+            $this->view->setVars([
+                'templates' => $templates,
+                'categories' => $categories,
+                'difficulty_levels' => $difficultyLevels,
+                'statistics' => $statistics,
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'category' => $category,
+                'difficulty' => $difficulty,
+                'keyword' => $keyword
+            ]);
+            
+            return $this->view->pick('knowledge-graph/templates');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('获取模板列表失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/knowledge-graph/list');
+        }
+    }
+
+    /**
+     * 获取模板详情（API）
+     * 
+     * @Get("/template/{id:[0-9]+}", name="admin.knowledge_graph.template_detail")
+     */
+    public function templateDetailAction($id)
+    {
+        try {
+            $templateRepo = new KnowledgeGraphTemplateRepo();
+            $template = $templateRepo->findById($id);
+            
+            if (!$template) {
+                return $this->jsonError(['msg' => '模板不存在']);
+            }
+            
+            // 转换为数组并解析JSON数据
+            $templateData = $template->toArray();
+            $templateData['nodes'] = $template->getNodeDataArray();
+            $templateData['relations'] = $template->getRelationDataArray();
+            $templateData['tags_array'] = $template->getTagsArray();
+            
+            return $this->jsonSuccess([
+                'data' => $templateData
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Get template detail error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '获取模板详情失败']);
+        }
+    }
+
+    /**
+     * 应用模板到课程（API）
+     * 
+     * @Post("/apply-template/{courseId:[0-9]+}", name="admin.knowledge_graph.apply_template")
+     */
+    public function applyTemplateAction($courseId)
+    {
+        try {
+            $templateId = $this->request->getPost('template_id', 'int');
+            
+            if (!$templateId) {
+                return $this->jsonError(['msg' => '请选择模板']);
+            }
+            
+            // 验证课程存在
+            $courseRepo = new CourseRepo();
+            $course = $courseRepo->findById($courseId);
+            if (!$course) {
+                return $this->jsonError(['msg' => '课程不存在']);
+            }
+            
+            // 验证模板存在
+            $templateRepo = new KnowledgeGraphTemplateRepo();
+            $template = $templateRepo->findById($templateId);
+            if (!$template) {
+                return $this->jsonError(['msg' => '模板不存在']);
+            }
+            
+            // 获取当前用户
+            $userId = $this->getAuthUser()['id'] ?? 0;
+            
+            // 应用模板到课程
+            $result = $templateRepo->applyToCourse($template, $courseId, $userId);
+            
+            return $this->jsonSuccess([
+                'msg' => '应用模板成功',
+                'data' => [
+                    'nodes_created' => count($result['nodes']),
+                    'relations_created' => count($result['relations']),
+                    'nodes' => $result['nodes'],
+                    'relations' => $result['relations']
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Apply template error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '应用模板失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 创建模板（API）
+     * 
+     * @Post("/template/create", name="admin.knowledge_graph.template_create")
+     */
+    public function createTemplateAction()
+    {
+        try {
+            $name = $this->request->getPost('name', 'string');
+            $category = $this->request->getPost('category', 'string');
+            $description = $this->request->getPost('description', 'string');
+            $difficultyLevel = $this->request->getPost('difficulty_level', 'string');
+            $tags = $this->request->getPost('tags', 'string');
+            $nodes = $this->request->getPost('nodes');
+            $relations = $this->request->getPost('relations');
+            
+            // 验证必填字段
+            if (empty($name)) {
+                return $this->jsonError(['msg' => '模板名称不能为空']);
+            }
+            
+            if (empty($nodes)) {
+                return $this->jsonError(['msg' => '节点数据不能为空']);
+            }
+            
+            // 解析JSON数据
+            if (is_string($nodes)) {
+                $nodes = json_decode($nodes, true);
+            }
+            if (is_string($relations)) {
+                $relations = json_decode($relations, true);
+            }
+            
+            $userId = $this->getAuthUser()['id'] ?? 0;
+            
+            $templateRepo = new KnowledgeGraphTemplateRepo();
+            $template = $templateRepo->create([
+                'name' => $name,
+                'category' => $category ?: \App\Models\KnowledgeGraphTemplate::CATEGORY_OTHER,
+                'description' => $description,
+                'difficulty_level' => $difficultyLevel ?: \App\Models\KnowledgeGraphTemplate::DIFFICULTY_BEGINNER,
+                'tags' => $tags,
+                'nodes' => $nodes,
+                'relations' => $relations ?: [],
+                'is_system' => false,
+                'created_by' => $userId
+            ]);
+            
+            if ($template) {
+                return $this->jsonSuccess([
+                    'msg' => '创建模板成功',
+                    'data' => $template->toArray()
+                ]);
+            }
+            
+            return $this->jsonError(['msg' => '创建模板失败']);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Create template error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '创建模板失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 更新模板（API）
+     * 
+     * @Post("/template/{id:[0-9]+}/update", name="admin.knowledge_graph.template_update")
+     */
+    public function updateTemplateAction($id)
+    {
+        try {
+            $templateRepo = new KnowledgeGraphTemplateRepo();
+            $template = $templateRepo->findById($id);
+            
+            if (!$template) {
+                return $this->jsonError(['msg' => '模板不存在']);
+            }
+            
+            // 只有创建者可以编辑
+            $userId = $this->getAuthUser()['id'] ?? 0;
+            if ($template->created_by != $userId && !$template->is_system) {
+                return $this->jsonError(['msg' => '无权编辑此模板']);
+            }
+            
+            $data = [];
+            $fields = ['name', 'category', 'description', 'difficulty_level', 'tags'];
+            foreach ($fields as $field) {
+                $value = $this->request->getPost($field);
+                if ($value !== null) {
+                    $data[$field] = $value;
+                }
+            }
+            
+            // 更新节点和关系数据
+            $nodes = $this->request->getPost('nodes');
+            if ($nodes !== null) {
+                $data['nodes'] = is_string($nodes) ? json_decode($nodes, true) : $nodes;
+            }
+            
+            $relations = $this->request->getPost('relations');
+            if ($relations !== null) {
+                $data['relations'] = is_string($relations) ? json_decode($relations, true) : $relations;
+            }
+            
+            $data['updated_by'] = $userId;
+            
+            if ($templateRepo->update($template, $data)) {
+                return $this->jsonSuccess(['msg' => '更新模板成功']);
+            }
+            
+            return $this->jsonError(['msg' => '更新模板失败']);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Update template error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '更新模板失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 删除模板（API）
+     * 
+     * @Post("/template/{id:[0-9]+}/delete", name="admin.knowledge_graph.template_delete")
+     */
+    public function deleteTemplateAction($id)
+    {
+        try {
+            $templateRepo = new KnowledgeGraphTemplateRepo();
+            $template = $templateRepo->findById($id);
+            
+            if (!$template) {
+                return $this->jsonError(['msg' => '模板不存在']);
+            }
+            
+            // 系统模板不能删除
+            if ($template->is_system) {
+                return $this->jsonError(['msg' => '系统模板不能删除']);
+            }
+            
+            // 只有创建者可以删除
+            $userId = $this->getAuthUser()['id'] ?? 0;
+            if ($template->created_by != $userId) {
+                return $this->jsonError(['msg' => '无权删除此模板']);
+            }
+            
+            if ($templateRepo->delete($template)) {
+                return $this->jsonSuccess(['msg' => '删除模板成功']);
+            }
+            
+            return $this->jsonError(['msg' => '删除模板失败']);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Delete template error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '删除模板失败: ' . $e->getMessage()]);
+        }
     }
 }

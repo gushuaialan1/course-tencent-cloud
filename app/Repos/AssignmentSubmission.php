@@ -29,6 +29,46 @@ class AssignmentSubmission extends Repository
     }
 
     /**
+     * 根据ID查找提交记录（包含详细信息）
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public function findByIdWithDetails(int $id): ?array
+    {
+        $builder = $this->modelsManager->createBuilder()
+            ->from(['s' => AssignmentSubmissionModel::class])
+            ->leftJoin(\App\Models\Assignment::class, 'a.id = s.assignment_id', 'a')
+            ->leftJoin(\App\Models\User::class, 'u.id = s.user_id', 'u')
+            ->leftJoin(\App\Models\User::class, 'g.id = s.grader_id', 'g')
+            ->leftJoin(\App\Models\Course::class, 'c.id = a.course_id', 'c')
+            ->columns([
+                's.*',
+                'a.title as assignment_title',
+                'a.max_score as assignment_max_score',
+                'a.assignment_type',
+                'a.content as assignment_content',
+                'a.reference_answer',
+                'c.id as course_id',
+                'c.title as course_title',
+                'u.id as user_id',
+                'u.name as user_name',
+                'g.id as grader_id',
+                'g.name as grader_name'
+            ])
+            ->where('s.id = :id:', ['id' => $id])
+            ->andWhere('s.delete_time = 0');
+
+        $result = $builder->getQuery()->execute();
+        
+        if ($result->count() === 0) {
+            return null;
+        }
+
+        return $result->getFirst()->toArray();
+    }
+
+    /**
      * 根据作业ID和用户ID查找提交记录
      *
      * @param int $assignmentId
@@ -274,6 +314,110 @@ class AssignmentSubmission extends Repository
     public function returnSubmission(AssignmentSubmissionModel $submission, string $reason = ''): bool
     {
         return $submission->returnSubmission($reason);
+    }
+
+    /**
+     * 查找所有提交记录（包含详细信息）
+     *
+     * @param array $options
+     * @return array
+     */
+    public function findAllWithDetails(array $options = []): array
+    {
+        $builder = $this->modelsManager->createBuilder()
+            ->from(['s' => AssignmentSubmissionModel::class])
+            ->leftJoin(\App\Models\Assignment::class, 'a.id = s.assignment_id', 'a')
+            ->leftJoin(\App\Models\User::class, 'u.id = s.user_id', 'u')
+            ->leftJoin(\App\Models\User::class, 'g.id = s.grader_id', 'g')
+            ->leftJoin(\App\Models\Course::class, 'c.id = a.course_id', 'c')
+            ->columns([
+                's.*',
+                'a.title as assignment_title',
+                'a.assignment_type',
+                'c.id as course_id',
+                'c.title as course_title',
+                'u.name as user_name',
+                'g.name as grader_name'
+            ])
+            ->where('s.delete_time = 0');
+
+        // 状态过滤
+        if (!empty($options['status'])) {
+            $builder->andWhere('s.status = :status:', ['status' => $options['status']]);
+        }
+
+        // 评分状态过滤
+        if (!empty($options['grade_status'])) {
+            $builder->andWhere('s.grade_status = :grade_status:', ['grade_status' => $options['grade_status']]);
+        }
+
+        // 作业ID过滤
+        if (!empty($options['assignment_id'])) {
+            $builder->andWhere('s.assignment_id = :assignment_id:', ['assignment_id' => $options['assignment_id']]);
+        }
+
+        // 课程ID过滤
+        if (!empty($options['course_id'])) {
+            $builder->andWhere('a.course_id = :course_id:', ['course_id' => $options['course_id']]);
+        }
+
+        // 迟交过滤
+        if (isset($options['is_late'])) {
+            $builder->andWhere('s.is_late = :is_late:', ['is_late' => $options['is_late']]);
+        }
+
+        // 排序
+        $builder->orderBy($options['order'] ?? 's.submit_time DESC');
+
+        // 分页
+        if (!empty($options['limit'])) {
+            $builder->limit($options['limit'], $options['offset'] ?? 0);
+        }
+
+        return $builder->getQuery()->execute()->toArray();
+    }
+
+    /**
+     * 统计所有提交记录数量（包含详细过滤）
+     *
+     * @param array $options
+     * @return int
+     */
+    public function countAllWithDetails(array $options = []): int
+    {
+        $builder = $this->modelsManager->createBuilder()
+            ->from(['s' => AssignmentSubmissionModel::class])
+            ->leftJoin(\App\Models\Assignment::class, 'a.id = s.assignment_id', 'a')
+            ->columns('COUNT(*) as count')
+            ->where('s.delete_time = 0');
+
+        // 状态过滤
+        if (!empty($options['status'])) {
+            $builder->andWhere('s.status = :status:', ['status' => $options['status']]);
+        }
+
+        // 评分状态过滤
+        if (!empty($options['grade_status'])) {
+            $builder->andWhere('s.grade_status = :grade_status:', ['grade_status' => $options['grade_status']]);
+        }
+
+        // 作业ID过滤
+        if (!empty($options['assignment_id'])) {
+            $builder->andWhere('s.assignment_id = :assignment_id:', ['assignment_id' => $options['assignment_id']]);
+        }
+
+        // 课程ID过滤
+        if (!empty($options['course_id'])) {
+            $builder->andWhere('a.course_id = :course_id:', ['course_id' => $options['course_id']]);
+        }
+
+        // 迟交过滤
+        if (isset($options['is_late'])) {
+            $builder->andWhere('s.is_late = :is_late:', ['is_late' => $options['is_late']]);
+        }
+
+        $result = $builder->getQuery()->execute()->getFirst();
+        return $result ? $result->count : 0;
     }
 
     /**

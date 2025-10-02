@@ -88,7 +88,7 @@ class UploadController extends Controller
             return $this->jsonSuccess([
                 'uploads' => $results,
                 'total' => count($results),
-                'success_count' => count(array_filter($results, fn($r) => $r['success']))
+                'success_count' => count(array_filter($results, function($r) { return $r['success']; }))
             ]);
             
         } catch (\Exception $e) {

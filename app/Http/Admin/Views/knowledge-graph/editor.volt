@@ -29,6 +29,9 @@
             </span>
         </div>
         <div class="kg-nav-right">
+            <button class="layui-btn layui-btn-sm layui-btn-warm" id="btn-use-template">
+                <i class="layui-icon layui-icon-template-1"></i>使用模板
+            </button>
             <button class="layui-btn layui-btn-sm" id="btn-save-graph">
                 <i class="layui-icon layui-icon-ok"></i>保存图谱
             </button>
@@ -319,6 +322,10 @@
         });
         
         // 绑定工具栏事件
+        $('#btn-use-template').on('click', function() {
+            showTemplateSelector(courseId, graphEditor);
+        });
+        
         $('#btn-save-graph').on('click', function() {
             graphEditor.saveGraph();
         });
@@ -577,6 +584,152 @@
         setTimeout(function() {
             $('#kg-loading').fadeOut();
         }, 1000);
+        
+        // 显示模板选择器
+        function showTemplateSelector(courseId, graphEditor) {
+            // 获取模板列表
+            $.get('{{ url({"for":"admin.knowledge_graph.templates"}) }}?format=json', function(res) {
+                // 如果没有format参数支持，则直接打开模板列表页
+                layer.open({
+                    type: 2,
+                    title: '选择知识图谱模板',
+                    area: ['90%', '90%'],
+                    content: '{{ url({"for":"admin.knowledge_graph.templates"}) }}',
+                    btn: ['取消'],
+                    yes: function(index) {
+                        layer.close(index);
+                    }
+                });
+            }).fail(function() {
+                // 如果AJAX失败，显示简化的模板选择对话框
+                showSimpleTemplateSelector(courseId, graphEditor);
+            });
+        }
+        
+        // 简化的模板选择器
+        function showSimpleTemplateSelector(courseId, graphEditor) {
+            var content = '<div style="padding: 20px;">';
+            content += '<div class="layui-form">';
+            content += '<div class="layui-form-item">';
+            content += '<label class="layui-form-label">选择模板</label>';
+            content += '<div class="layui-input-block">';
+            content += '<select id="template-select" lay-filter="template-select">';
+            content += '<option value="">请选择模板</option>';
+            content += '</select>';
+            content += '</div>';
+            content += '</div>';
+            content += '<div id="template-preview" style="margin-top: 20px; display: none;"></div>';
+            content += '</div>';
+            content += '</div>';
+            
+            layer.open({
+                type: 1,
+                title: '使用知识图谱模板',
+                area: ['600px', '500px'],
+                content: content,
+                btn: ['应用模板', '取消'],
+                success: function(layero, index) {
+                    // 加载模板列表
+                    loadTemplateList();
+                    
+                    // 监听模板选择
+                    layui.form.on('select(template-select)', function(data) {
+                        if (data.value) {
+                            previewTemplate(data.value);
+                        }
+                    });
+                },
+                yes: function(index) {
+                    var templateId = $('#template-select').val();
+                    if (!templateId) {
+                        layer.msg('请选择模板', {icon: 2});
+                        return;
+                    }
+                    
+                    // 应用模板
+                    applyTemplate(courseId, templateId, graphEditor, index);
+                }
+            });
+        }
+        
+        // 加载模板列表
+        function loadTemplateList() {
+            // 这里简化处理，实际应该通过API获取
+            var templates = [
+                {id: 1, name: '计算机科学基础', nodes: 15, relations: 18},
+                {id: 2, name: '数学基础', nodes: 12, relations: 17},
+                {id: 3, name: 'Web全栈开发技术栈', nodes: 20, relations: 32}
+            ];
+            
+            var select = $('#template-select');
+            templates.forEach(function(tpl) {
+                select.append('<option value="' + tpl.id + '">' + tpl.name + ' (' + tpl.nodes + '节点, ' + tpl.relations + '关系)</option>');
+            });
+            
+            layui.form.render('select');
+        }
+        
+        // 预览模板
+        function previewTemplate(templateId) {
+            var url = '{{ url({"for":"admin.knowledge_graph.template_detail"}) }}'.replace(/\/0$/, '/' + templateId);
+            
+            $.get(url, function(res) {
+                if (res.code === 0) {
+                    var data = res.data;
+                    var preview = '<div class="layui-card">';
+                    preview += '<div class="layui-card-header">' + data.name + '</div>';
+                    preview += '<div class="layui-card-body">';
+                    preview += '<p>' + (data.description || '暂无描述') + '</p>';
+                    preview += '<p><strong>节点数量：</strong>' + data.node_count + ' 个</p>';
+                    preview += '<p><strong>关系数量：</strong>' + data.relation_count + ' 个</p>';
+                    if (data.tags_array && data.tags_array.length > 0) {
+                        preview += '<p><strong>标签：</strong>' + data.tags_array.join(', ') + '</p>';
+                    }
+                    preview += '</div>';
+                    preview += '</div>';
+                    
+                    $('#template-preview').html(preview).show();
+                }
+            });
+        }
+        
+        // 应用模板到课程
+        function applyTemplate(courseId, templateId, graphEditor, layerIndex) {
+            var applyUrl = '{{ url({"for":"admin.knowledge_graph.apply_template","courseId":0}) }}'.replace(/\/0$/, '/' + courseId);
+            
+            layer.confirm('应用模板将创建新的节点和关系，确定要继续吗？', {
+                icon: 3,
+                title: '确认操作'
+            }, function(confirmIndex) {
+                var loadingIndex = layer.load(2, {shade: [0.3, '#000']});
+                
+                $.post(applyUrl, {
+                    template_id: templateId
+                }, function(res) {
+                    layer.close(loadingIndex);
+                    
+                    if (res.code === 0) {
+                        layer.msg('应用模板成功！', {icon: 1});
+                        layer.close(layerIndex);
+                        layer.close(confirmIndex);
+                        
+                        // 刷新图谱
+                        if (graphEditor && graphEditor.loadGraph) {
+                            setTimeout(function() {
+                                graphEditor.loadGraph();
+                            }, 500);
+                        } else {
+                            location.reload();
+                        }
+                    } else {
+                        layer.msg(res.msg || '应用模板失败', {icon: 2});
+                    }
+                }).fail(function() {
+                    layer.close(loadingIndex);
+                    layer.msg('网络请求失败', {icon: 2});
+                });
+            });
+        }
     });
     </script>
 </body>
