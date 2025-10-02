@@ -82,6 +82,123 @@ class Assignment extends Repository
     }
 
     /**
+     * 查找所有作业（支持多种过滤条件）
+     *
+     * @param array $options
+     * @return array
+     */
+    public function findAll(array $options = []): array
+    {
+        $conditions = ['delete_time = 0'];
+        $bind = [];
+
+        // 课程ID过滤
+        if (!empty($options['course_id'])) {
+            $conditions[] = 'course_id = :course_id:';
+            $bind['course_id'] = $options['course_id'];
+        }
+
+        // 作业类型过滤
+        if (!empty($options['type'])) {
+            $conditions[] = 'assignment_type = :type:';
+            $bind['type'] = $options['type'];
+        }
+
+        // 状态过滤
+        if (!empty($options['status'])) {
+            $conditions[] = 'status = :status:';
+            $bind['status'] = $options['status'];
+        }
+
+        // 章节过滤
+        if (!empty($options['chapter_id'])) {
+            $conditions[] = 'chapter_id = :chapter_id:';
+            $bind['chapter_id'] = $options['chapter_id'];
+        }
+
+        // 标题搜索
+        if (!empty($options['title'])) {
+            $conditions[] = 'title LIKE :title:';
+            $bind['title'] = '%' . $options['title'] . '%';
+        }
+
+        // 创建者过滤
+        if (!empty($options['owner_id'])) {
+            $conditions[] = 'owner_id = :owner_id:';
+            $bind['owner_id'] = $options['owner_id'];
+        }
+
+        $queryOptions = [
+            'conditions' => implode(' AND ', $conditions),
+            'bind' => $bind,
+            'order' => $options['order'] ?? 'id DESC'
+        ];
+
+        // 分页
+        if (!empty($options['limit'])) {
+            $queryOptions['limit'] = $options['limit'];
+            if (!empty($options['offset'])) {
+                $queryOptions['offset'] = $options['offset'];
+            }
+        }
+
+        return AssignmentModel::find($queryOptions)->toArray();
+    }
+
+    /**
+     * 统计作业数量
+     *
+     * @param array $options
+     * @return int
+     */
+    public function countAll(array $options = []): int
+    {
+        $conditions = ['delete_time = 0'];
+        $bind = [];
+
+        // 课程ID过滤
+        if (!empty($options['course_id'])) {
+            $conditions[] = 'course_id = :course_id:';
+            $bind['course_id'] = $options['course_id'];
+        }
+
+        // 作业类型过滤
+        if (!empty($options['type'])) {
+            $conditions[] = 'assignment_type = :type:';
+            $bind['type'] = $options['type'];
+        }
+
+        // 状态过滤
+        if (!empty($options['status'])) {
+            $conditions[] = 'status = :status:';
+            $bind['status'] = $options['status'];
+        }
+
+        // 章节过滤
+        if (!empty($options['chapter_id'])) {
+            $conditions[] = 'chapter_id = :chapter_id:';
+            $bind['chapter_id'] = $options['chapter_id'];
+        }
+
+        // 标题搜索
+        if (!empty($options['title'])) {
+            $conditions[] = 'title LIKE :title:';
+            $bind['title'] = '%' . $options['title'] . '%';
+        }
+
+        // 创建者过滤
+        if (!empty($options['owner_id'])) {
+            $conditions[] = 'owner_id = :owner_id:';
+            $bind['owner_id'] = $options['owner_id'];
+        }
+
+        return (int)AssignmentModel::count([
+            'conditions' => implode(' AND ', $conditions),
+            'bind' => $bind
+        ]);
+    }
+
+    /**
      * 创建作业
      *
      * @param array $data
