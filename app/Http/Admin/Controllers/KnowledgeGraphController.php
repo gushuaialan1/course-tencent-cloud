@@ -230,7 +230,7 @@ class KnowledgeGraphController extends Controller
     }
 
     /**
-     * 保存图谱数据
+     * 保存图谱数据（批量保存节点位置）
      * 
      * @Post("/save/{courseId:[0-9]+}", name="admin.knowledge_graph.save")
      */
@@ -239,17 +239,216 @@ class KnowledgeGraphController extends Controller
         try {
             $data = $this->request->getJsonRawBody(true);
             
-            if (empty($data['elements'])) {
-                return $this->jsonError(['message' => '图谱数据不能为空']);
+            if (empty($data['positions'])) {
+                return $this->jsonError(['message' => '没有需要保存的位置数据']);
             }
             
-            // 这里可以实现增量保存逻辑
-            // 比较前端传来的数据与数据库中的数据，只更新有变化的部分
+            // 批量更新节点位置
+            $knowledgeNodeRepo = new KnowledgeNodeRepo();
+            $knowledgeNodeRepo->updateNodesPosition($data['positions']);
             
             return $this->jsonSuccess(['message' => '保存成功']);
             
         } catch (\Exception $e) {
             return $this->jsonError(['message' => '保存失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 创建节点
+     * 
+     * @Post("/node/create", name="admin.knowledge_graph.create_node")
+     */
+    public function createNodeAction()
+    {
+        try {
+            $data = $this->request->getJsonRawBody(true);
+            
+            // 验证必填字段
+            if (empty($data['name']) || empty($data['course_id'])) {
+                return $this->jsonError(['message' => '节点名称和课程ID不能为空']);
+            }
+            
+            // 添加创建者信息
+            $data['created_by'] = $this->authUser->id;
+            
+            $knowledgeNodeRepo = new KnowledgeNodeRepo();
+            $node = $knowledgeNodeRepo->createNode($data);
+            
+            if ($node) {
+                return $this->jsonSuccess([
+                    'message' => '节点创建成功',
+                    'node' => $node->toArray()
+                ]);
+            }
+            
+            return $this->jsonError(['message' => '节点创建失败']);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '创建失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 更新节点
+     * 
+     * @Post("/node/{id:[0-9]+}/update", name="admin.knowledge_graph.update_node")
+     */
+    public function updateNodeAction($id)
+    {
+        try {
+            $data = $this->request->getJsonRawBody(true);
+            
+            $knowledgeNodeRepo = new KnowledgeNodeRepo();
+            $node = $knowledgeNodeRepo->findById($id);
+            
+            if (!$node) {
+                return $this->jsonError(['message' => '节点不存在']);
+            }
+            
+            // 添加更新者信息
+            $data['updated_by'] = $this->authUser->id;
+            
+            $success = $knowledgeNodeRepo->updateNode($node, $data);
+            
+            if ($success) {
+                return $this->jsonSuccess([
+                    'message' => '节点更新成功',
+                    'node' => $node->toArray()
+                ]);
+            }
+            
+            return $this->jsonError(['message' => '节点更新失败']);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '更新失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 删除节点
+     * 
+     * @Post("/node/{id:[0-9]+}/delete", name="admin.knowledge_graph.delete_node")
+     */
+    public function deleteNodeAction($id)
+    {
+        try {
+            $knowledgeNodeRepo = new KnowledgeNodeRepo();
+            $node = $knowledgeNodeRepo->findById($id);
+            
+            if (!$node) {
+                return $this->jsonError(['message' => '节点不存在']);
+            }
+            
+            $success = $knowledgeNodeRepo->deleteNode($node);
+            
+            if ($success) {
+                return $this->jsonSuccess(['message' => '节点删除成功']);
+            }
+            
+            return $this->jsonError(['message' => '节点删除失败']);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '删除失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 创建关系
+     * 
+     * @Post("/relation/create", name="admin.knowledge_graph.create_relation")
+     */
+    public function createRelationAction()
+    {
+        try {
+            $data = $this->request->getJsonRawBody(true);
+            
+            // 验证必填字段
+            if (empty($data['from_node_id']) || empty($data['to_node_id']) || empty($data['relation_type'])) {
+                return $this->jsonError(['message' => '起始节点、目标节点和关系类型不能为空']);
+            }
+            
+            // 添加创建者信息
+            $data['created_by'] = $this->authUser->id;
+            
+            $knowledgeRelationRepo = new KnowledgeRelationRepo();
+            $relation = $knowledgeRelationRepo->createRelation($data);
+            
+            if ($relation) {
+                return $this->jsonSuccess([
+                    'message' => '关系创建成功',
+                    'relation' => $relation->toArray()
+                ]);
+            }
+            
+            return $this->jsonError(['message' => '关系创建失败，可能已存在或节点无效']);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '创建失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 更新关系
+     * 
+     * @Post("/relation/{id:[0-9]+}/update", name="admin.knowledge_graph.update_relation")
+     */
+    public function updateRelationAction($id)
+    {
+        try {
+            $data = $this->request->getJsonRawBody(true);
+            
+            $knowledgeRelationRepo = new KnowledgeRelationRepo();
+            $relation = $knowledgeRelationRepo->findById($id);
+            
+            if (!$relation) {
+                return $this->jsonError(['message' => '关系不存在']);
+            }
+            
+            // 添加更新者信息
+            $data['updated_by'] = $this->authUser->id;
+            
+            $success = $knowledgeRelationRepo->updateRelation($relation, $data);
+            
+            if ($success) {
+                return $this->jsonSuccess([
+                    'message' => '关系更新成功',
+                    'relation' => $relation->toArray()
+                ]);
+            }
+            
+            return $this->jsonError(['message' => '关系更新失败']);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '更新失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * 删除关系
+     * 
+     * @Post("/relation/{id:[0-9]+}/delete", name="admin.knowledge_graph.delete_relation")
+     */
+    public function deleteRelationAction($id)
+    {
+        try {
+            $knowledgeRelationRepo = new KnowledgeRelationRepo();
+            $relation = $knowledgeRelationRepo->findById($id);
+            
+            if (!$relation) {
+                return $this->jsonError(['message' => '关系不存在']);
+            }
+            
+            $success = $knowledgeRelationRepo->deleteRelation($relation);
+            
+            if ($success) {
+                return $this->jsonSuccess(['message' => '关系删除成功']);
+            }
+            
+            return $this->jsonError(['message' => '关系删除失败']);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '删除失败: ' . $e->getMessage()]);
         }
     }
 
