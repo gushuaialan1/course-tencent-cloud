@@ -32,59 +32,95 @@ class AssignmentController extends Controller
      */
     public function listAction()
     {
-        $page = $this->request->getQuery('page', 'int', 1);
-        $limit = $this->request->getQuery('limit', 'int', 15);
-        $courseId = $this->request->getQuery('course_id', 'int');
-        $status = $this->request->getQuery('status', 'string');
-        $type = $this->request->getQuery('type', 'string');
-        $title = $this->request->getQuery('title', 'string');
+        try {
+            $page = max(1, $this->request->getQuery('page', 'int', 1));
+            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
+            $courseId = $this->request->getQuery('course_id', 'int');
+            $status = $this->request->getQuery('status', 'string');
+            $type = $this->request->getQuery('type', 'string');
+            $title = $this->request->getQuery('title', 'string');
 
-        $assignmentRepo = new AssignmentRepo();
-        
-        $options = [
-            'limit' => $limit,
-            'offset' => ($page - 1) * $limit
-        ];
+            $assignmentRepo = new AssignmentRepo();
+            
+            $options = [
+                'limit' => $limit,
+                'offset' => ($page - 1) * $limit
+            ];
 
-        if ($courseId) {
-            $options['course_id'] = $courseId;
-        }
-        if ($status) {
-            $options['status'] = $status;
-        }
-        if ($type) {
-            $options['type'] = $type;
-        }
+            if ($courseId) {
+                $options['course_id'] = $courseId;
+            }
+            if ($status) {
+                $options['status'] = $status;
+            }
+            if ($type) {
+                $options['type'] = $type;
+            }
+            if ($title) {
+                $options['title'] = $title;
+            }
 
-        $assignments = $assignmentRepo->findByCourseId($courseId ?: 0, $options);
-        
-        // 获取总数用于分页
-        $totalOptions = array_diff_key($options, ['limit' => '', 'offset' => '']);
-        $total = count($assignmentRepo->findByCourseId($courseId ?: 0, $totalOptions));
+            $assignments = $assignmentRepo->findAll($options);
+            
+            // 获取总数用于分页
+            $totalOptions = array_diff_key($options, ['limit' => '', 'offset' => '']);
+            $total = $assignmentRepo->countAll($totalOptions);
 
-        // 获取提交统计
-        $submissionRepo = new AssignmentSubmissionRepo();
-        foreach ($assignments as &$assignment) {
-            $stats = $submissionRepo->getStatistics(['assignment_id' => $assignment['id']]);
-            $assignment['submission_stats'] = $stats;
-        }
+            // 获取提交统计
+            $submissionRepo = new AssignmentSubmissionRepo();
+            foreach ($assignments as &$assignment) {
+                try {
+                    $stats = $submissionRepo->getStatistics(['assignment_id' => $assignment['id']]);
+                    $assignment['submission_stats'] = $stats;
+                } catch (\Exception $e) {
+                    $assignment['submission_stats'] = [
+                        'total' => 0,
+                        'graded' => 0,
+                        'pending' => 0
+                    ];
+                }
+            }
 
-        $pager = [
-            'page' => $page,
-            'limit' => $limit,
-            'total' => $total,
-            'pages' => ceil($total / $limit)
-        ];
+            // 获取课程列表用于筛选
+            $courseRepo = new CourseRepo();
+            $courses = $courseRepo->findAll(['published' => 1, 'deleted' => 0]);
 
-        if ($this->request->isAjax()) {
-            return $this->jsonSuccess([
+            $pager = [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => ceil($total / $limit)
+            ];
+
+            if ($this->request->isAjax()) {
+                return $this->jsonSuccess([
+                    'assignments' => $assignments,
+                    'pager' => $pager
+                ]);
+            }
+
+            $this->view->setVars([
                 'assignments' => $assignments,
-                'pager' => $pager
+                'pager' => $pager,
+                'courses' => $courses,
+                'course_id' => $courseId,
+                'status' => $status,
+                'type' => $type,
+                'title' => $title,
+                'assignment_types' => AssignmentModel::getTypes(),
+                'assignment_statuses' => AssignmentModel::getStatuses()
             ]);
+            
+            return $this->view->pick('assignment/list');
+            
+        } catch (\Exception $e) {
+            if ($this->request->isAjax()) {
+                return $this->jsonError(['msg' => '获取作业列表失败: ' . $e->getMessage()]);
+            }
+            
+            $this->flashSession->error('获取作业列表失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/index/index');
         }
-
-        $this->view->setVar('assignments', $assignments);
-        $this->view->setVar('pager', $pager);
     }
 
     /**
@@ -121,10 +157,23 @@ class AssignmentController extends Controller
      */
     public function createAction()
     {
-        $courseRepo = new CourseRepo();
-        $courses = $courseRepo->findAll(['status' => 'published']);
+        try {
+            $courseRepo = new CourseRepo();
+            $courses = $courseRepo->findAll(['published' => 1, 'deleted' => 0]);
 
-        $this->view->setVar('courses', $courses);
+            $this->view->setVars([
+                'courses' => $courses,
+                'assignment_types' => AssignmentModel::getTypes(),
+                'grade_modes' => AssignmentModel::getGradeModes(),
+                'assignment_statuses' => AssignmentModel::getStatuses()
+            ]);
+            
+            return $this->view->pick('assignment/create');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('加载创建页面失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/assignment/list');
+        }
     }
 
     /**
@@ -195,21 +244,34 @@ class AssignmentController extends Controller
      */
     public function editAction()
     {
-        $id = $this->dispatcher->getParam('id');
-        
-        $assignmentRepo = new AssignmentRepo();
-        $assignment = $assignmentRepo->findById($id);
-        
-        if (!$assignment) {
-            $this->notFound();
-            return;
+        try {
+            $id = $this->dispatcher->getParam('id');
+            
+            $assignmentRepo = new AssignmentRepo();
+            $assignment = $assignmentRepo->findById($id);
+            
+            if (!$assignment) {
+                $this->flashSession->error('作业不存在');
+                return $this->response->redirect('/admin/assignment/list');
+            }
+
+            $courseRepo = new CourseRepo();
+            $courses = $courseRepo->findAll(['published' => 1, 'deleted' => 0]);
+
+            $this->view->setVars([
+                'assignment' => $assignment,
+                'courses' => $courses,
+                'assignment_types' => AssignmentModel::getTypes(),
+                'grade_modes' => AssignmentModel::getGradeModes(),
+                'assignment_statuses' => AssignmentModel::getStatuses()
+            ]);
+            
+            return $this->view->pick('assignment/edit');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('加载编辑页面失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/assignment/list');
         }
-
-        $courseRepo = new CourseRepo();
-        $courses = $courseRepo->findAll(['status' => 'published']);
-
-        $this->view->setVar('assignment', $assignment);
-        $this->view->setVar('courses', $courses);
     }
 
     /**
