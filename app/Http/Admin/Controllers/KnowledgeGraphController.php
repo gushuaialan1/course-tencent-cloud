@@ -25,12 +25,31 @@ class KnowledgeGraphController extends Controller
      */
     public function listAction()
     {
-        $courseRepo = new CourseRepo();
-        $courses = $courseRepo->findAll(['limit' => 100]);
-        
-        $this->view->setVar('courses', $courses);
-        
-        return $this->view->pick('knowledge-graph/list');
+        try {
+            $courseRepo = new CourseRepo();
+            $nodeRepo = new KnowledgeNodeRepo();
+            
+            // 获取课程列表
+            $courses = $courseRepo->findAll(['published' => 1, 'deleted' => 0]);
+            
+            // 为每个课程添加节点统计
+            $coursesWithStats = [];
+            foreach ($courses as $course) {
+                $courseArray = is_object($course) ? $course->toArray() : $course;
+                $stats = $nodeRepo->getNodeStatistics($courseArray['id']);
+                $courseArray['node_count'] = $stats['total'];
+                $courseArray['node_stats'] = $stats;
+                $coursesWithStats[] = $courseArray;
+            }
+            
+            $this->view->setVar('courses', $coursesWithStats);
+            
+            return $this->view->pick('knowledge-graph/list');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('获取数据失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/index/index');
+        }
     }
 
     /**
@@ -40,24 +59,38 @@ class KnowledgeGraphController extends Controller
      */
     public function editorAction($courseId)
     {
-        $courseRepo = new CourseRepo();
-        $course = $courseRepo->findById($courseId);
-        
-        if (!$course) {
-            return $this->dispatcher->forward([
-                'controller' => 'error',
-                'action' => 'show404'
+        try {
+            $courseRepo = new CourseRepo();
+            $course = $courseRepo->findById($courseId);
+            
+            if (!$course) {
+                $this->flashSession->error('课程不存在');
+                return $this->response->redirect('/admin/knowledge-graph/list');
+            }
+            
+            $knowledgeNodeRepo = new KnowledgeNodeRepo();
+            $statistics = $knowledgeNodeRepo->getNodeStatistics($courseId);
+            
+            // 获取节点类型和状态选项
+            $nodeTypes = \App\Models\KnowledgeNode::getTypes();
+            $nodeStatuses = \App\Models\KnowledgeNode::getStatuses();
+            $relationTypes = \App\Models\KnowledgeRelation::getTypes();
+            
+            $this->view->setVars([
+                'course' => $course,
+                'statistics' => $statistics,
+                'course_id' => $courseId,
+                'node_types' => $nodeTypes,
+                'node_statuses' => $nodeStatuses,
+                'relation_types' => $relationTypes
             ]);
+            
+            return $this->view->pick('knowledge-graph/editor');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('加载编辑器失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/knowledge-graph/list');
         }
-        
-        $knowledgeNodeRepo = new KnowledgeNodeRepo();
-        $statistics = $knowledgeNodeRepo->getNodeStatistics($courseId);
-        
-        $this->view->setVar('course', $course);
-        $this->view->setVar('statistics', $statistics);
-        $this->view->setVar('course_id', $courseId);
-        
-        return $this->view->pick('knowledge-graph/editor');
     }
 
     /**
@@ -67,35 +100,69 @@ class KnowledgeGraphController extends Controller
      */
     public function nodesAction($courseId)
     {
-        $courseRepo = new CourseRepo();
-        $course = $courseRepo->findById($courseId);
-        
-        if (!$course) {
-            return $this->dispatcher->forward([
-                'controller' => 'error',
-                'action' => 'show404'
+        try {
+            $courseRepo = new CourseRepo();
+            $course = $courseRepo->findById($courseId);
+            
+            if (!$course) {
+                $this->flashSession->error('课程不存在');
+                return $this->response->redirect('/admin/knowledge-graph/list');
+            }
+            
+            $page = max(1, $this->request->get('page', 'int', 1));
+            $limit = 20;
+            $offset = ($page - 1) * $limit;
+            
+            // 获取筛选条件
+            $type = $this->request->get('type', 'string');
+            $status = $this->request->get('status', 'string');
+            $keyword = $this->request->get('keyword', 'string');
+            
+            $knowledgeNodeRepo = new KnowledgeNodeRepo();
+            
+            // 构建查询选项
+            $options = [
+                'limit' => $limit,
+                'offset' => $offset
+            ];
+            
+            if ($type) {
+                $options['type'] = $type;
+            }
+            if ($status) {
+                $options['status'] = $status;
+            }
+            
+            // 根据是否有关键词选择不同的查询方法
+            if ($keyword) {
+                $nodes = $knowledgeNodeRepo->searchByName($keyword, array_merge($options, ['course_id' => $courseId]));
+                $allNodes = $knowledgeNodeRepo->searchByName($keyword, ['course_id' => $courseId, 'limit' => 10000]);
+            } else {
+                $nodes = $knowledgeNodeRepo->findByCourseId($courseId, $options);
+                $allNodes = $knowledgeNodeRepo->findByCourseId($courseId);
+            }
+            
+            $total = count($allNodes);
+            
+            $this->view->setVars([
+                'course' => $course,
+                'nodes' => $nodes,
+                'page' => $page,
+                'total' => $total,
+                'limit' => $limit,
+                'type' => $type,
+                'status' => $status,
+                'keyword' => $keyword,
+                'node_types' => \App\Models\KnowledgeNode::getTypes(),
+                'node_statuses' => \App\Models\KnowledgeNode::getStatuses()
             ]);
+            
+            return $this->view->pick('knowledge-graph/nodes');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('获取节点列表失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/knowledge-graph/list');
         }
-        
-        $page = $this->request->get('page', 'int', 1);
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
-        
-        $knowledgeNodeRepo = new KnowledgeNodeRepo();
-        $nodes = $knowledgeNodeRepo->findByCourseId($courseId, [
-            'limit' => $limit,
-            'offset' => $offset
-        ]);
-        
-        $total = count($knowledgeNodeRepo->findByCourseId($courseId));
-        
-        $this->view->setVar('course', $course);
-        $this->view->setVar('nodes', $nodes);
-        $this->view->setVar('page', $page);
-        $this->view->setVar('total', $total);
-        $this->view->setVar('limit', $limit);
-        
-        return $this->view->pick('knowledge-graph/nodes');
     }
 
     /**
