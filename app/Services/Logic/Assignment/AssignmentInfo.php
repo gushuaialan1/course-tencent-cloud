@@ -1,0 +1,169 @@
+<?php
+/**
+ * @copyright Copyright (c) 2021 深圳市酷瓜软件有限公司
+ * @license https://opensource.org/licenses/GPL-2.0
+ * @link https://www.koogua.com
+ */
+
+namespace App\Services\Logic\Assignment;
+
+use App\Models\Assignment as AssignmentModel;
+use App\Models\AssignmentSubmission as SubmissionModel;
+use App\Models\User as UserModel;
+use App\Repos\Assignment as AssignmentRepo;
+use App\Repos\AssignmentQuestion as AssignmentQuestionRepo;
+use App\Repos\AssignmentSubmission as SubmissionRepo;
+use App\Repos\Course as CourseRepo;
+use App\Services\Logic\Service as LogicService;
+
+class AssignmentInfo extends LogicService
+{
+
+    public function handle($id)
+    {
+        $user = $this->getCurrentUser();
+
+        $assignmentRepo = new AssignmentRepo();
+
+        $assignment = $assignmentRepo->findById($id);
+
+        if (!$assignment) {
+            throw new \Exception('作业不存在');
+        }
+
+        $result = $this->handleAssignment($assignment, $user);
+
+        return $result;
+    }
+
+    protected function handleAssignment(AssignmentModel $assignment, UserModel $user)
+    {
+        $course = $this->handleCourseInfo($assignment->course_id);
+        $questions = $this->handleQuestions($assignment->id);
+        $submission = $this->handleSubmission($assignment->id, $user->id);
+        $me = $this->handleMeInfo($assignment, $user);
+
+        $isOverdue = $assignment->deadline > 0 && $assignment->deadline < time();
+
+        return [
+            'id' => $assignment->id,
+            'title' => $assignment->title,
+            'description' => $assignment->description,
+            'course_id' => $assignment->course_id,
+            'deadline' => $assignment->deadline,
+            'total_score' => $assignment->total_score,
+            'question_count' => $assignment->question_count,
+            'status' => $assignment->status,
+            'allow_resubmit' => $assignment->allow_resubmit,
+            'deleted' => $assignment->deleted,
+            'create_time' => $assignment->create_time,
+            'update_time' => $assignment->update_time,
+            'course' => $course,
+            'questions' => $questions,
+            'submission' => $submission,
+            'is_overdue' => $isOverdue,
+            'me' => $me,
+        ];
+    }
+
+    protected function handleCourseInfo($courseId)
+    {
+        $courseRepo = new CourseRepo();
+
+        $course = $courseRepo->findById($courseId);
+
+        if (!$course) {
+            return null;
+        }
+
+        return [
+            'id' => $course->id,
+            'title' => $course->title,
+            'cover' => $course->cover,
+        ];
+    }
+
+    protected function handleQuestions($assignmentId)
+    {
+        $questionRepo = new AssignmentQuestionRepo();
+
+        $questions = $questionRepo->findAll([
+            'assignment_id' => $assignmentId,
+            'deleted' => 0,
+        ], ['priority' => 1], 100);
+
+        $result = [];
+
+        if ($questions->count() > 0) {
+            foreach ($questions as $question) {
+                $result[] = [
+                    'id' => $question->id,
+                    'assignment_id' => $question->assignment_id,
+                    'type' => $question->type,
+                    'title' => $question->title,
+                    'content' => $question->content,
+                    'options' => $question->options ? json_decode($question->options, true) : [],
+                    'answer' => $question->answer,
+                    'score' => $question->score,
+                    'priority' => $question->priority,
+                    'required' => $question->required,
+                ];
+            }
+        }
+
+        return $result;
+    }
+
+    protected function handleSubmission($assignmentId, $userId)
+    {
+        $submissionRepo = new SubmissionRepo();
+
+        $submission = $submissionRepo->findSubmission($assignmentId, $userId);
+
+        if (!$submission) {
+            return null;
+        }
+
+        $answers = $submission->answers ? json_decode($submission->answers, true) : [];
+
+        return [
+            'id' => $submission->id,
+            'assignment_id' => $submission->assignment_id,
+            'user_id' => $submission->user_id,
+            'score' => $submission->score,
+            'status' => $submission->status,
+            'answers' => $answers,
+            'is_late' => $submission->is_late,
+            'submitted_at' => $submission->submitted_at,
+            'graded_at' => $submission->graded_at,
+            'create_time' => $submission->create_time,
+            'update_time' => $submission->update_time,
+        ];
+    }
+
+    protected function handleMeInfo(AssignmentModel $assignment, UserModel $user)
+    {
+        $me = [
+            'owned' => 0,
+            'allow_submit' => 0,
+        ];
+
+        if ($user->id == 0) {
+            return $me;
+        }
+
+        // 检查是否有权限提交（需要购买课程）
+        $courseRepo = new CourseRepo();
+        $course = $courseRepo->findById($assignment->course_id);
+
+        if ($course) {
+            // TODO: 检查用户是否购买了课程
+            // 这里简化处理，实际需要检查 course_user 表
+            $me['allow_submit'] = 1;
+        }
+
+        return $me;
+    }
+
+}
+
