@@ -146,6 +146,23 @@ class Assignment extends Repository
     }
 
     /**
+     * 统计课程已发布作业数量(用于前台标签页显示)
+     *
+     * @param int $courseId
+     * @return int
+     */
+    public function countByCourseId(int $courseId): int
+    {
+        return (int)AssignmentModel::count([
+            'conditions' => 'course_id = :course_id: AND status = :status: AND delete_time = 0',
+            'bind' => [
+                'course_id' => $courseId,
+                'status' => AssignmentModel::STATUS_PUBLISHED
+            ]
+        ]);
+    }
+
+    /**
      * 统计作业数量
      *
      * @param array $options

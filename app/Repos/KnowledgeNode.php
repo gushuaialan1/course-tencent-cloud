@@ -103,6 +103,20 @@ class KnowledgeNode extends Repository
     }
 
     /**
+     * 统计课程节点数量(用于前台标签页显示)
+     *
+     * @param int $courseId
+     * @return int
+     */
+    public function countByCourseId(int $courseId): int
+    {
+        return (int)KnowledgeNodeModel::count([
+            'conditions' => 'course_id = :course_id:',
+            'bind' => ['course_id' => $courseId]
+        ]);
+    }
+
+    /**
      * 获取课程的知识图谱数据
      *
      * @param int $courseId

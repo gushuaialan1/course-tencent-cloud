@@ -8,11 +8,13 @@
 namespace App\Http\Home\Controllers;
 
 use App\Http\Home\Services\CourseQuery as CourseQueryService;
+use App\Services\Logic\Course\AssignmentList as CourseAssignmentListService;
 use App\Services\Logic\Course\ChapterList as CourseChapterListService;
 use App\Services\Logic\Course\ConsultList as CourseConsultListService;
 use App\Services\Logic\Course\CourseFavorite as CourseFavoriteService;
 use App\Services\Logic\Course\CourseInfo as CourseInfoService;
 use App\Services\Logic\Course\CourseList as CourseListService;
+use App\Services\Logic\Course\KnowledgeGraph as CourseKnowledgeGraphService;
 use App\Services\Logic\Course\PackageList as CoursePackageListService;
 use App\Services\Logic\Course\RelatedList as CourseRelatedListService;
 use App\Services\Logic\Course\ResourceList as CourseResourceListService;
@@ -191,6 +193,36 @@ class CourseController extends Controller
 
         $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
         $this->view->setVar('topics', $topics);
+    }
+
+    /**
+     * @Get("/{id:[0-9]+}/assignments", name="home.course.assignments")
+     */
+    public function assignmentsAction($id)
+    {
+        $service = new CourseAssignmentListService();
+
+        $result = $service->handle($id);
+
+        $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+        $this->view->setVar('assignments', $result['assignments']);
+        $this->view->setVar('count', $result['count']);
+    }
+
+    /**
+     * @Get("/{id:[0-9]+}/knowledge-graph", name="home.course.knowledge_graph")
+     */
+    public function knowledgeGraphAction($id)
+    {
+        $service = new CourseKnowledgeGraphService();
+
+        $result = $service->handle($id);
+
+        $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+        $this->view->setVar('graph_data', $result['graph_data']);
+        $this->view->setVar('node_count', $result['node_count']);
+        $this->view->setVar('edge_count', $result['edge_count']);
+        $this->view->setVar('course_title', $result['course_title']);
     }
 
     /**

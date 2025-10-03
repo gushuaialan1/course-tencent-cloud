@@ -28,6 +28,50 @@ class KnowledgeRelation extends Repository
     }
 
     /**
+     * 根据课程ID查找所有关系
+     *
+     * @param int $courseId
+     * @param array $options
+     * @return array
+     */
+    public function findByCourseId(int $courseId, array $options = []): array
+    {
+        $conditions = ['from_node_id IN (SELECT id FROM kg_knowledge_node WHERE course_id = :course_id:)'];
+        $bind = ['course_id' => $courseId];
+
+        // 关系类型过滤
+        if (!empty($options['relation_type'])) {
+            $conditions[] = 'relation_type = :relation_type:';
+            $bind['relation_type'] = $options['relation_type'];
+        }
+
+        // 状态过滤
+        if (isset($options['status'])) {
+            $conditions[] = 'status = :status:';
+            $bind['status'] = $options['status'];
+        } else {
+            $conditions[] = 'status = :status:';
+            $bind['status'] = KnowledgeRelationModel::STATUS_ACTIVE;
+        }
+
+        $params = [
+            'conditions' => implode(' AND ', $conditions),
+            'bind' => $bind,
+            'order' => $options['order'] ?? 'weight DESC, create_time DESC'
+        ];
+
+        // 分页
+        if (!empty($options['limit'])) {
+            $params['limit'] = $options['limit'];
+            if (!empty($options['offset'])) {
+                $params['offset'] = $options['offset'];
+            }
+        }
+
+        return KnowledgeRelationModel::find($params)->toArray();
+    }
+
+    /**
      * 根据节点ID查找关系
      *
      * @param int $nodeId

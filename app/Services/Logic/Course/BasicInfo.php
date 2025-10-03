@@ -8,7 +8,9 @@
 namespace App\Services\Logic\Course;
 
 use App\Models\Course as CourseModel;
+use App\Repos\Assignment as AssignmentRepo;
 use App\Repos\Course as CourseRepo;
+use App\Repos\KnowledgeNode as KnowledgeNodeRepo;
 use App\Services\Category as CategoryService;
 use App\Services\Logic\CourseTrait;
 use App\Services\Logic\Service as LogicService;
@@ -31,6 +33,14 @@ class BasicInfo extends LogicService
         $categoryPaths = $this->handleCategoryPaths($course->category_id);
         $teacher = $this->handleTeacherInfo($course->teacher_id);
         $ratings = $this->handleRatings($course);
+
+        // 统计作业数量（扩展功能）
+        $assignmentRepo = new AssignmentRepo();
+        $assignmentCount = $assignmentRepo->countByCourseId($course->id);
+
+        // 统计知识图谱节点数量（扩展功能）
+        $knowledgeNodeRepo = new KnowledgeNodeRepo();
+        $knowledgeGraphNodeCount = $knowledgeNodeRepo->countByCourseId($course->id);
 
         return [
             'id' => $course->id,
@@ -58,6 +68,8 @@ class BasicInfo extends LogicService
             'review_count' => $course->review_count,
             'consult_count' => $course->consult_count,
             'favorite_count' => $course->favorite_count,
+            'assignment_count' => $assignmentCount,
+            'knowledge_graph_node_count' => $knowledgeGraphNodeCount,
             'create_time' => $course->create_time,
             'update_time' => $course->update_time,
         ];
