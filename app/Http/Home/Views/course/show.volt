@@ -27,6 +27,8 @@
 
         {% set show_tab_chapters = course.lesson_count > 0 %}
         {% set show_tab_packages = course.package_count > 0 %}
+        {% set show_tab_assignments = course.assignment_count > 0 %}
+        {% set show_tab_knowledge_graph = course.knowledge_graph_node_count > 0 %}
         {% set show_tab_consults = course.consult_count > 0 %}
         {% set show_tab_reviews = course.review_count > 0 %}
         {% set show_tab_resources = course.resource_count > 0 %}
@@ -39,6 +41,12 @@
                         <li>目录</li>
                         {% if show_tab_packages %}
                             <li>套餐<span class="tab-count">{{ course.package_count }}</span></li>
+                        {% endif %}
+                        {% if show_tab_assignments %}
+                            <li>作业<span class="tab-count">{{ course.assignment_count }}</span></li>
+                        {% endif %}
+                        {% if show_tab_knowledge_graph %}
+                            <li>知识图谱</li>
                         {% endif %}
                         {% if show_tab_consults %}
                             <li>咨询<span class="tab-count">{{ course.consult_count }}</span></li>
@@ -60,6 +68,14 @@
                         {% if show_tab_packages %}
                             {% set packages_url = url({'for':'home.course.packages','id':course.id}) %}
                             <div class="layui-tabs-item" id="tab-packages" data-url="{{ packages_url }}"></div>
+                        {% endif %}
+                        {% if show_tab_assignments %}
+                            {% set assignments_url = url({'for':'home.course.assignments','id':course.id}) %}
+                            <div class="layui-tabs-item" id="tab-assignments" data-url="{{ assignments_url }}"></div>
+                        {% endif %}
+                        {% if show_tab_knowledge_graph %}
+                            {% set kg_url = url({'for':'home.course.knowledge_graph','id':course.id}) %}
+                            <div class="layui-tabs-item" id="tab-knowledge-graph" data-url="{{ kg_url }}"></div>
                         {% endif %}
                         {% if show_tab_consults %}
                             {% set consults_url = url({'for':'home.course.consults','id':course.id}) %}

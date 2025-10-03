@@ -29,7 +29,7 @@
             <a class="layui-btn layui-btn-sm" href="{{ url({'for':'admin.course.list'}) }}">
                 <i class="layui-icon layui-icon-return"></i>返回课程
             </a>
-            <a class="layui-btn layui-btn-sm" href="{{ url({'for':'admin.resource.list'}) }}">
+            <a class="layui-btn layui-btn-sm" href="{{ url({'for':'admin.resource.recent'}) }}">
                 <i class="layui-icon layui-icon-list"></i>资源列表
             </a>
         </div>

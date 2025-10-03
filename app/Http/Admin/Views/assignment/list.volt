@@ -125,7 +125,7 @@
                         <p class="kg-text-muted">{{ substr(assignment.description, 0, 50) }}...</p>
                         {% endif %}
                     </td>
-                    <td>{{ assignment.course.title ?? '' }}</td>
+                    <td>{{ assignment.course_title|default('') }}</td>
                     <td>
                         {% if assignment.assignment_type == 'choice' %}
                         <span class="layui-badge layui-bg-blue">选择题</span>
@@ -151,7 +151,7 @@
                     </td>
                     <td>
                         {% set stats = assignment.submission_stats %}
-                        <span class="kg-text-info">{{ stats.submitted ?? 0 }}/{{ stats.total ?? 0 }}</span>
+                        <span class="kg-text-info">{{ stats.submitted|default(0) }}/{{ stats.total|default(0) }}</span>
                     </td>
                     <td>
                         {% if assignment.due_date > 0 %}

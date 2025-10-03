@@ -137,6 +137,16 @@ layui.use(['jquery', 'layer', 'rate', 'helper'], function () {
         helper.ajaxLoadHtml($tabPackages.data('url'), $tabPackages.attr('id'));
     }
 
+    if ($('#tab-assignments').length > 0) {
+        var $tabAssignments = $('#tab-assignments');
+        helper.ajaxLoadHtml($tabAssignments.data('url'), $tabAssignments.attr('id'));
+    }
+
+    if ($('#tab-knowledge-graph').length > 0) {
+        var $tabKG = $('#tab-knowledge-graph');
+        helper.ajaxLoadHtml($tabKG.data('url'), $tabKG.attr('id'));
+    }
+
     if ($('#tab-consults').length > 0) {
         var $tabConsults = $('#tab-consults');
         helper.ajaxLoadHtml($tabConsults.data('url'), $tabConsults.attr('id'));

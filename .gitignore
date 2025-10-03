@@ -2,6 +2,7 @@
 /.idea
 /vendor
 /config/config.php
+/config/config*.php
 /config/xs.course.ini
 /config/xs.article.ini
 /config/xs.question.ini
@@ -13,3 +14,7 @@
 /public/h5
 /storage/cache/purifier
 *KgTest*
+
+# 开发环境配置文件和测试脚本
+/test-env.php
+/配置说明-开发环境.md

@@ -16,7 +16,7 @@ class CreateKnowledgeGraphTemplateTable extends AbstractMigration
      */
     public function up()
     {
-        $this->createKnowledgeGraphTemplateTable();
+        $this->createTemplateTable();
     }
 
     /**
@@ -30,7 +30,7 @@ class CreateKnowledgeGraphTemplateTable extends AbstractMigration
     /**
      * 创建知识图谱模板表
      */
-    private function createKnowledgeGraphTemplateTable()
+    private function createTemplateTable()
     {
         $table = $this->table('kg_knowledge_graph_template', [
             'id' => true,
