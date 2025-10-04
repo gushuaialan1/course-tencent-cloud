@@ -145,23 +145,16 @@ class AssignmentInfo extends LogicService
     {
         $me = [
             'owned' => 0,
-            'allow_submit' => 0,
+            'allow_submit' => 1,  // 暂时全部放开权限
         ];
 
         if ($user->id == 0) {
             return $me;
         }
 
-        // 检查是否有权限提交（需要购买课程）
-        $courseRepo = new CourseRepo();
-        $course = $courseRepo->findById($assignment->course_id);
-
-        if ($course) {
-            // TODO: 检查用户是否购买了课程
-            // 这里简化处理，实际需要检查 course_user 表
-            $me['allow_submit'] = 1;
-        }
-
+        // 暂时简化处理：所有登录用户都可以提交作业
+        // 后续可以添加课程购买权限检查
+        
         return $me;
     }
 

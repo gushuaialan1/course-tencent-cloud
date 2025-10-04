@@ -106,6 +106,13 @@ class Notification extends Model
     const TYPE_COMMENT_REPLIED = 506;
     const TYPE_COMMENT_LIKED = 507;
 
+    /* -------------- 作业相关 -------------- */
+
+    const TYPE_ASSIGNMENT_PUBLISHED = 600;
+    const TYPE_ASSIGNMENT_SUBMITTED = 601;
+    const TYPE_ASSIGNMENT_GRADED = 602;
+    const TYPE_ASSIGNMENT_DEADLINE_SOON = 603;
+
     /**
      * 主键编号
      *

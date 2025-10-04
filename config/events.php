@@ -8,6 +8,7 @@
 use App\Listeners\Account;
 use App\Listeners\Answer;
 use App\Listeners\Article;
+use App\Listeners\Assignment;
 use App\Listeners\Comment;
 use App\Listeners\Consult;
 use App\Listeners\Help;
@@ -23,6 +24,7 @@ return [
     'Account' => Account::class,
     'Answer' => Answer::class,
     'Article' => Article::class,
+    'Assignment' => Assignment::class,
     'Comment' => Comment::class,
     'Consult' => Consult::class,
     'Help' => Help::class,

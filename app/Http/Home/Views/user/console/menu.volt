@@ -22,6 +22,7 @@
     <div class="layui-card-body">
         <ul class="my-menu">
             <li><a href="{{ url({'for':'home.uc.courses'}) }}">我的课程</a></li>
+            <li><a href="{{ url({'for':'home.uc.assignments'}) }}">我的作业</a></li>
             <li><a href="{{ url({'for':'home.uc.reviews'}) }}">我的评价</a></li>
             <li><a href="{{ url({'for':'home.uc.consults'}) }}">我的咨询</a></li>
         </ul>

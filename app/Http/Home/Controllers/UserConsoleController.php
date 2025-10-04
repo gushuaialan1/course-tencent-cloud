@@ -12,6 +12,7 @@ use App\Services\Logic\Account\OAuthProvider as OAuthProviderService;
 use App\Services\Logic\User\Console\AccountInfo as AccountInfoService;
 use App\Services\Logic\User\Console\AnswerList as AnswerListService;
 use App\Services\Logic\User\Console\ArticleList as ArticleListService;
+use App\Services\Logic\User\Console\AssignmentList as AssignmentListService;
 use App\Services\Logic\User\Console\ConnectDelete as ConnectDeleteService;
 use App\Services\Logic\User\Console\ConnectList as ConnectListService;
 use App\Services\Logic\User\Console\ConsultList as ConsultListService;
@@ -360,6 +361,19 @@ class UserConsoleController extends Controller
         ];
 
         return $this->jsonSuccess($content);
+    }
+
+    /**
+     * @Get("/assignments", name="home.uc.assignments")
+     */
+    public function assignmentsAction()
+    {
+        $service = new AssignmentListService();
+
+        $pager = $service->handle();
+
+        $this->view->pick('user/console/assignments');
+        $this->view->setVar('pager', $pager);
     }
 
     /**
