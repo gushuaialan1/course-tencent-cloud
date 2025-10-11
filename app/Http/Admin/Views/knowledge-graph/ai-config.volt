@@ -229,7 +229,7 @@
         var layer = layui.layer;
         var $ = layui.jquery;
 
-        var currentProvider = '{{ ai_config['provider'] }}';
+        var currentProvider = '{{ ai_config["provider"] }}';
 
         // 显示对应的配置面板
         function showProviderConfig(provider) {
