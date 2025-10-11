@@ -10,7 +10,15 @@
     $siliconflow_models = is_array($siliconflow_models) ? $siliconflow_models : (array)$siliconflow_models;
     $ai_config = is_array($ai_config) ? $ai_config : (array)$ai_config;
     $configs = is_array($configs) ? $configs : (array)$configs;
+    
+    // 递归转换 provider_info 的每个子元素
     $provider_info = is_array($provider_info) ? $provider_info : (array)$provider_info;
+    foreach ($provider_info as $k => $v) {
+        $provider_info[$k] = is_array($v) ? $v : (array)$v;
+        if (isset($provider_info[$k]['features'])) {
+            $provider_info[$k]['features'] = is_array($provider_info[$k]['features']) ? $provider_info[$k]['features'] : (array)$provider_info[$k]['features'];
+        }
+    }
     ?>
 
     {% set list_url = url({'for':'admin.knowledge_graph.list'}) %}
