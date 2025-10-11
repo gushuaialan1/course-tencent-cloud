@@ -173,22 +173,22 @@
                     {% for key, info in provider_info %}
                         <div class="layui-card provider-info-card" id="provider-info-{{ key }}" style="display: none;">
                             <div class="layui-card-header">
-                                <i class="layui-icon layui-icon-tips"></i> {{ info.name }}
+                                <i class="layui-icon layui-icon-tips"></i> {{ info['name'] }}
                             </div>
                             <div class="layui-card-body">
-                                <p><strong>简介：</strong>{{ info.description }}</p>
-                                <p><strong>定价：</strong>{{ info.pricing }}</p>
+                                <p><strong>简介：</strong>{{ info['description'] }}</p>
+                                <p><strong>定价：</strong>{{ info['pricing'] }}</p>
                                 <p><strong>特点：</strong></p>
                                 <ul>
-                                    {% for feature in info.features %}
+                                    {% for feature in info['features'] %}
                                         <li>{{ feature }}</li>
                                     {% endfor %}
                                 </ul>
                                 <p>
-                                    <a href="{{ info.website }}" target="_blank" class="layui-btn layui-btn-xs">
+                                    <a href="{{ info['website'] }}" target="_blank" class="layui-btn layui-btn-xs">
                                         <i class="layui-icon layui-icon-website"></i>官网
                                     </a>
-                                    <a href="{{ info.doc_url }}" target="_blank" class="layui-btn layui-btn-xs layui-btn-primary">
+                                    <a href="{{ info['doc_url'] }}" target="_blank" class="layui-btn layui-btn-xs layui-btn-primary">
                                         <i class="layui-icon layui-icon-read"></i>文档
                                     </a>
                                 </p>
