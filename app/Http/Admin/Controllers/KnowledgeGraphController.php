@@ -1015,10 +1015,10 @@ class KnowledgeGraphController extends Controller
             $configRepo = new KgAiConfigRepo();
             
             // 获取当前配置（不解密，用于显示）
-            $configs = $configRepo->getAllConfigs(false);
+            $configs = (array)$configRepo->getAllConfigs(false);
             
             // 获取AI配置信息
-            $aiConfig = $configRepo->getAiConfig();
+            $aiConfig = (array)$configRepo->getAiConfig();
             
             // 获取选项
             $providers = \App\Models\KgAiConfig::getProviders();
@@ -1032,7 +1032,8 @@ class KnowledgeGraphController extends Controller
                 \App\Models\KgAiConfig::PROVIDER_DEEPSEEK,
                 \App\Models\KgAiConfig::PROVIDER_SILICONFLOW
             ] as $provider) {
-                $providerInfo[$provider] = \App\Models\KgAiConfig::getProviderInfo($provider);
+                $info = \App\Models\KgAiConfig::getProviderInfo($provider);
+                $providerInfo[$provider] = is_array($info) ? $info : (array)$info;
             }
             
             $this->view->setVars([
