@@ -1020,11 +1020,11 @@ class KnowledgeGraphController extends Controller
             // 获取AI配置信息
             $aiConfig = (array)$configRepo->getAiConfig();
             
-            // 获取选项
-            $providers = \App\Models\KgAiConfig::getProviders();
-            $generationModes = \App\Models\KgAiConfig::getGenerationModes();
-            $deepseekModels = \App\Models\KgAiConfig::getDeepSeekModels();
-            $siliconflowModels = \App\Models\KgAiConfig::getSiliconFlowModels();
+            // 获取选项（强制转换为数组）
+            $providers = (array)\App\Models\KgAiConfig::getProviders();
+            $generationModes = (array)\App\Models\KgAiConfig::getGenerationModes();
+            $deepseekModels = (array)\App\Models\KgAiConfig::getDeepSeekModels();
+            $siliconflowModels = (array)\App\Models\KgAiConfig::getSiliconFlowModels();
             
             // 获取提供商信息
             $providerInfo = [];
