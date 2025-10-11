@@ -135,6 +135,23 @@
                 </div>
             </div>
 
+            <!-- 快速生成 -->
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    <i class="layui-icon layui-icon-fire"></i> 快速生成
+                </div>
+                <div class="layui-card-body">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="layui-btn layui-btn-sm layui-btn-normal" id="btn-generate-simple" style="width: 100%;">
+                            <i class="layui-icon layui-icon-list"></i> 从章节生成
+                        </button>
+                        <button class="layui-btn layui-btn-sm layui-btn-warm" id="btn-generate-ai" style="width: 100%;">
+                            <i class="layui-icon layui-icon-fire"></i> AI智能生成
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- 布局工具 -->
             <div class="layui-card">
                 <div class="layui-card-header">

@@ -18,7 +18,7 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
         this.options = $.extend({
             container: '#knowledge-graph-container',
             courseId: 0,
-            apiBase: '/api/knowledge-graph',
+            apiBase: '/admin/knowledge-graph',  // 修复：使用后台API路径
             readOnly: false,
             showMinimap: true,
             enableContextMenu: true,
@@ -103,6 +103,16 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                             'border-width': 4,
                             'border-color': '#009688',
                             'background-color': '#E0F2F1'
+                        }
+                    },
+                    // 关系源节点样式
+                    {
+                        selector: 'node.relation-source',
+                        style: {
+                            'border-width': 4,
+                            'border-color': '#FF9800',
+                            'border-style': 'dashed',
+                            'background-color': '#FFF3E0'
                         }
                     },
                     // 悬停节点样式
@@ -218,7 +228,39 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
             // 空白区域点击事件
             this.cy.on('click', function(evt) {
                 if (evt.target === self.cy) {
-                    self.clearSelection();
+                    // 如果处于节点模式且已选择节点类型，则添加节点
+                    if (self.mode === 'node' && self.currentNodeType) {
+                        var position = evt.position;
+                        self.addNode(self.currentNodeType, {position: position});
+                    } else {
+                        self.clearSelection();
+                    }
+                }
+            });
+            
+            // 节点点击事件 - 用于创建关系
+            this.cy.on('click', 'node', function(evt) {
+                if (self.mode === 'relation' && self.currentRelationType) {
+                    evt.stopPropagation();
+                    
+                    if (!self.relationSourceNode) {
+                        // 选择起始节点
+                        self.relationSourceNode = evt.target;
+                        evt.target.addClass('relation-source');
+                        layer.msg('已选择起始节点，请点击目标节点', {icon: 1, time: 2000});
+                    } else {
+                        // 选择目标节点，创建关系
+                        var targetNode = evt.target;
+                        if (self.relationSourceNode.id() !== targetNode.id()) {
+                            self.createRelation(self.relationSourceNode, targetNode, self.currentRelationType);
+                        }
+                        // 清除选择
+                        self.relationSourceNode.removeClass('relation-source');
+                        self.relationSourceNode = null;
+                        self.currentRelationType = null;
+                        self.mode = 'select';
+                        $('.kg-relation-tool').removeClass('active');
+                    }
                 }
             });
 
@@ -236,6 +278,15 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
 
             // 键盘事件
             this.bindKeyboardEvents();
+            
+            // 节点工具点击事件
+            this.bindNodeTools();
+            
+            // 关系工具点击事件  
+            this.bindRelationTools();
+            
+            // 生成工具点击事件
+            this.bindGenerateTools();
         },
 
         /**
@@ -292,6 +343,71 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
         },
 
         /**
+         * 绑定节点工具点击事件
+         */
+        bindNodeTools: function() {
+            var self = this;
+            
+            $('.kg-node-tool').on('click', function() {
+                var nodeType = $(this).data('node-type');
+                
+                // 切换选中状态
+                $('.kg-node-tool').removeClass('active');
+                $(this).addClass('active');
+                
+                // 设置当前节点类型
+                self.currentNodeType = nodeType;
+                
+                // 切换到节点模式
+                self.mode = 'node';
+                
+                // 显示提示
+                layer.msg('请在画布上点击鼠标左键添加' + $(this).find('span').text() + '节点', {icon: 1, time: 2000});
+            });
+        },
+
+        /**
+         * 绑定关系工具点击事件
+         */
+        bindRelationTools: function() {
+            var self = this;
+            
+            $('.kg-relation-tool').on('click', function() {
+                var relationType = $(this).data('relation-type');
+                
+                // 切换选中状态
+                $('.kg-relation-tool').removeClass('active');
+                $(this).addClass('active');
+                
+                // 设置当前关系类型
+                self.currentRelationType = relationType;
+                
+                // 切换到关系模式
+                self.mode = 'relation';
+                
+                // 显示提示
+                layer.msg('请依次点击起始节点和目标节点创建' + $(this).find('span').text() + '关系', {icon: 1, time: 3000});
+            });
+        },
+
+        /**
+         * 绑定生成工具点击事件
+         */
+        bindGenerateTools: function() {
+            var self = this;
+            
+            // 从章节生成按钮
+            $('#btn-generate-simple').on('click', function() {
+                self.generateFromChapters();
+            });
+            
+            // AI智能生成按钮
+            $('#btn-generate-ai').on('click', function() {
+                self.generateWithAI();
+            });
+        },
+
+        /**
          * 加载图谱数据
          */
         loadGraphData: function() {
@@ -304,10 +420,12 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
 
             layer.load(1);
             
-            $.get(this.options.apiBase + '/course/' + this.options.courseId)
+            // 修复：使用后台数据API路径 /admin/knowledge-graph/data/{courseId}
+            $.get(this.options.apiBase + '/data/' + this.options.courseId)
                 .done(function(response) {
                     if (response.code === 0) {
-                        self.graphData = response.data.graph;
+                        // 修复：API返回的数据可能在response.data或直接在response中
+                        self.graphData = response.data || response;
                         self.renderGraph(self.graphData);
                         layer.closeAll('loading');
                     } else {
@@ -360,7 +478,8 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     var nodeData = {
                         group: 'nodes',
                         data: {
-                            id: element.data.id,
+                            id: 'node_' + element.data.id,  // 修复：添加前缀避免ID冲突
+                            dbId: element.data.id,  // 保存原始数据库ID
                             label: element.data.label,
                             type: element.data.type,
                             description: element.data.description || '',
@@ -382,9 +501,10 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     var edgeData = {
                         group: 'edges',
                         data: {
-                            id: element.data.id,
-                            source: element.data.source,
-                            target: element.data.target,
+                            id: 'edge_' + element.data.id,  // 修复：添加前缀避免ID冲突
+                            dbId: element.data.id,  // 保存原始数据库ID
+                            source: 'node_' + element.data.source,  // 修复：添加前缀匹配节点ID
+                            target: 'node_' + element.data.target,  // 修复：添加前缀匹配节点ID
                             type: element.data.type,
                             label: element.style.label || '',
                             // 样式数据
@@ -482,6 +602,13 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
             this.selectedNodes.push(node);
             this.updatePropertyPanel('node', node.data());
             console.log('选中节点:', node.data('label'));
+            
+            // 如果节点有ID（已保存的节点），显示详情和资源
+            var nodeId = node.data('id');
+            if (nodeId && nodeId.indexOf('node_') !== 0) {
+                // 只对已保存的节点（有数字ID）显示详情
+                this.showNodeDetail(nodeId);
+            }
         },
 
         /**
@@ -581,19 +708,81 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
          */
         addNode: function(type, event) {
             var self = this;
+            var renderedPos;
             
-            // 计算位置
-            var containerPos = $(this.options.container).offset();
-            var position = {
-                x: event.clientX - containerPos.left,
-                y: event.clientY - containerPos.top
-            };
+            // 支持直接传入位置对象 {position: {x, y}}
+            if (event && event.position) {
+                renderedPos = event.position;
+            } else {
+                // 计算位置（从鼠标事件）
+                var containerPos = $(this.options.container).offset();
+                var position = {
+                    x: event.clientX - containerPos.left,
+                    y: event.clientY - containerPos.top
+                };
 
-            // 转换为图谱坐标
-            var renderedPos = this.cy.renderedToModelPosition(position);
+                // 转换为图谱坐标
+                renderedPos = this.cy.renderedToModelPosition(position);
+            }
 
             // 显示节点编辑对话框
             this.showNodeDialog(type, null, renderedPos);
+        },
+        
+        /**
+         * 创建关系
+         */
+        createRelation: function(sourceNode, targetNode, relationType) {
+            var self = this;
+            
+            // 提取数据库ID（去掉node_前缀）
+            var sourceId = sourceNode.data('dbId') || sourceNode.id().replace('node_', '');
+            var targetId = targetNode.data('dbId') || targetNode.id().replace('node_', '');
+            
+            var relationData = {
+                from_node_id: parseInt(sourceId),
+                to_node_id: parseInt(targetId),
+                relation_type: relationType,
+                course_id: this.options.courseId,
+                description: ''
+            };
+            
+            // 发送到后端保存
+            $.ajax({
+                url: this.options.apiBase + '/relation/create',
+                method: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: JSON.stringify(relationData),
+                success: function(response) {
+                    if (response.code === 0) {
+                        // 添加边到图谱
+                        self.cy.add({
+                            group: 'edges',
+                            data: {
+                                id: 'edge_' + response.data.relation.id,
+                                dbId: response.data.relation.id,
+                                source: sourceNode.id(),
+                                target: targetNode.id(),
+                                label: self.getRelationLabel(relationType),
+                                relationType: relationType,
+                                lineColor: self.getRelationColor(relationType),
+                                lineStyle: self.getRelationStyle(relationType)
+                            }
+                        });
+                        
+                        self.markAsModified();
+                        layer.msg('关系创建成功', {icon: 1});
+                    } else {
+                        layer.msg(response.message || '关系创建失败', {icon: 2});
+                    }
+                },
+                error: function(xhr) {
+                    layer.msg('网络错误：' + xhr.status, {icon: 2});
+                }
+            });
         },
 
         /**
@@ -705,6 +894,9 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                 url: apiUrl,
                 method: method,
                 contentType: 'application/json',
+                headers: {
+                    'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: JSON.stringify(nodeData),
                 success: function(response) {
                     if (response.code === 0) {
@@ -785,11 +977,15 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
          */
         deleteNode: function(node) {
             var self = this;
-            var nodeId = node.id();
+            // 修复：从 node_123 中提取数字ID
+            var nodeId = node.id().replace('node_', '');
 
             $.ajax({
-                url: this.options.apiBase + '/nodes/' + nodeId,
-                method: 'DELETE',
+                url: this.options.apiBase + '/node/' + nodeId + '/delete',  // 修复：使用正确的路由
+                method: 'POST',  // 修复：使用POST而不是DELETE
+                headers: {
+                    'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                },
                 success: function(response) {
                     if (response.code === 0) {
                         node.remove();
@@ -810,11 +1006,15 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
          */
         deleteEdge: function(edge) {
             var self = this;
-            var edgeId = edge.id();
+            // 修复：从 edge_123 中提取数字ID
+            var edgeId = edge.id().replace('edge_', '');
 
             $.ajax({
-                url: this.options.apiBase + '/relations/' + edgeId,
-                method: 'DELETE',
+                url: this.options.apiBase + '/relation/' + edgeId + '/delete',  // 修复：使用正确的路由
+                method: 'POST',  // 修复：使用POST而不是DELETE
+                headers: {
+                    'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                },
                 success: function(response) {
                     if (response.code === 0) {
                         edge.remove();
@@ -844,18 +1044,23 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
             // 获取所有节点位置
             var positions = [];
             this.cy.nodes().forEach(function(node) {
+                // 修复：从 node_123 中提取数字ID
+                var nodeId = node.id().replace('node_', '');
                 positions.push({
-                    id: node.id(),
-                    x: node.position('x'),
-                    y: node.position('y')
+                    id: parseInt(nodeId),
+                    x: Math.round(node.position('x')),
+                    y: Math.round(node.position('y'))
                 });
             });
 
             // 保存位置信息
             $.ajax({
-                url: this.options.apiBase + '/nodes/positions',
+                url: this.options.apiBase + '/save/' + this.options.courseId,  // 修复：使用正确的路由
                 method: 'POST',
                 contentType: 'application/json',
+                headers: {
+                    'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: JSON.stringify({positions: positions}),
                 success: function(response) {
                     if (response.code === 0) {
@@ -866,7 +1071,11 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     }
                 },
                 error: function(xhr) {
-                    layer.msg('网络错误：' + xhr.status, {icon: 2});
+                    var errorMsg = '网络错误：' + xhr.status;
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    layer.msg(errorMsg, {icon: 2});
                 }
             });
         },
@@ -898,6 +1107,306 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                 clearInterval(this.autoSaveTimer);
                 this.autoSaveTimer = null;
             }
+        },
+
+        /**
+         * 从章节简单生成知识图谱
+         */
+        generateFromChapters: function() {
+            var self = this;
+            
+            layer.confirm('从章节生成将创建新的知识图谱，是否继续？', {
+                title: '从章节生成',
+                btn: ['继续', '取消'],
+                icon: 3
+            }, function(index) {
+                layer.close(index);
+                
+                // 显示加载提示
+                var loadingIndex = layer.load(1, {
+                    shade: [0.3, '#000'],
+                    content: '正在生成知识图谱...'
+                });
+                
+                $.ajax({
+                    url: self.options.apiBase + '/generate/simple',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: JSON.stringify({
+                        course_id: self.options.courseId
+                    }),
+                    success: function(response) {
+                        layer.close(loadingIndex);
+                        
+                        if (response.errcode === 0 && response.data && response.data.graph) {
+                            // 加载生成的图谱
+                            self.loadGeneratedGraph(response.data.graph);
+                            layer.msg(response.data.message || '生成成功！', {icon: 1, time: 2000});
+                        } else {
+                            layer.msg(response.errmsg || '生成失败', {icon: 2});
+                        }
+                    },
+                    error: function(xhr) {
+                        layer.close(loadingIndex);
+                        var errorMsg = '生成失败：' + xhr.status;
+                        if (xhr.responseJSON && xhr.responseJSON.errmsg) {
+                            errorMsg = xhr.responseJSON.errmsg;
+                        }
+                        layer.msg(errorMsg, {icon: 2});
+                    }
+                });
+            });
+        },
+
+        /**
+         * 使用AI智能生成知识图谱
+         */
+        generateWithAI: function() {
+            var self = this;
+            
+            layer.confirm('AI智能生成将分析课程内容并创建知识图谱，可能需要10-30秒，是否继续？', {
+                title: 'AI智能生成',
+                btn: ['开始生成', '取消'],
+                icon: 3
+            }, function(index) {
+                layer.close(index);
+                
+                // 显示加载提示
+                var loadingIndex = layer.load(1, {
+                    shade: [0.5, '#000'],
+                    content: 'AI正在分析课程内容...'
+                });
+                
+                $.ajax({
+                    url: self.options.apiBase + '/generate/ai',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: JSON.stringify({
+                        course_id: self.options.courseId
+                    }),
+                    timeout: 60000, // 60秒超时
+                    success: function(response) {
+                        layer.close(loadingIndex);
+                        
+                        if (response.errcode === 0 && response.data && response.data.graph) {
+                            // 加载生成的图谱
+                            self.loadGeneratedGraph(response.data.graph);
+                            layer.msg(response.data.message || 'AI生成成功！', {icon: 1, time: 2000});
+                        } else {
+                            layer.msg(response.errmsg || 'AI生成失败', {icon: 2});
+                        }
+                    },
+                    error: function(xhr) {
+                        layer.close(loadingIndex);
+                        var errorMsg = 'AI生成失败：' + xhr.status;
+                        if (xhr.responseJSON && xhr.responseJSON.errmsg) {
+                            errorMsg = xhr.responseJSON.errmsg;
+                        }
+                        layer.msg(errorMsg, {icon: 2});
+                    }
+                });
+            });
+        },
+
+        /**
+         * 加载生成的图谱数据
+         */
+        loadGeneratedGraph: function(graphData) {
+            var self = this;
+            
+            if (!graphData || !graphData.nodes || !graphData.edges) {
+                layer.msg('图谱数据格式错误', {icon: 2});
+                return;
+            }
+            
+            // 清空当前图谱
+            this.cy.elements().remove();
+            
+            // 添加生成的节点
+            graphData.nodes.forEach(function(node) {
+                self.cy.add({
+                    group: 'nodes',
+                    data: node.data,
+                    position: node.position || {x: 100, y: 100}
+                });
+            });
+            
+            // 添加生成的关系
+            graphData.edges.forEach(function(edge) {
+                self.cy.add({
+                    group: 'edges',
+                    data: edge.data
+                });
+            });
+            
+            // 应用层次布局
+            this.applyLayout('dagre');
+            
+            // 更新统计
+            this.updateStatistics();
+            
+            // 标记为已修改
+            this.markAsModified();
+            
+            // 提示保存
+            layer.msg('图谱已生成，请记得保存！', {icon: 1, time: 3000});
+        },
+
+        /**
+         * 显示节点详情和绑定的学习资源
+         */
+        showNodeDetail: function(nodeId) {
+            var self = this;
+            
+            $.ajax({
+                url: this.options.apiBase + '/node/' + nodeId + '/detail',
+                method: 'GET',
+                success: function(response) {
+                    if (response.errcode === 0 && response.data) {
+                        self.renderNodeDetailPanel(response.data);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('获取节点详情失败', xhr);
+                }
+            });
+        },
+
+        /**
+         * 渲染节点详情面板
+         */
+        renderNodeDetailPanel: function(data) {
+            var node = data.node;
+            var resources = data.resources;
+            
+            // 构建资源列表HTML
+            var resourcesHtml = '';
+            
+            // 课时列表
+            if (resources.lessons && resources.lessons.length > 0) {
+                resourcesHtml += '<div class="kg-resource-group">';
+                resourcesHtml += '<h4><i class="layui-icon layui-icon-play"></i> 相关课时 (' + resources.lessons.length + ')</h4>';
+                resourcesHtml += '<ul class="kg-resource-list">';
+                resources.lessons.forEach(function(lesson) {
+                    var modelIcon = lesson.model === 'live' ? 'layui-icon-play-video' : 'layui-icon-play';
+                    resourcesHtml += '<li>';
+                    resourcesHtml += '<i class="layui-icon ' + modelIcon + '"></i>';
+                    resourcesHtml += '<span>' + lesson.title + '</span>';
+                    resourcesHtml += '</li>';
+                });
+                resourcesHtml += '</ul>';
+                resourcesHtml += '</div>';
+            }
+            
+            // 作业列表
+            if (resources.assignments && resources.assignments.length > 0) {
+                resourcesHtml += '<div class="kg-resource-group">';
+                resourcesHtml += '<h4><i class="layui-icon layui-icon-edit"></i> 相关作业 (' + resources.assignments.length + ')</h4>';
+                resourcesHtml += '<ul class="kg-resource-list">';
+                resources.assignments.forEach(function(assignment) {
+                    resourcesHtml += '<li>';
+                    resourcesHtml += '<i class="layui-icon layui-icon-edit"></i>';
+                    resourcesHtml += '<span>' + assignment.title + '</span>';
+                    resourcesHtml += '</li>';
+                });
+                resourcesHtml += '</ul>';
+                resourcesHtml += '</div>';
+            }
+            
+            // 如果没有资源
+            if (!resourcesHtml) {
+                resourcesHtml = '<div class="kg-no-resources">';
+                resourcesHtml += '<i class="layui-icon layui-icon-tips"></i>';
+                resourcesHtml += '<p>该节点暂未绑定学习资源</p>';
+                resourcesHtml += '</div>';
+            }
+            
+            // 构建完整的详情HTML
+            var detailHtml = '<div class="kg-node-detail">';
+            detailHtml += '<h3>' + node.name + '</h3>';
+            detailHtml += '<div class="kg-node-meta">';
+            detailHtml += '<span class="kg-node-type">' + this.getNodeTypeLabel(node.type) + '</span>';
+            detailHtml += '</div>';
+            if (node.description) {
+                detailHtml += '<div class="kg-node-description">' + node.description + '</div>';
+            }
+            detailHtml += '<div class="kg-node-resources">';
+            detailHtml += resourcesHtml;
+            detailHtml += '</div>';
+            detailHtml += '</div>';
+            
+            // 使用Layer显示详情
+            layer.open({
+                type: 1,
+                title: '节点详情',
+                area: ['500px', '600px'],
+                content: detailHtml,
+                btn: ['关闭'],
+                yes: function(index) {
+                    layer.close(index);
+                }
+            });
+        },
+
+        /**
+         * 获取节点类型标签
+         */
+        getNodeTypeLabel: function(type) {
+            var labels = {
+                'concept': '概念',
+                'skill': '技能',
+                'topic': '主题',
+                'course': '课程'
+            };
+            return labels[type] || type;
+        },
+
+        /**
+         * 获取关系标签
+         */
+        getRelationLabel: function(relationType) {
+            var labels = {
+                'prerequisite': '前置',
+                'contains': '包含',
+                'related': '相关',
+                'suggests': '建议',
+                'extends': '扩展'
+            };
+            return labels[relationType] || relationType;
+        },
+        
+        /**
+         * 获取关系颜色
+         */
+        getRelationColor: function(relationType) {
+            var colors = {
+                'prerequisite': '#FF5722',  // 橙红色
+                'contains': '#2196F3',      // 蓝色
+                'related': '#4CAF50',       // 绿色
+                'suggests': '#FF9800',      // 橙色
+                'extends': '#9C27B0'        // 紫色
+            };
+            return colors[relationType] || '#999999';
+        },
+        
+        /**
+         * 获取关系线条样式
+         */
+        getRelationStyle: function(relationType) {
+            var styles = {
+                'prerequisite': 'solid',
+                'contains': 'solid',
+                'related': 'dashed',
+                'suggests': 'dotted',
+                'extends': 'solid'
+            };
+            return styles[relationType] || 'solid';
         },
 
         /**

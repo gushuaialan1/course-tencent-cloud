@@ -1238,4 +1238,190 @@ class KnowledgeGraphController extends Controller
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+    
+    /**
+     * 从章节简单生成知识图谱
+     * 
+     * @Post("/generate/simple", name="admin.knowledge_graph.generate_simple")
+     */
+    public function generateSimpleAction()
+    {
+        try {
+            $request = $this->request->getJsonRawBody(true);
+            
+            if (!isset($request['course_id'])) {
+                return $this->jsonError('缺少课程ID参数');
+            }
+            
+            $courseId = intval($request['course_id']);
+            
+            // 使用生成服务
+            $generator = new \App\Services\KnowledgeGraphGenerator();
+            $graphData = $generator->generateFromChapters($courseId);
+            
+            return $this->jsonSuccess([
+                'graph' => $graphData,
+                'message' => '生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError('生成失败：' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 使用AI智能生成知识图谱
+     * 
+     * @Post("/generate/ai", name="admin.knowledge_graph.generate_ai")
+     */
+    public function generateAiAction()
+    {
+        try {
+            $request = $this->request->getJsonRawBody(true);
+            
+            if (!isset($request['course_id'])) {
+                return $this->jsonError('缺少课程ID参数');
+            }
+            
+            $courseId = intval($request['course_id']);
+            $options = $request['options'] ?? [];
+            
+            // 检查AI是否已配置
+            $aiConfigRepo = new KgAiConfigRepo();
+            if (!$aiConfigRepo->isAiConfigured()) {
+                return $this->jsonError('AI功能未配置，请先在系统设置中配置AI服务');
+            }
+            
+            // 使用生成服务
+            $generator = new \App\Services\KnowledgeGraphGenerator();
+            $graphData = $generator->generateWithAI($courseId, $options);
+            
+            return $this->jsonSuccess([
+                'graph' => $graphData,
+                'message' => 'AI生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError('AI生成失败：' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 获取节点详情（含绑定的学习资源）
+     * 
+     * @Get("/node/{nodeId:[0-9]+}/detail", name="admin.knowledge_graph.node_detail")
+     */
+    public function nodeDetailAction($nodeId)
+    {
+        try {
+            $nodeRepo = new KnowledgeNodeRepo();
+            $node = $nodeRepo->findById($nodeId);
+            
+            if (!$node) {
+                return $this->jsonError('节点不存在');
+            }
+            
+            $nodeArray = is_object($node) ? $node->toArray() : $node;
+            
+            // 获取绑定的资源
+            $resources = $this->getNodeResources($nodeArray);
+            
+            return $this->jsonSuccess([
+                'node' => $nodeArray,
+                'resources' => $resources
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError('获取节点详情失败：' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 获取节点绑定的学习资源
+     * 
+     * @param array $node 节点数据
+     * @return array
+     */
+    private function getNodeResources($node)
+    {
+        $resources = [
+            'lessons' => [],
+            'assignments' => [],
+            'quizzes' => []
+        ];
+        
+        // 如果有绑定主要资源
+        if (!empty($node['primary_resource_type']) && !empty($node['primary_resource_id'])) {
+            $type = $node['primary_resource_type'];
+            $id = $node['primary_resource_id'];
+            
+            switch ($type) {
+                case 'chapter':
+                    // 获取章节下的所有课时
+                    $chapterRepo = new \App\Repos\Chapter();
+                    $lessons = $chapterRepo->findLessons($id);
+                    foreach ($lessons as $lesson) {
+                        $lessonArray = is_object($lesson) ? $lesson->toArray() : $lesson;
+                        $resources['lessons'][] = [
+                            'id' => $lessonArray['id'],
+                            'title' => $lessonArray['title'],
+                            'model' => $lessonArray['model'] ?? 'vod'
+                        ];
+                    }
+                    break;
+                    
+                case 'lesson':
+                    // 单个课时
+                    $chapterRepo = new \App\Repos\Chapter();
+                    $lesson = $chapterRepo->findById($id);
+                    if ($lesson) {
+                        $lessonArray = is_object($lesson) ? $lesson->toArray() : $lesson;
+                        $resources['lessons'][] = [
+                            'id' => $lessonArray['id'],
+                            'title' => $lessonArray['title'],
+                            'model' => $lessonArray['model'] ?? 'vod'
+                        ];
+                    }
+                    break;
+            }
+        }
+        
+        // 解析resource_bindings JSON
+        if (!empty($node['resource_bindings'])) {
+            $bindings = json_decode($node['resource_bindings'], true);
+            
+            if (is_array($bindings)) {
+                // 获取额外绑定的课时
+                if (!empty($bindings['lessons']) && is_array($bindings['lessons'])) {
+                    $chapterRepo = new \App\Repos\Chapter();
+                    foreach ($bindings['lessons'] as $lessonId) {
+                        $lesson = $chapterRepo->findById($lessonId);
+                        if ($lesson) {
+                            $lessonArray = is_object($lesson) ? $lesson->toArray() : $lesson;
+                            // 避免重复
+                            $exists = false;
+                            foreach ($resources['lessons'] as $existingLesson) {
+                                if ($existingLesson['id'] == $lessonArray['id']) {
+                                    $exists = true;
+                                    break;
+                                }
+                            }
+                            if (!$exists) {
+                                $resources['lessons'][] = [
+                                    'id' => $lessonArray['id'],
+                                    'title' => $lessonArray['title'],
+                                    'model' => $lessonArray['model'] ?? 'vod'
+                                ];
+                            }
+                        }
+                    }
+                }
+                
+                // TODO: 添加作业和测验的查询
+                // 当前系统可能没有作业和测验模块，暂时预留
+            }
+        }
+        
+        return $resources;
+    }
 }
