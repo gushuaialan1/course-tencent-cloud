@@ -14,8 +14,9 @@
     {{ css_link('admin/css/knowledge-graph.css') }}
     <!-- Cytoscape.js CDN -->
     <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
-    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+    <!-- 修复：先加载dagre基础库，再加载cytoscape扩展 -->
     <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
 </head>
 <body class="kg-body">
 
@@ -34,6 +35,9 @@
             </button>
             <button class="layui-btn layui-btn-sm" id="btn-save-graph">
                 <i class="layui-icon layui-icon-ok"></i>保存图谱
+            </button>
+            <button class="layui-btn layui-btn-sm layui-btn-normal" id="btn-save-as-template">
+                <i class="layui-icon layui-icon-templeate-1"></i>保存为模板
             </button>
             <button class="layui-btn layui-btn-sm layui-btn-primary" id="btn-export-graph">
                 <i class="layui-icon layui-icon-export"></i>导出
@@ -166,7 +170,7 @@
                     </div>
                     <div class="kg-metric">
                         <span class="kg-metric-label">关系数量</span>
-                        <span class="kg-metric-value" id="stat-edges">0</span>
+                        <span class="kg-metric-value" id="stat-edges">{{ relation_statistics.total|default(0) }}</span>
                     </div>
                     <div class="kg-metric">
                         <span class="kg-metric-label">概念节点</span>
@@ -292,12 +296,12 @@
 
     <!-- 隐藏表单数据 -->
     <input type="hidden" id="course-id" value="{{ course.id }}">
-    <input type="hidden" id="api-base" value="/api/knowledge-graph">
+    <input type="hidden" id="api-base" value="/admin/knowledge-graph">
 
     <!-- JavaScript依赖 -->
-    {{ js_link('lib/jquery.min.js') }}
-    {{ js_link('lib/layui/layui.js') }}
-    {{ js_link('admin/js/knowledge-graph.js') }}
+    {{ js_include('lib/jquery.min.js') }}
+    {{ js_include('lib/layui/layui.js') }}
+    {{ js_include('admin/js/knowledge-graph.js') }}
 
     <script>
     layui.use(['knowledgeGraph', 'layer', 'form'], function() {
@@ -328,6 +332,11 @@
         
         $('#btn-save-graph').on('click', function() {
             graphEditor.saveGraph();
+        });
+        
+        // 保存为模板
+        $('#btn-save-as-template').on('click', function() {
+            showSaveAsTemplateDialog(courseId, graphEditor);
         });
         
         $('#btn-export-graph').on('click', function() {
@@ -728,6 +737,162 @@
                     layer.close(loadingIndex);
                     layer.msg('网络请求失败', {icon: 2});
                 });
+            });
+        }
+        
+        // 显示保存为模板对话框
+        function showSaveAsTemplateDialog(courseId, graphEditor) {
+            // 检查是否有节点
+            var nodes = graphEditor.cy.nodes();
+            if (nodes.length === 0) {
+                layer.msg('图谱中没有节点，无法保存为模板', {icon: 2});
+                return;
+            }
+            
+            // 构建表单HTML
+            var formHtml = '<form class="layui-form" lay-filter="template-form" style="padding: 20px;">';
+            formHtml += '<div class="layui-form-item">';
+            formHtml += '<label class="layui-form-label">模板名称<span style="color:red;">*</span></label>';
+            formHtml += '<div class="layui-input-block">';
+            formHtml += '<input type="text" name="name" lay-verify="required" placeholder="请输入模板名称" class="layui-input">';
+            formHtml += '</div>';
+            formHtml += '</div>';
+            
+            formHtml += '<div class="layui-form-item">';
+            formHtml += '<label class="layui-form-label">模板分类<span style="color:red;">*</span></label>';
+            formHtml += '<div class="layui-input-block">';
+            formHtml += '<select name="category" lay-verify="required">';
+            formHtml += '<option value="">请选择分类</option>';
+            formHtml += '<option value="cs">计算机科学</option>';
+            formHtml += '<option value="math">数学</option>';
+            formHtml += '<option value="language">语言</option>';
+            formHtml += '<option value="business">商业</option>';
+            formHtml += '<option value="other">其他</option>';
+            formHtml += '</select>';
+            formHtml += '</div>';
+            formHtml += '</div>';
+            
+            formHtml += '<div class="layui-form-item">';
+            formHtml += '<label class="layui-form-label">难度级别</label>';
+            formHtml += '<div class="layui-input-block">';
+            formHtml += '<select name="difficulty_level">';
+            formHtml += '<option value="beginner">初级</option>';
+            formHtml += '<option value="intermediate">中级</option>';
+            formHtml += '<option value="advanced">高级</option>';
+            formHtml += '</select>';
+            formHtml += '</div>';
+            formHtml += '</div>';
+            
+            formHtml += '<div class="layui-form-item layui-form-text">';
+            formHtml += '<label class="layui-form-label">模板描述</label>';
+            formHtml += '<div class="layui-input-block">';
+            formHtml += '<textarea name="description" placeholder="请输入模板描述" class="layui-textarea"></textarea>';
+            formHtml += '</div>';
+            formHtml += '</div>';
+            
+            formHtml += '<div class="layui-form-item">';
+            formHtml += '<label class="layui-form-label">标签</label>';
+            formHtml += '<div class="layui-input-block">';
+            formHtml += '<input type="text" name="tags" placeholder="多个标签用逗号分隔" class="layui-input">';
+            formHtml += '</div>';
+            formHtml += '</div>';
+            
+            formHtml += '<div class="layui-form-item" style="background: #f5f5f5; padding: 10px; border-radius: 4px;">';
+            formHtml += '<p><i class="layui-icon layui-icon-tips"></i> 图谱信息：</p>';
+            formHtml += '<p>节点数量：' + nodes.length + ' 个</p>';
+            formHtml += '<p>关系数量：' + graphEditor.cy.edges().length + ' 个</p>';
+            formHtml += '</div>';
+            
+            formHtml += '</form>';
+            
+            // 打开对话框
+            layer.open({
+                type: 1,
+                title: '保存为模板',
+                area: ['500px', '600px'],
+                content: formHtml,
+                btn: ['保存', '取消'],
+                success: function(layero, index) {
+                    // 渲染表单
+                    form.render('select');
+                },
+                yes: function(index, layero) {
+                    // 获取表单数据
+                    var formData = form.val('template-form');
+                    
+                    // 验证必填字段
+                    if (!formData.name) {
+                        layer.msg('请输入模板名称', {icon: 2});
+                        return;
+                    }
+                    if (!formData.category) {
+                        layer.msg('请选择模板分类', {icon: 2});
+                        return;
+                    }
+                    
+                    // 收集节点数据
+                    var nodesData = [];
+                    graphEditor.cy.nodes().forEach(function(node) {
+                        var data = node.data();
+                        var pos = node.position();
+                        nodesData.push({
+                            id: data.id,
+                            name: data.label || data.name || '',
+                            type: data.type || 'concept',
+                            description: data.description || '',
+                            position_x: Math.round(pos.x),
+                            position_y: Math.round(pos.y),
+                            weight: data.weight || 1.0,
+                            properties: data.properties || {},
+                            style_config: data.style_config || {},
+                            sort_order: data.sort_order || 0
+                        });
+                    });
+                    
+                    // 收集关系数据
+                    var relationsData = [];
+                    graphEditor.cy.edges().forEach(function(edge) {
+                        var data = edge.data();
+                        relationsData.push({
+                            from_node_id: data.source,
+                            to_node_id: data.target,
+                            relation_type: data.type || 'related',
+                            weight: data.weight || 1.0,
+                            description: data.description || '',
+                            properties: data.properties || {},
+                            style_config: data.style_config || {}
+                        });
+                    });
+                    
+                    // 准备提交数据
+                    var postData = {
+                        name: formData.name,
+                        category: formData.category,
+                        description: formData.description || '',
+                        difficulty_level: formData.difficulty_level || 'beginner',
+                        tags: formData.tags || '',
+                        nodes: JSON.stringify(nodesData),
+                        relations: JSON.stringify(relationsData)
+                    };
+                    
+                    // 提交保存
+                    var loadingIndex = layer.load(2, {shade: [0.3, '#000']});
+                    var createUrl = '{{ url({"for":"admin.knowledge_graph.template_create"}) }}';
+                    
+                    $.post(createUrl, postData, function(res) {
+                        layer.close(loadingIndex);
+                        
+                        if (res.code === 0) {
+                            layer.msg('模板保存成功！', {icon: 1, time: 2000});
+                            layer.close(index);
+                        } else {
+                            layer.msg(res.msg || '保存失败', {icon: 2});
+                        }
+                    }).fail(function() {
+                        layer.close(loadingIndex);
+                        layer.msg('网络请求失败', {icon: 2});
+                    });
+                }
             });
         }
     });
