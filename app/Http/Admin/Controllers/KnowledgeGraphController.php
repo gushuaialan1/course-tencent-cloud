@@ -1036,14 +1036,15 @@ class KnowledgeGraphController extends Controller
                 $providerInfo[$provider] = is_array($info) ? $info : (array)$info;
             }
             
+            // 使用 json_decode/encode 确保所有数据都是纯数组，避免 Phalcon View 转换为对象
             $this->view->setVars([
-                'configs' => $configs,
-                'ai_config' => $aiConfig,
-                'providers' => $providers,
-                'generation_modes' => $generationModes,
-                'deepseek_models' => $deepseekModels,
-                'siliconflow_models' => $siliconflowModels,
-                'provider_info' => $providerInfo
+                'configs' => json_decode(json_encode($configs), true),
+                'ai_config' => json_decode(json_encode($aiConfig), true),
+                'providers' => json_decode(json_encode($providers), true),
+                'generation_modes' => json_decode(json_encode($generationModes), true),
+                'deepseek_models' => json_decode(json_encode($deepseekModels), true),
+                'siliconflow_models' => json_decode(json_encode($siliconflowModels), true),
+                'provider_info' => json_decode(json_encode($providerInfo), true)
             ]);
             
             return $this->view->pick('knowledge-graph/ai-config');
