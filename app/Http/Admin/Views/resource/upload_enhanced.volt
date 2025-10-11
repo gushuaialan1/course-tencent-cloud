@@ -240,14 +240,14 @@
     <input type="hidden" name="course_id" value="{{ course_id|default('') }}">
 
     <!-- JavaScript依赖 -->
-    {{ js_link('lib/jquery.min.js') }}
-    {{ js_link('lib/layui/layui.js') }}
+    {{ js_include('lib/jquery.min.js') }}
+    {{ js_include('lib/layui/layui.js') }}
     
     <!-- Uppy.js CDN -->
     <script src="https://releases.transloadit.com/uppy/v3.3.1/uppy.min.js"></script>
     
     <!-- 自定义增强上传脚本 -->
-    {{ js_link('admin/js/uppy-enhanced.js') }}
+    {{ js_include('admin/js/uppy-enhanced.js') }}
 
     <script>
     layui.use(['form', 'layer', 'uppyEnhanced'], function() {

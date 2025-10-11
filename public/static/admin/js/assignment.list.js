@@ -47,12 +47,12 @@ layui.use(['layer', 'form', 'table'], function () {
                 action: action,
                 ids: checkedIds.join(',')
             }, function (res) {
-                if (res.code === 200) {
-                    layer.msg(res.data.message, { icon: 1 }, function () {
+                if (res.code === 0) {
+                    layer.msg(res.msg || '操作成功', { icon: 1 }, function () {
                         location.reload();
                     });
                 } else {
-                    layer.msg(res.data.message, { icon: 2 });
+                    layer.msg(res.msg || '操作失败', { icon: 2 });
                 }
             });
             layer.close(index);
@@ -69,12 +69,12 @@ layui.use(['layer', 'form', 'table'], function () {
             case 'publish':
                 layer.confirm('确定要发布这个作业吗？', function (index) {
                     $.post('/admin/assignment/publish', { id: id }, function (res) {
-                        if (res.code === 200) {
+                        if (res.code === 0) {
                             layer.msg('发布成功', { icon: 1 }, function () {
                                 location.reload();
                             });
                         } else {
-                            layer.msg(res.data.message, { icon: 2 });
+                            layer.msg(res.msg || '操作失败', { icon: 2 });
                         }
                     });
                     layer.close(index);
@@ -91,12 +91,12 @@ layui.use(['layer', 'form', 'table'], function () {
                         id: id,
                         title: value
                     }, function (res) {
-                        if (res.code === 200) {
+                        if (res.code === 0) {
                             layer.msg('复制成功', { icon: 1 }, function () {
                                 location.reload();
                             });
                         } else {
-                            layer.msg(res.data.message, { icon: 2 });
+                            layer.msg(res.msg || '操作失败', { icon: 2 });
                         }
                     });
                     layer.close(index);
@@ -106,12 +106,12 @@ layui.use(['layer', 'form', 'table'], function () {
             case 'delete':
                 layer.confirm('确定要删除这个作业吗？删除后不可恢复！', function (index) {
                     $.post('/admin/assignment/delete', { id: id }, function (res) {
-                        if (res.code === 200) {
+                        if (res.code === 0) {
                             layer.msg('删除成功', { icon: 1 }, function () {
                                 location.reload();
                             });
                         } else {
-                            layer.msg(res.data.message, { icon: 2 });
+                            layer.msg(res.msg || '操作失败', { icon: 2 });
                         }
                     });
                     layer.close(index);

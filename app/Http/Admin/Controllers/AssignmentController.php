@@ -232,10 +232,10 @@ class AssignmentController extends Controller
             
             return $this->jsonSuccess([
                 'assignment' => $assignment->toArray(),
-                'message' => '作业创建成功'
+                'msg' => '作业创建成功'
             ]);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '作业创建失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '作业创建失败: ' . $e->getMessage()]);
         }
     }
 
@@ -263,10 +263,12 @@ class AssignmentController extends Controller
                 'courses' => $courses,
                 'assignment_types' => AssignmentModel::getTypes(),
                 'grade_modes' => AssignmentModel::getGradeModes(),
-                'assignment_statuses' => AssignmentModel::getStatuses()
+                'assignment_statuses' => AssignmentModel::getStatuses(),
+                'is_edit' => true  // 标记为编辑模式
             ]);
             
-            return $this->view->pick('assignment/edit');
+            // 使用create视图（create和edit共用同一个表单）
+            return $this->view->pick('assignment/create');
             
         } catch (\Exception $e) {
             $this->flashSession->error('加载编辑页面失败: ' . $e->getMessage());
@@ -286,7 +288,7 @@ class AssignmentController extends Controller
         $assignment = $assignmentRepo->findById($id);
         
         if (!$assignment) {
-            return $this->jsonError(['message' => '作业不存在']);
+            return $this->jsonError(['msg' => '作业不存在']);
         }
 
         try {
@@ -311,10 +313,10 @@ class AssignmentController extends Controller
             
             return $this->jsonSuccess([
                 'assignment' => $assignment->toArray(),
-                'message' => '作业更新成功'
+                'msg' => '作业更新成功'
             ]);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '作业更新失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '作业更新失败: ' . $e->getMessage()]);
         }
     }
 
@@ -329,14 +331,14 @@ class AssignmentController extends Controller
         $assignment = $assignmentRepo->findById($id);
         
         if (!$assignment) {
-            return $this->jsonError(['message' => '作业不存在']);
+            return $this->jsonError(['msg' => '作业不存在']);
         }
 
         try {
             $assignmentRepo->delete($assignment);
-            return $this->jsonSuccess(['message' => '作业删除成功']);
+            return $this->jsonSuccess(['msg' => '作业删除成功']);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '作业删除失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '作业删除失败: ' . $e->getMessage()]);
         }
     }
 
@@ -351,14 +353,14 @@ class AssignmentController extends Controller
         $assignment = $assignmentRepo->findById($id);
         
         if (!$assignment) {
-            return $this->jsonError(['message' => '作业不存在']);
+            return $this->jsonError(['msg' => '作业不存在']);
         }
 
         try {
             $assignmentRepo->publish($assignment);
-            return $this->jsonSuccess(['message' => '作业发布成功']);
+            return $this->jsonSuccess(['msg' => '作业发布成功']);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '作业发布失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '作业发布失败: ' . $e->getMessage()]);
         }
     }
 
@@ -373,14 +375,14 @@ class AssignmentController extends Controller
         $assignment = $assignmentRepo->findById($id);
         
         if (!$assignment) {
-            return $this->jsonError(['message' => '作业不存在']);
+            return $this->jsonError(['msg' => '作业不存在']);
         }
 
         try {
             $assignmentRepo->close($assignment);
-            return $this->jsonSuccess(['message' => '作业关闭成功']);
+            return $this->jsonSuccess(['msg' => '作业关闭成功']);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '作业关闭失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '作业关闭失败: ' . $e->getMessage()]);
         }
     }
 
@@ -397,7 +399,7 @@ class AssignmentController extends Controller
         $assignment = $assignmentRepo->findById($id);
         
         if (!$assignment) {
-            return $this->jsonError(['message' => '作业不存在']);
+            return $this->jsonError(['msg' => '作业不存在']);
         }
 
         try {
@@ -416,10 +418,10 @@ class AssignmentController extends Controller
             
             return $this->jsonSuccess([
                 'assignment' => $newAssignment->toArray(),
-                'message' => '作业复制成功'
+                'msg' => '作业复制成功'
             ]);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '作业复制失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '作业复制失败: ' . $e->getMessage()]);
         }
     }
 
@@ -432,7 +434,7 @@ class AssignmentController extends Controller
         $ids = $this->request->getPost('ids', 'string');
         
         if (empty($action) || empty($ids)) {
-            return $this->jsonError(['message' => '参数错误']);
+            return $this->jsonError(['msg' => '参数错误']);
         }
 
         $assignmentIds = explode(',', $ids);
@@ -440,7 +442,7 @@ class AssignmentController extends Controller
         $assignmentIds = array_filter($assignmentIds);
 
         if (empty($assignmentIds)) {
-            return $this->jsonError(['message' => '请选择要操作的作业']);
+            return $this->jsonError(['msg' => '请选择要操作的作业']);
         }
 
         $assignmentRepo = new AssignmentRepo();
@@ -463,15 +465,15 @@ class AssignmentController extends Controller
                     break;
                     
                 default:
-                    return $this->jsonError(['message' => '不支持的操作']);
+                    return $this->jsonError(['msg' => '不支持的操作']);
             }
 
             return $this->jsonSuccess([
                 'affected_rows' => $affectedRows,
-                'message' => $message
+                'msg' => $message
             ]);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '批量操作失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '批量操作失败: ' . $e->getMessage()]);
         }
     }
 
@@ -696,12 +698,12 @@ class AssignmentController extends Controller
         $submission = $submissionRepo->findById($id);
         
         if (!$submission) {
-            return $this->jsonError(['message' => '提交记录不存在']);
+            return $this->jsonError(['msg' => '提交记录不存在']);
         }
 
         // 验证提交状态
         if ($submission->status !== \App\Models\AssignmentSubmission::STATUS_SUBMITTED) {
-            return $this->jsonError(['message' => '该提交不可批改']);
+            return $this->jsonError(['msg' => '该提交不可批改']);
         }
 
         try {
@@ -710,7 +712,7 @@ class AssignmentController extends Controller
             $assignment = $assignmentRepo->findById($submission->assignment_id);
             
             if (!$assignment) {
-                return $this->jsonError(['message' => '作业不存在']);
+                return $this->jsonError(['msg' => '作业不存在']);
             }
 
             // 开始批改
@@ -746,7 +748,7 @@ class AssignmentController extends Controller
 
             // 验证分数不超过满分
             if ($score > $submission->max_score) {
-                return $this->jsonError(['message' => "分数不能超过满分{$submission->max_score}"]);
+                return $this->jsonError(['msg' => "分数不能超过满分{$submission->max_score}"]);
             }
 
             // 完成批改
@@ -757,10 +759,10 @@ class AssignmentController extends Controller
             
             return $this->jsonSuccess([
                 'submission' => $submission->toArray(),
-                'message' => '批改成功'
+                'msg' => '批改成功'
             ]);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '批改失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '批改失败: ' . $e->getMessage()]);
         }
     }
 
@@ -774,7 +776,7 @@ class AssignmentController extends Controller
         $ids = $this->request->getPost('ids', 'string');
         
         if (empty($action) || empty($ids)) {
-            return $this->jsonError(['message' => '参数错误']);
+            return $this->jsonError(['msg' => '参数错误']);
         }
 
         $submissionIds = explode(',', $ids);
@@ -782,7 +784,7 @@ class AssignmentController extends Controller
         $submissionIds = array_filter($submissionIds);
 
         if (empty($submissionIds)) {
-            return $this->jsonError(['message' => '请选择要操作的提交']);
+            return $this->jsonError(['msg' => '请选择要操作的提交']);
         }
 
         $submissionRepo = new AssignmentSubmissionRepo();
@@ -803,15 +805,15 @@ class AssignmentController extends Controller
                     break;
                     
                 default:
-                    return $this->jsonError(['message' => '不支持的操作']);
+                    return $this->jsonError(['msg' => '不支持的操作']);
             }
 
             return $this->jsonSuccess([
                 'affected_rows' => $affectedRows,
-                'message' => $message
+                'msg' => $message
             ]);
         } catch (\Exception $e) {
-            return $this->jsonError(['message' => '批量操作失败: ' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '批量操作失败: ' . $e->getMessage()]);
         }
     }
 

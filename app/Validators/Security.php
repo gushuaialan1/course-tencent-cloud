@@ -53,7 +53,9 @@ class Security extends Validator
 
     protected function getCsrfWhitelist()
     {
-        return [];
+        return [
+            'admin.knowledge_graph.save',  // 临时白名单：知识图谱保存
+        ];
     }
 
 }

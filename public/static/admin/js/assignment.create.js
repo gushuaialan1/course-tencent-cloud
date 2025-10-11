@@ -2,22 +2,15 @@
  * 作业创建页面
  */
 
-layui.use(['layer', 'form', 'laydate', 'layedit', 'upload'], function () {
+layui.use(['layer', 'form', 'laydate', 'upload'], function () {
     var $ = layui.$;
     var layer = layui.layer;
     var form = layui.form;
     var laydate = layui.laydate;
-    var layedit = layui.layedit;
     var upload = layui.upload;
 
     var questionCount = 0;
     var attachments = [];
-
-    // 初始化富文本编辑器
-    var instructionsEditor = layedit.build('instructions-editor', {
-        height: 200,
-        tool: ['strong', 'italic', 'underline', 'del', '|', 'left', 'center', 'right', '|', 'link', 'unlink', '|', 'face', 'image']
-    });
 
     // 初始化日期时间选择器
     laydate.render({
@@ -413,17 +406,24 @@ layui.use(['layer', 'form', 'laydate', 'layedit', 'upload'], function () {
         $.post('/admin/assignment/create', formData, function (res) {
             layer.close(loading);
             
-            if (res.code === 200) {
+            if (res.code === 0) {  // 修复：检查 code === 0
                 var message = status === 'draft' ? '草稿保存成功' : '作业发布成功';
                 layer.msg(message, { icon: 1 }, function () {
-                    location.href = '/admin/assignment';
+                    location.href = '/admin/assignment/list';  // 修复：正确的路径
                 });
             } else {
-                layer.msg(res.data.message, { icon: 2 });
+                layer.msg(res.msg || res.message || '操作失败', { icon: 2 });  // 修复：正确的字段
             }
-        }).fail(function () {
+        }).fail(function (xhr) {
             layer.close(loading);
-            layer.msg('保存失败，请重试', { icon: 2 });
+            var errorMsg = '保存失败，请重试';
+            try {
+                var response = JSON.parse(xhr.responseText);
+                errorMsg = response.msg || response.message || errorMsg;
+            } catch (e) {
+                // 解析失败使用默认消息
+            }
+            layer.msg(errorMsg, { icon: 2 });
         });
     }
 
@@ -437,7 +437,7 @@ layui.use(['layer', 'form', 'laydate', 'layedit', 'upload'], function () {
         });
 
         // 富文本内容
-        formData.instructions = layedit.getContent(instructionsEditor);
+        formData.instructions = $('#instructions-editor').val();
 
         // 题目数据
         var questions = [];

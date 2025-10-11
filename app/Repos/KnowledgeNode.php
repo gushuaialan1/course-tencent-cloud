@@ -132,10 +132,11 @@ class KnowledgeNode extends Repository
         $relations = [];
 
         if (!empty($nodeIds)) {
+            // 修复：使用字符串IN避免参数绑定冲突
+            $nodeIdList = implode(',', array_map('intval', $nodeIds));
             $relations = KnowledgeRelationModel::find([
-                'conditions' => 'from_node_id IN ({ids:array}) AND to_node_id IN ({ids:array}) AND status = :status:',
+                'conditions' => "from_node_id IN ({$nodeIdList}) AND to_node_id IN ({$nodeIdList}) AND status = :status:",
                 'bind' => [
-                    'ids' => $nodeIds,
                     'status' => KnowledgeRelationModel::STATUS_ACTIVE
                 ]
             ])->toArray();

@@ -36,8 +36,25 @@ class KnowledgeRelation extends Repository
      */
     public function findByCourseId(int $courseId, array $options = []): array
     {
-        $conditions = ['from_node_id IN (SELECT id FROM kg_knowledge_node WHERE course_id = :course_id:)'];
-        $bind = ['course_id' => $courseId];
+        // 先获取课程的所有节点ID
+        $nodes = KnowledgeNodeModel::find([
+            'conditions' => 'course_id = :course_id:',
+            'bind' => ['course_id' => $courseId],
+            'columns' => 'id'
+        ]);
+        
+        if (count($nodes) === 0) {
+            return [];
+        }
+        
+        $nodeIds = array_column($nodes->toArray(), 'id');
+        
+        $conditions = [];
+        $bind = [];
+        
+        // 节点ID过滤 - 使用IN而不是子查询
+        $nodeIdList = implode(',', array_map('intval', $nodeIds));
+        $conditions[] = 'from_node_id IN (' . $nodeIdList . ')';
 
         // 关系类型过滤
         if (!empty($options['relation_type'])) {
@@ -301,10 +318,26 @@ class KnowledgeRelation extends Repository
         $conditions = ['status = :status:'];
         $bind = ['status' => KnowledgeRelationModel::STATUS_ACTIVE];
 
-        // 课程过滤
+        // 课程过滤 - 修复：先获取节点ID，避免子查询问题
         if (!empty($options['course_id'])) {
-            $conditions[] = 'from_node_id IN (SELECT id FROM kg_knowledge_node WHERE course_id = :course_id:)';
-            $bind['course_id'] = $options['course_id'];
+            // 获取该课程的所有节点ID
+            $nodes = KnowledgeNodeModel::find([
+                'conditions' => 'course_id = :course_id:',
+                'bind' => ['course_id' => $options['course_id']],
+                'columns' => 'id'
+            ]);
+            
+            if (count($nodes) === 0) {
+                // 如果没有节点，返回空统计
+                return [
+                    'total' => 0,
+                    'by_type' => []
+                ];
+            }
+            
+            $nodeIds = array_column($nodes->toArray(), 'id');
+            $nodeIdList = implode(',', array_map('intval', $nodeIds));
+            $conditions[] = "from_node_id IN ({$nodeIdList})";
         }
 
         $baseConditions = implode(' AND ', $conditions);

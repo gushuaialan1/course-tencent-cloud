@@ -1,7 +1,6 @@
 {% extends "templates/main.volt" %}
 
 {% block link_css %}
-{{ css_link('lib/layedit/layedit.css') }}
 {{ css_link('admin/css/assignment.css') }}
 {% endblock %}
 
@@ -69,7 +68,7 @@
                             <div class="layui-form-item">
                                 <label class="layui-form-label">关联课程</label>
                                 <div class="layui-input-block">
-                                    <select name="course_id" lay-verify="required">
+                                    <select name="course_id" lay-verify="required" lay-filter="course-select">
                                         <option value="">请选择课程</option>
                                         {% for course in courses %}
                                         <option value="{{ course.id }}">{{ course.title }}</option>
@@ -207,7 +206,7 @@
                 <div class="layui-card-body">
                     <div class="layui-form-item">
                         <div class="layui-input-block">
-                            <textarea name="instructions" id="instructions-editor" style="display: none;"></textarea>
+                            <textarea name="instructions" id="instructions-editor" placeholder="请输入作业说明（选填）" class="layui-textarea" rows="5"></textarea>
                         </div>
                     </div>
                 </div>
@@ -285,6 +284,5 @@
 {% endblock %}
 
 {% block include_js %}
-{{ js_include('lib/layedit/layedit.js') }}
 {{ js_include('admin/js/assignment.create.js') }}
 {% endblock %}
