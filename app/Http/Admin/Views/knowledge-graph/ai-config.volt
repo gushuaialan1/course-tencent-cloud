@@ -2,6 +2,17 @@
 
 {% block content %}
 
+    {# 强制转换所有变量为数组，避免 Phalcon View 的对象转换问题 #}
+    <?php
+    $providers = is_array($providers) ? $providers : (array)$providers;
+    $generation_modes = is_array($generation_modes) ? $generation_modes : (array)$generation_modes;
+    $deepseek_models = is_array($deepseek_models) ? $deepseek_models : (array)$deepseek_models;
+    $siliconflow_models = is_array($siliconflow_models) ? $siliconflow_models : (array)$siliconflow_models;
+    $ai_config = is_array($ai_config) ? $ai_config : (array)$ai_config;
+    $configs = is_array($configs) ? $configs : (array)$configs;
+    $provider_info = is_array($provider_info) ? $provider_info : (array)$provider_info;
+    ?>
+
     {% set list_url = url({'for':'admin.knowledge_graph.list'}) %}
     {% set save_url = url({'for':'admin.knowledge_graph.ai_config_save'}) %}
     {% set test_url = url({'for':'admin.knowledge_graph.ai_config_test'}) %}
