@@ -34,11 +34,11 @@
                             <div class="layui-form-item">
                                 <label class="layui-form-label">服务提供商</label>
                                 <div class="layui-input-block">
-                                    <select name="provider" lay-filter="provider" lay-verify="required">
-                                        {% for key, value in providers %}
-                                            <option value="{{ key }}" {% if ai_config.provider == key %}selected{% endif %}>{{ value }}</option>
-                                        {% endfor %}
-                                    </select>
+                                        <select name="provider" lay-filter="provider" lay-verify="required">
+                                            {% for key, value in providers %}
+                                                <option value="{{ key }}" {% if ai_config['provider'] == key %}selected{% endif %}>{{ value }}</option>
+                                            {% endfor %}
+                                        </select>
                                     <div class="layui-form-mid layui-word-aux">选择AI服务商或关闭AI功能</div>
                                 </div>
                             </div>
@@ -59,7 +59,7 @@
                                     <div class="layui-input-block">
                                         <select name="model" lay-filter="model">
                                             {% for key, value in deepseek_models %}
-                                                <option value="{{ key }}" {% if ai_config.model == key %}selected{% endif %}>{{ value }}</option>
+                                                <option value="{{ key }}" {% if ai_config['model'] == key %}selected{% endif %}>{{ value }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -67,7 +67,7 @@
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">API地址</label>
                                     <div class="layui-input-block">
-                                        <input type="text" name="base_url" placeholder="https://api.deepseek.com" class="layui-input" value="{{ ai_config.base_url }}">
+                                        <input type="text" name="base_url" placeholder="https://api.deepseek.com" class="layui-input" value="{{ ai_config['base_url'] }}">
                                         <div class="layui-form-mid layui-word-aux">默认使用官方地址，一般无需修改</div>
                                     </div>
                                 </div>
@@ -89,7 +89,7 @@
                                     <div class="layui-input-block">
                                         <select name="model" lay-filter="model">
                                             {% for key, value in siliconflow_models %}
-                                                <option value="{{ key }}" {% if ai_config.model == key %}selected{% endif %}>{{ value }}</option>
+                                                <option value="{{ key }}" {% if ai_config['model'] == key %}selected{% endif %}>{{ value }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -97,7 +97,7 @@
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">API地址</label>
                                     <div class="layui-input-block">
-                                        <input type="text" name="base_url" placeholder="https://api.siliconflow.cn" class="layui-input" value="{{ ai_config.base_url }}">
+                                        <input type="text" name="base_url" placeholder="https://api.siliconflow.cn" class="layui-input" value="{{ ai_config['base_url'] }}">
                                         <div class="layui-form-mid layui-word-aux">默认使用官方地址，一般无需修改</div>
                                     </div>
                                 </div>
@@ -109,7 +109,7 @@
                                 <div class="layui-input-block">
                                     <select name="generation_mode">
                                         {% for key, value in generation_modes %}
-                                            <option value="{{ key }}" {% if ai_config.generation_mode == key %}selected{% endif %}>{{ value }}</option>
+                                            <option value="{{ key }}" {% if ai_config['generation_mode'] == key %}selected{% endif %}>{{ value }}</option>
                                         {% endfor %}
                                     </select>
                                     <div class="layui-form-mid layui-word-aux">选择图谱生成方式</div>
@@ -130,21 +130,21 @@
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">超时时间（秒）</label>
                                     <div class="layui-input-inline" style="width: 150px;">
-                                        <input type="number" name="timeout" value="{{ ai_config.timeout }}" class="layui-input">
+                                        <input type="number" name="timeout" value="{{ ai_config['timeout'] }}" class="layui-input">
                                     </div>
                                     <div class="layui-form-mid layui-word-aux">API请求超时时间</div>
                                 </div>
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">最大令牌数</label>
                                     <div class="layui-input-inline" style="width: 150px;">
-                                        <input type="number" name="max_tokens" value="{{ ai_config.max_tokens }}" class="layui-input">
+                                        <input type="number" name="max_tokens" value="{{ ai_config['max_tokens'] }}" class="layui-input">
                                     </div>
                                     <div class="layui-form-mid layui-word-aux">生成内容的最大长度</div>
                                 </div>
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">温度参数</label>
                                     <div class="layui-input-inline" style="width: 150px;">
-                                        <input type="text" name="temperature" value="{{ ai_config.temperature }}" class="layui-input">
+                                        <input type="text" name="temperature" value="{{ ai_config['temperature'] }}" class="layui-input">
                                     </div>
                                     <div class="layui-form-mid layui-word-aux">0-1之间，值越高越随机</div>
                                 </div>
@@ -229,7 +229,7 @@
         var layer = layui.layer;
         var $ = layui.jquery;
 
-        var currentProvider = '{{ ai_config.provider }}';
+        var currentProvider = '{{ ai_config['provider'] }}';
 
         // 显示对应的配置面板
         function showProviderConfig(provider) {
