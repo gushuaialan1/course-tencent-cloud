@@ -2,18 +2,17 @@
 /**
  * 更新管理员角色权限 - 添加知识图谱和作业系统权限
  * 
- * 执行命令: php console.php migration:run
+ * 执行命令: php vendor/bin/phinx migrate
  */
 
-use Phalcon\Db\Column;
-use Phalcon\Migrations\Mvc\Model\Migration;
+use Phinx\Migration\AbstractMigration;
 
-class UpdateAdminRolePermissionsMigration20241005000001 extends Migration
+class UpdateAdminRolePermissionsMigration20241005000001 extends AbstractMigration
 {
     public function up()
     {
         // 获取管理员角色（ID=1）当前的权限
-        $role = $this->db->fetchOne('SELECT routes FROM kg_role WHERE id = 1');
+        $role = $this->fetchRow('SELECT routes FROM kg_role WHERE id = 1');
         
         if (!$role) {
             echo "管理员角色不存在，跳过\n";
@@ -93,9 +92,12 @@ class UpdateAdminRolePermissionsMigration20241005000001 extends Migration
         // 更新数据库
         $routesJson = json_encode($routes, JSON_UNESCAPED_UNICODE);
         
-        $this->db->execute(
-            'UPDATE kg_role SET routes = ?, update_time = ? WHERE id = 1',
-            [$routesJson, time()]
+        $this->execute(
+            sprintf(
+                "UPDATE kg_role SET routes = '%s', update_time = %d WHERE id = 1",
+                addslashes($routesJson),
+                time()
+            )
         );
         
         echo "✓ 已为管理员角色添加 " . count($newRoutes) . " 个新权限\n";
