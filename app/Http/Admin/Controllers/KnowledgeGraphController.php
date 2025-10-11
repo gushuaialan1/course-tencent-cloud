@@ -13,6 +13,7 @@ use App\Repos\KnowledgeNode as KnowledgeNodeRepo;
 use App\Repos\KnowledgeRelation as KnowledgeRelationRepo;
 use App\Repos\Course as CourseRepo;
 use App\Repos\KnowledgeGraphTemplate as KnowledgeGraphTemplateRepo;
+use App\Repos\KgAiConfig as KgAiConfigRepo;
 
 /**
  * @RoutePrefix("/admin/knowledge-graph")
@@ -48,8 +49,23 @@ class KnowledgeGraphController extends Controller
             return $this->view->pick('knowledge-graph/list');
             
         } catch (\Exception $e) {
+            // 开发环境下直接显示详细错误信息
+            $isDev = $this->config->env === 'dev';
+            if ($isDev) {
+                echo '<h1>知识图谱列表加载失败</h1>';
+                echo '<h2>错误信息：</h2>';
+                echo '<pre style="background: #f5f5f5; padding: 20px; border: 1px solid #ddd;">';
+                echo htmlspecialchars($e->getMessage()) . "\n\n";
+                echo "文件: " . $e->getFile() . "\n";
+                echo "行号: " . $e->getLine() . "\n\n";
+                echo "堆栈跟踪:\n" . htmlspecialchars($e->getTraceAsString());
+                echo '</pre>';
+                echo '<p><a href="/admin">返回管理后台</a></p>';
+                return false;
+            }
+            
             $this->flashSession->error('获取数据失败: ' . $e->getMessage());
-            return $this->response->redirect('/admin/index/index');
+            return $this->response->redirect('/admin');
         }
     }
 
@@ -70,7 +86,13 @@ class KnowledgeGraphController extends Controller
             }
             
             $knowledgeNodeRepo = new KnowledgeNodeRepo();
-            $statistics = $knowledgeNodeRepo->getNodeStatistics($courseId);
+            $knowledgeRelationRepo = new KnowledgeRelationRepo();
+            
+            // 获取节点统计
+            $nodeStatistics = $knowledgeNodeRepo->getNodeStatistics($courseId);
+            
+            // 获取关系统计
+            $relationStatistics = $knowledgeRelationRepo->getRelationStatistics(['course_id' => $courseId]);
             
             // 获取节点类型和状态选项
             $nodeTypes = \App\Models\KnowledgeNode::getTypes();
@@ -79,7 +101,8 @@ class KnowledgeGraphController extends Controller
             
             $this->view->setVars([
                 'course' => $course,
-                'statistics' => $statistics,
+                'statistics' => $nodeStatistics,
+                'relation_statistics' => $relationStatistics,
                 'course_id' => $courseId,
                 'node_types' => $nodeTypes,
                 'node_statuses' => $nodeStatuses,
@@ -89,6 +112,21 @@ class KnowledgeGraphController extends Controller
             return $this->view->pick('knowledge-graph/editor');
             
         } catch (\Exception $e) {
+            // 开发环境下直接显示详细错误信息
+            $isDev = $this->config->env === 'dev';
+            if ($isDev) {
+                echo '<h1>编辑器加载失败</h1>';
+                echo '<h2>错误信息：</h2>';
+                echo '<pre style="background: #f5f5f5; padding: 20px; border: 1px solid #ddd;">';
+                echo htmlspecialchars($e->getMessage()) . "\n\n";
+                echo "文件: " . $e->getFile() . "\n";
+                echo "行号: " . $e->getLine() . "\n\n";
+                echo "堆栈跟踪:\n" . htmlspecialchars($e->getTraceAsString());
+                echo '</pre>';
+                echo '<p><a href="/admin/knowledge-graph/list">返回列表</a></p>';
+                return false;
+            }
+            
             $this->flashSession->error('加载编辑器失败: ' . $e->getMessage());
             return $this->response->redirect('/admin/knowledge-graph/list');
         }
@@ -223,7 +261,8 @@ class KnowledgeGraphController extends Controller
             $knowledgeNodeRepo = new KnowledgeNodeRepo();
             $graphData = $knowledgeNodeRepo->getCourseGraphData($courseId);
             
-            return $this->jsonSuccess($graphData);
+            // 修复：将图谱数据包装到data字段中，符合前端期望的格式
+            return $this->jsonSuccess(['data' => $graphData]);
             
         } catch (\Exception $e) {
             return $this->jsonError(['message' => '获取图谱数据失败: ' . $e->getMessage()]);
@@ -238,7 +277,21 @@ class KnowledgeGraphController extends Controller
     public function saveGraphAction($courseId)
     {
         try {
+            // 获取JSON数据
             $data = $this->request->getJsonRawBody(true);
+            
+            // 记录接收到的数据用于调试
+            error_log('Save graph data received: ' . json_encode($data));
+            
+            // 检查数据是否为空
+            if ($data === null) {
+                return $this->jsonError(['message' => '请求数据格式错误，期望JSON格式']);
+            }
+            
+            // 检查是否有positions数据
+            if (!isset($data['positions'])) {
+                return $this->jsonError(['message' => '缺少positions字段']);
+            }
             
             if (empty($data['positions'])) {
                 return $this->jsonError(['message' => '没有需要保存的位置数据']);
@@ -246,11 +299,14 @@ class KnowledgeGraphController extends Controller
             
             // 批量更新节点位置
             $knowledgeNodeRepo = new KnowledgeNodeRepo();
-            $knowledgeNodeRepo->updateNodesPosition($data['positions']);
+            $updated = $knowledgeNodeRepo->updateNodesPosition($data['positions']);
             
-            return $this->jsonSuccess(['message' => '保存成功']);
+            error_log('Updated positions count: ' . count($data['positions']));
+            
+            return $this->jsonSuccess(['message' => '保存成功', 'updated' => count($data['positions'])]);
             
         } catch (\Exception $e) {
+            error_log('Save graph error: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
             return $this->jsonError(['message' => '保存失败: ' . $e->getMessage()]);
         }
     }
@@ -691,6 +747,21 @@ class KnowledgeGraphController extends Controller
             return $this->view->pick('knowledge-graph/templates');
             
         } catch (\Exception $e) {
+            // 开发环境下直接显示详细错误信息
+            $isDev = $this->config->env === 'dev';
+            if ($isDev) {
+                echo '<h1>模板列表加载失败</h1>';
+                echo '<h2>错误信息：</h2>';
+                echo '<pre style="background: #f5f5f5; padding: 20px; border: 1px solid #ddd;">';
+                echo htmlspecialchars($e->getMessage()) . "\n\n";
+                echo "文件: " . $e->getFile() . "\n";
+                echo "行号: " . $e->getLine() . "\n\n";
+                echo "堆栈跟踪:\n" . htmlspecialchars($e->getTraceAsString());
+                echo '</pre>';
+                echo '<p><a href="/admin/knowledge-graph/list">返回列表</a></p>';
+                return false;
+            }
+            
             $this->flashSession->error('获取模板列表失败: ' . $e->getMessage());
             return $this->response->redirect('/admin/knowledge-graph/list');
         }
@@ -930,6 +1001,241 @@ class KnowledgeGraphController extends Controller
         } catch (\Exception $e) {
             $this->logger->error('Delete template error: ' . $e->getMessage());
             return $this->jsonError(['msg' => '删除模板失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * AI配置页面
+     * 
+     * @Get("/ai-config", name="admin.knowledge_graph.ai_config")
+     */
+    public function aiConfigAction()
+    {
+        try {
+            $configRepo = new KgAiConfigRepo();
+            
+            // 获取当前配置（不解密，用于显示）
+            $configs = $configRepo->getAllConfigs(false);
+            
+            // 获取AI配置信息
+            $aiConfig = $configRepo->getAiConfig();
+            
+            // 获取选项
+            $providers = \App\Models\KgAiConfig::getProviders();
+            $generationModes = \App\Models\KgAiConfig::getGenerationModes();
+            $deepseekModels = \App\Models\KgAiConfig::getDeepSeekModels();
+            $siliconflowModels = \App\Models\KgAiConfig::getSiliconFlowModels();
+            
+            // 获取提供商信息
+            $providerInfo = [];
+            foreach ([
+                \App\Models\KgAiConfig::PROVIDER_DEEPSEEK,
+                \App\Models\KgAiConfig::PROVIDER_SILICONFLOW
+            ] as $provider) {
+                $providerInfo[$provider] = \App\Models\KgAiConfig::getProviderInfo($provider);
+            }
+            
+            $this->view->setVars([
+                'configs' => $configs,
+                'ai_config' => $aiConfig,
+                'providers' => $providers,
+                'generation_modes' => $generationModes,
+                'deepseek_models' => $deepseekModels,
+                'siliconflow_models' => $siliconflowModels,
+                'provider_info' => $providerInfo
+            ]);
+            
+            return $this->view->pick('knowledge-graph/ai-config');
+            
+        } catch (\Exception $e) {
+            $this->flashSession->error('加载配置页面失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/knowledge-graph/list');
+        }
+    }
+
+    /**
+     * 保存AI配置（API）
+     * 
+     * @Post("/ai-config/save", name="admin.knowledge_graph.ai_config_save")
+     */
+    public function saveAiConfigAction()
+    {
+        try {
+            $provider = $this->request->getPost('provider', 'string');
+            $apiKey = $this->request->getPost('api_key', 'string');
+            $model = $this->request->getPost('model', 'string');
+            $baseUrl = $this->request->getPost('base_url', 'string');
+            $generationMode = $this->request->getPost('generation_mode', 'string');
+            $timeout = $this->request->getPost('timeout', 'int', 30);
+            $maxTokens = $this->request->getPost('max_tokens', 'int', 2000);
+            $temperature = $this->request->getPost('temperature', 'float', 0.7);
+            
+            // 验证
+            if (!in_array($provider, [
+                \App\Models\KgAiConfig::PROVIDER_DISABLED,
+                \App\Models\KgAiConfig::PROVIDER_DEEPSEEK,
+                \App\Models\KgAiConfig::PROVIDER_SILICONFLOW
+            ])) {
+                return $this->jsonError(['msg' => '无效的服务提供商']);
+            }
+            
+            // 如果启用AI，必须提供API Key
+            if ($provider !== \App\Models\KgAiConfig::PROVIDER_DISABLED && empty($apiKey)) {
+                return $this->jsonError(['msg' => '请输入API Key']);
+            }
+            
+            $userId = $this->getAuthUser()['id'] ?? 0;
+            $configRepo = new KgAiConfigRepo();
+            
+            $configs = [
+                \App\Models\KgAiConfig::KEY_PROVIDER => $provider,
+                \App\Models\KgAiConfig::KEY_MODEL => $model,
+                \App\Models\KgAiConfig::KEY_BASE_URL => $baseUrl,
+                \App\Models\KgAiConfig::KEY_GENERATION_MODE => $generationMode,
+                \App\Models\KgAiConfig::KEY_TIMEOUT => (string)$timeout,
+                \App\Models\KgAiConfig::KEY_MAX_TOKENS => (string)$maxTokens,
+                \App\Models\KgAiConfig::KEY_TEMPERATURE => (string)$temperature
+            ];
+            
+            // 只有当提供了新的API Key时才更新（不为空且不是星号）
+            if (!empty($apiKey) && !preg_match('/^\*+$/', $apiKey)) {
+                $configs[\App\Models\KgAiConfig::KEY_API_KEY] = $apiKey;
+            }
+            
+            if ($configRepo->batchUpdate($configs, $userId)) {
+                return $this->jsonSuccess(['msg' => '配置保存成功']);
+            }
+            
+            return $this->jsonError(['msg' => '配置保存失败']);
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Save AI config error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '保存失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 测试AI连接（API）
+     * 
+     * @Post("/ai-config/test", name="admin.knowledge_graph.ai_config_test")
+     */
+    public function testAiConnectionAction()
+    {
+        try {
+            $provider = $this->request->getPost('provider', 'string');
+            $apiKey = $this->request->getPost('api_key', 'string');
+            $model = $this->request->getPost('model', 'string');
+            $baseUrl = $this->request->getPost('base_url', 'string');
+            
+            if (empty($provider) || $provider === \App\Models\KgAiConfig::PROVIDER_DISABLED) {
+                return $this->jsonError(['msg' => '请选择AI服务提供商']);
+            }
+            
+            if (empty($apiKey) || preg_match('/^\*+$/', $apiKey)) {
+                return $this->jsonError(['msg' => '请输入API Key']);
+            }
+            
+            if (empty($model)) {
+                return $this->jsonError(['msg' => '请选择模型']);
+            }
+            
+            // 如果没有提供baseUrl，使用默认值
+            if (empty($baseUrl)) {
+                $baseUrl = \App\Models\KgAiConfig::getDefaultBaseUrl($provider);
+            }
+            
+            // 测试连接
+            $startTime = microtime(true);
+            $result = $this->testAiApi($provider, $apiKey, $model, $baseUrl);
+            $duration = round((microtime(true) - $startTime) * 1000);
+            
+            if ($result['success']) {
+                return $this->jsonSuccess([
+                    'msg' => '连接测试成功',
+                    'duration' => $duration,
+                    'response' => $result['response']
+                ]);
+            } else {
+                return $this->jsonError([
+                    'msg' => '连接测试失败：' . $result['error']
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Test AI connection error: ' . $e->getMessage());
+            return $this->jsonError(['msg' => '测试失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 测试AI API调用
+     *
+     * @param string $provider
+     * @param string $apiKey
+     * @param string $model
+     * @param string $baseUrl
+     * @return array
+     */
+    private function testAiApi(string $provider, string $apiKey, string $model, string $baseUrl): array
+    {
+        try {
+            $endpoint = rtrim($baseUrl, '/') . '/v1/chat/completions';
+            
+            $data = [
+                'model' => $model,
+                'messages' => [
+                    ['role' => 'user', 'content' => '你好，请回复"连接成功"']
+                ],
+                'max_tokens' => 50,
+                'temperature' => 0.7
+            ];
+            
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $endpoint,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => json_encode($data),
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $apiKey
+                ],
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_SSL_VERIFYPEER => true
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+            
+            if ($curlError) {
+                return ['success' => false, 'error' => '网络错误: ' . $curlError];
+            }
+            
+            if ($httpCode !== 200) {
+                $errorMsg = '服务器返回错误 ' . $httpCode;
+                if ($response) {
+                    $responseData = json_decode($response, true);
+                    if (isset($responseData['error']['message'])) {
+                        $errorMsg = $responseData['error']['message'];
+                    }
+                }
+                return ['success' => false, 'error' => $errorMsg];
+            }
+            
+            $responseData = json_decode($response, true);
+            if (!isset($responseData['choices'][0]['message']['content'])) {
+                return ['success' => false, 'error' => '响应格式错误'];
+            }
+            
+            return [
+                'success' => true,
+                'response' => $responseData['choices'][0]['message']['content']
+            ];
+            
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 }
