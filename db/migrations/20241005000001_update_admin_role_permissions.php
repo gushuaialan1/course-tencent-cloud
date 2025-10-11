@@ -7,7 +7,7 @@
 
 use Phinx\Migration\AbstractMigration;
 
-class UpdateAdminRolePermissionsMigration20241005000001 extends AbstractMigration
+class UpdateAdminRolePermissions extends AbstractMigration
 {
     public function up()
     {
