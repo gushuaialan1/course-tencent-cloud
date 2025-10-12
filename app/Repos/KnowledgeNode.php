@@ -237,14 +237,18 @@ class KnowledgeNode extends Repository
         $node->sort_order = $data['sort_order'] ?? 0;
         $node->created_by = $data['created_by'] ?? 0;
 
-        // 扩展属性
-        if (!empty($data['properties'])) {
+        // 扩展属性（必须设置为有效JSON，即使为空）
+        if (isset($data['properties'])) {
             $node->setPropertiesData($data['properties']);
+        } else {
+            $node->properties = '{}';  // 空JSON对象
         }
 
-        // 样式配置
-        if (!empty($data['style_config'])) {
+        // 样式配置（必须设置为有效JSON，即使为空）
+        if (isset($data['style_config'])) {
             $node->setStyleConfigData($data['style_config']);
+        } else {
+            $node->style_config = '{}';  // 空JSON对象
         }
 
         if ($node->save()) {

@@ -208,14 +208,18 @@ class KnowledgeRelation extends Repository
         $relation->status = $data['status'] ?? KnowledgeRelationModel::STATUS_ACTIVE;
         $relation->created_by = $data['created_by'] ?? 0;
 
-        // 扩展属性
-        if (!empty($data['properties'])) {
+        // 扩展属性（必须设置为有效JSON，即使为空）
+        if (isset($data['properties'])) {
             $relation->setPropertiesData($data['properties']);
+        } else {
+            $relation->properties = '{}';  // 空JSON对象
         }
 
-        // 样式配置
-        if (!empty($data['style_config'])) {
+        // 样式配置（必须设置为有效JSON，即使为空）
+        if (isset($data['style_config'])) {
             $relation->setStyleConfigData($data['style_config']);
+        } else {
+            $relation->style_config = '{}';  // 空JSON对象
         }
 
         // 验证关系是否有效

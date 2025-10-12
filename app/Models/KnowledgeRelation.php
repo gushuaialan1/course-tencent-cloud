@@ -68,18 +68,18 @@ class KnowledgeRelation extends Model
     public $description = '';
 
     /**
-     * 扩展属性
+     * 扩展属性（JSON格式，默认为空对象）
      *
      * @var string
      */
-    public $properties = '';
+    public $properties = '{}';
 
     /**
-     * 样式配置
+     * 样式配置（JSON格式，默认为空对象）
      *
      * @var string
      */
-    public $style_config = '';
+    public $style_config = '{}';
 
     /**
      * 状态
