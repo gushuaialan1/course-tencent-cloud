@@ -21,10 +21,13 @@ class KnowledgeNode extends Repository
      */
     public function findById(int $id): ?KnowledgeNodeModel
     {
-        return KnowledgeNodeModel::findFirst([
+        $result = KnowledgeNodeModel::findFirst([
             'conditions' => 'id = :id:',
             'bind' => ['id' => $id]
         ]);
+        
+        // Phalcon的findFirst在找不到时返回false，需要转换为null
+        return $result ?: null;
     }
 
     /**
@@ -331,7 +334,18 @@ class KnowledgeNode extends Repository
                 continue;
             }
 
-            $node = $this->findById($position['id']);
+            // 跳过临时节点ID（字符串形式，如 'node_1'）
+            // 只处理已保存到数据库的节点（数字ID）
+            if (!is_numeric($position['id'])) {
+                continue;
+            }
+
+            $nodeId = intval($position['id']);
+            if ($nodeId <= 0) {
+                continue;
+            }
+
+            $node = $this->findById($nodeId);
             if (!$node) {
                 continue;
             }
