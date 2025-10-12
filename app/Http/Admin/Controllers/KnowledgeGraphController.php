@@ -106,7 +106,8 @@ class KnowledgeGraphController extends Controller
                 'course_id' => $courseId,
                 'node_types' => $nodeTypes,
                 'node_statuses' => $nodeStatuses,
-                'relation_types' => $relationTypes
+                'relation_types' => $relationTypes,
+                'csrfToken' => $this->di->get('csrfToken')
             ]);
             
             return $this->view->pick('knowledge-graph/editor');
