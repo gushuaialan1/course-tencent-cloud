@@ -25,24 +25,30 @@ INSERT INTO kg_course (
     7, 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
 );
 
--- 课程1 - 章节
-INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+-- 课程1 - 章节（逐条插入以便正确获取ID）
 -- 第1章：HTML基础
-(9001, 0, 'HTML基础', '学习HTML标签和页面结构', 1, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第2章：CSS样式
-(9001, 0, 'CSS样式与布局', '掌握CSS选择器和常用布局方式', 2, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第3章：JavaScript基础
-(9001, 0, 'JavaScript基础', '学习JavaScript语法和DOM操作', 3, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第4章：JavaScript进阶
-(9001, 0, 'JavaScript进阶', '深入学习ES6+新特性和异步编程', 4, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第5章：前端工程化
-(9001, 0, '前端工程化', '学习Webpack、npm、Git等工具', 5, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9001, 0, 'HTML基础', '学习HTML标签和页面结构', 1, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter1_id = LAST_INSERT_ID();
 
--- 获取章节ID用于创建课时（假设自增ID从最后插入的ID开始）
-SET @chapter1_id = LAST_INSERT_ID() - 4;
-SET @chapter2_id = LAST_INSERT_ID() - 3;
-SET @chapter3_id = LAST_INSERT_ID() - 2;
-SET @chapter4_id = LAST_INSERT_ID() - 1;
+-- 第2章：CSS样式
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9001, 0, 'CSS样式与布局', '掌握CSS选择器和常用布局方式', 2, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter2_id = LAST_INSERT_ID();
+
+-- 第3章：JavaScript基础
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9001, 0, 'JavaScript基础', '学习JavaScript语法和DOM操作', 3, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter3_id = LAST_INSERT_ID();
+
+-- 第4章：JavaScript进阶
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9001, 0, 'JavaScript进阶', '深入学习ES6+新特性和异步编程', 4, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter4_id = LAST_INSERT_ID();
+
+-- 第5章：前端工程化
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9001, 0, '前端工程化', '学习Webpack、npm、Git等工具', 5, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 SET @chapter5_id = LAST_INSERT_ID();
 
 -- 课程1 - 课时（子章节）
@@ -85,23 +91,30 @@ INSERT INTO kg_course (
     7, 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
 );
 
--- 课程2 - 章节
-INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+-- 课程2 - 章节（逐条插入以便正确获取ID）
 -- 第1章：Python基础回顾
-(9002, 0, 'Python基础回顾', '回顾Python基础语法', 1, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第2章：NumPy数值计算
-(9002, 0, 'NumPy数值计算', '学习NumPy数组操作和数值计算', 2, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第3章：Pandas数据处理
-(9002, 0, 'Pandas数据处理', '掌握Pandas数据分析核心功能', 3, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第4章：数据可视化
-(9002, 0, '数据可视化', '使用Matplotlib和Seaborn绘制图表', 4, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第5章：实战项目
-(9002, 0, '综合实战项目', '完成真实的数据分析项目', 5, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9002, 0, 'Python基础回顾', '回顾Python基础语法', 1, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter1_id = LAST_INSERT_ID();
 
-SET @chapter1_id = LAST_INSERT_ID() - 4;
-SET @chapter2_id = LAST_INSERT_ID() - 3;
-SET @chapter3_id = LAST_INSERT_ID() - 2;
-SET @chapter4_id = LAST_INSERT_ID() - 1;
+-- 第2章：NumPy数值计算
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9002, 0, 'NumPy数值计算', '学习NumPy数组操作和数值计算', 2, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter2_id = LAST_INSERT_ID();
+
+-- 第3章：Pandas数据处理
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9002, 0, 'Pandas数据处理', '掌握Pandas数据分析核心功能', 3, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter3_id = LAST_INSERT_ID();
+
+-- 第4章：数据可视化
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9002, 0, '数据可视化', '使用Matplotlib和Seaborn绘制图表', 4, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter4_id = LAST_INSERT_ID();
+
+-- 第5章：实战项目
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9002, 0, '综合实战项目', '完成真实的数据分析项目', 5, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 SET @chapter5_id = LAST_INSERT_ID();
 
 -- 课程2 - 课时
@@ -142,26 +155,35 @@ INSERT INTO kg_course (
     7, 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
 );
 
--- 课程3 - 章节
-INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+-- 课程3 - 章节（逐条插入以便正确获取ID）
 -- 第1章：数据库设计基础
-(9003, 0, '数据库设计基础', '学习数据库设计的基本原则', 1, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第2章：SQL查询
-(9003, 0, 'SQL查询语句', '掌握各种SQL查询技巧', 2, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第3章：索引设计
-(9003, 0, '索引设计与优化', '深入理解索引原理和优化方法', 3, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第4章：事务与锁
-(9003, 0, '事务与锁机制', '学习事务处理和并发控制', 4, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第5章：性能优化
-(9003, 0, '性能监控与调优', '掌握数据库性能优化技巧', 5, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
--- 第6章：高可用架构
-(9003, 0, '高可用架构设计', '学习主从复制和读写分离', 6, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9003, 0, '数据库设计基础', '学习数据库设计的基本原则', 1, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter1_id = LAST_INSERT_ID();
 
-SET @chapter1_id = LAST_INSERT_ID() - 5;
-SET @chapter2_id = LAST_INSERT_ID() - 4;
-SET @chapter3_id = LAST_INSERT_ID() - 3;
-SET @chapter4_id = LAST_INSERT_ID() - 2;
-SET @chapter5_id = LAST_INSERT_ID() - 1;
+-- 第2章：SQL查询
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9003, 0, 'SQL查询语句', '掌握各种SQL查询技巧', 2, 1, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter2_id = LAST_INSERT_ID();
+
+-- 第3章：索引设计
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9003, 0, '索引设计与优化', '深入理解索引原理和优化方法', 3, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter3_id = LAST_INSERT_ID();
+
+-- 第4章：事务与锁
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9003, 0, '事务与锁机制', '学习事务处理和并发控制', 4, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter4_id = LAST_INSERT_ID();
+
+-- 第5章：性能优化
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9003, 0, '性能监控与调优', '掌握数据库性能优化技巧', 5, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+SET @chapter5_id = LAST_INSERT_ID();
+
+-- 第6章：高可用架构
+INSERT INTO kg_chapter (course_id, parent_id, title, summary, priority, free, model, attrs, published, deleted, create_time, update_time) VALUES
+(9003, 0, '高可用架构设计', '学习主从复制和读写分离', 6, 0, 1, '{"duration":0}', 1, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 SET @chapter6_id = LAST_INSERT_ID();
 
 -- 课程3 - 课时
