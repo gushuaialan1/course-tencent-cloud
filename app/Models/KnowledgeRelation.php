@@ -86,7 +86,7 @@ class KnowledgeRelation extends Model
      *
      * @var string
      */
-    public $status = self::STATUS_ACTIVE;
+    public $status;  // 移除默认值，让代码逻辑控制
 
     /**
      * 创建者用户ID

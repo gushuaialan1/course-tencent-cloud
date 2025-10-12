@@ -262,6 +262,12 @@ class KnowledgeGraphController extends Controller
             $knowledgeNodeRepo = new KnowledgeNodeRepo();
             $graphData = $knowledgeNodeRepo->getCourseGraphData($courseId);
             
+            // 临时调试日志
+            error_log("=== getGraphDataAction ===");
+            error_log("Course ID: " . $courseId);
+            error_log("Elements count: " . (isset($graphData['elements']) ? count($graphData['elements']) : 0));
+            error_log("Statistics: " . json_encode($graphData['statistics'] ?? []));
+            
             // 修复：将图谱数据包装到data字段中，符合前端期望的格式
             return $this->jsonSuccess(['data' => $graphData]);
             

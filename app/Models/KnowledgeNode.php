@@ -109,7 +109,7 @@ class KnowledgeNode extends Model
      *
      * @var string
      */
-    public $status = self::STATUS_DRAFT;
+    public $status;  // 移除默认值，让代码逻辑控制
 
     /**
      * 排序顺序
