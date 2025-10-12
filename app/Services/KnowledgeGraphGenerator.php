@@ -44,16 +44,24 @@ class KnowledgeGraphGenerator extends Service
         }
         
         // 获取所有顶层章节（parent_id = 0）
-        $chapters = $chapterRepo->findAll([
+        $chaptersResult = $chapterRepo->findAll([
             'course_id' => $courseId,
             'parent_id' => 0,
             'deleted' => 0,
             'published' => 1
         ]);
         
-        if (count($chapters) === 0) {
+        if (count($chaptersResult) === 0) {
             throw new \Exception('该课程暂无章节，无法生成知识图谱');
         }
+        
+        // 转换为数组以便于操作
+        $chapters = [];
+        foreach ($chaptersResult as $chapter) {
+            $chapters[] = $chapter;
+        }
+        
+        error_log("找到 " . count($chapters) . " 个章节");
         
         $nodes = [];
         $edges = [];
@@ -213,6 +221,13 @@ class KnowledgeGraphGenerator extends Service
                 }
             }
         }
+        
+        // 调试：输出节点信息
+        error_log("=== 生成的节点列表 ===");
+        foreach ($nodes as $node) {
+            error_log("节点: " . $node['data']['label'] . " (ID: " . $node['data']['id'] . ", Type: " . $node['data']['type'] . ")");
+        }
+        error_log("=== 总计：" . count($nodes) . " 个节点 ===");
         
         return [
             'nodes' => $nodes,
