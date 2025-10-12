@@ -38,7 +38,8 @@ class ResourceController extends Controller
             $this->view->setVars([
                 'courses' => $courses,
                 'course_id' => $this->request->get('course_id', 'int', 0),
-                'upload_types' => $uploadTypes
+                'upload_types' => $uploadTypes,
+                'csrfToken' => $this->di->get('csrfToken')
             ]);
             
             return $this->view->pick('resource/upload_enhanced');

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="renderer" content="webkit">
-    <meta name="csrf-token" content="{{ security.getToken() }}">
+    <meta name="csrf-token" content="{{ csrfToken.getToken() }}">
     <title>资源管理 - 增强上传 - 管理后台</title>
     {{ icon_link('favicon.ico') }}
     {{ css_link('lib/layui/css/layui.css') }}
