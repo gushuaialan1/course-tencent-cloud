@@ -138,6 +138,12 @@ class KnowledgeGraphGenerator extends Service
             // 获取该章节下的所有课时
             $lessons = $chapterRepo->findLessons($chapterArray['id']);
             
+            // 调试日志
+            error_log("Chapter ID: " . $chapterArray['id'] . ", Title: " . $chapterArray['title'] . ", Lessons count: " . count($lessons));
+            if (count($lessons) > 0) {
+                error_log("Lessons found: " . json_encode($lessons->toArray()));
+            }
+            
             if (count($lessons) > 0) {
                 $lessonCount = 0;
                 foreach ($lessons as $lesson) {
