@@ -281,9 +281,6 @@ class KnowledgeGraphController extends Controller
             // 获取JSON数据
             $data = $this->request->getJsonRawBody(true);
             
-            // 记录接收到的数据用于调试
-            error_log('Save graph data received: ' . json_encode($data));
-            
             // 检查数据是否为空
             if ($data === null) {
                 return $this->jsonError(['message' => '请求数据格式错误，期望JSON格式']);
@@ -302,12 +299,9 @@ class KnowledgeGraphController extends Controller
             $knowledgeNodeRepo = new KnowledgeNodeRepo();
             $updated = $knowledgeNodeRepo->updateNodesPosition($data['positions']);
             
-            error_log('Updated positions count: ' . count($data['positions']));
-            
             return $this->jsonSuccess(['message' => '保存成功', 'updated' => count($data['positions'])]);
             
         } catch (\Exception $e) {
-            error_log('Save graph error: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
             return $this->jsonError(['message' => '保存失败: ' . $e->getMessage()]);
         }
     }
@@ -1255,40 +1249,29 @@ class KnowledgeGraphController extends Controller
     public function generateSimpleAction()
     {
         try {
-            error_log('=== generateSimpleAction START ===');
-            
             // 尝试获取JSON请求体
             $request = $this->request->getJsonRawBody(true);
-            error_log('JSON Request: ' . json_encode($request));
             
             // 如果JSON解析失败，尝试从POST获取
             if (empty($request)) {
                 $request = $this->request->getPost();
-                error_log('POST Request: ' . json_encode($request));
             }
             
             // 验证参数
             if (empty($request) || !isset($request['course_id'])) {
-                error_log('ERROR: Missing course_id');
                 return $this->jsonError(['msg' => '缺少课程ID参数']);
             }
             
             $courseId = intval($request['course_id']);
-            error_log('Course ID: ' . $courseId);
             
             // 验证course_id有效性
             if ($courseId <= 0) {
-                error_log('ERROR: Invalid course_id');
                 return $this->jsonError(['msg' => '无效的课程ID']);
             }
             
             // 使用生成服务
-            error_log('Creating generator service...');
             $generator = new \App\Services\KnowledgeGraphGenerator();
-            
-            error_log('Calling generateFromChapters...');
             $graphData = $generator->generateFromChapters($courseId);
-            error_log('Graph data generated: nodes=' . count($graphData['nodes']) . ', edges=' . count($graphData['edges']));
             
             // 返回前端期望的格式
             $response = [
@@ -1297,18 +1280,10 @@ class KnowledgeGraphController extends Controller
                     'message' => '生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
                 ]
             ];
-            error_log('Response prepared: ' . json_encode(array_keys($response)));
             
-            error_log('=== generateSimpleAction END ===');
             return $this->jsonSuccess($response);
             
         } catch (\Exception $e) {
-            // 记录详细错误日志
-            error_log('=== generateSimpleAction EXCEPTION ===');
-            error_log('Error: ' . $e->getMessage());
-            error_log('File: ' . $e->getFile() . ':' . $e->getLine());
-            error_log('Stack trace: ' . $e->getTraceAsString());
-            
             return $this->jsonError(['msg' => $e->getMessage()]);
         }
     }

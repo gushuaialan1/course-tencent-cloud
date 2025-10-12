@@ -61,8 +61,6 @@ class KnowledgeGraphGenerator extends Service
             $chapters[] = $chapter;
         }
         
-        error_log("找到 " . count($chapters) . " 个章节");
-        
         $nodes = [];
         $edges = [];
         $nodeIdCounter = 1;
@@ -146,12 +144,6 @@ class KnowledgeGraphGenerator extends Service
             // 获取该章节下的所有课时
             $lessons = $chapterRepo->findLessons($chapterArray['id']);
             
-            // 调试日志
-            error_log("Chapter ID: " . $chapterArray['id'] . ", Title: " . $chapterArray['title'] . ", Lessons count: " . count($lessons));
-            if (count($lessons) > 0) {
-                error_log("Lessons found: " . json_encode($lessons->toArray()));
-            }
-            
             if (count($lessons) > 0) {
                 $lessonCount = 0;
                 foreach ($lessons as $lesson) {
@@ -221,13 +213,6 @@ class KnowledgeGraphGenerator extends Service
                 }
             }
         }
-        
-        // 调试：输出节点信息
-        error_log("=== 生成的节点列表 ===");
-        foreach ($nodes as $node) {
-            error_log("节点: " . $node['data']['label'] . " (ID: " . $node['data']['id'] . ", Type: " . $node['data']['type'] . ")");
-        }
-        error_log("=== 总计：" . count($nodes) . " 个节点 ===");
         
         return [
             'nodes' => $nodes,
