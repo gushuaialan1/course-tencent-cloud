@@ -300,23 +300,50 @@ class KnowledgeGraphController extends Controller
                 foreach ($data['nodes'] as $nodeData) {
                     $tempId = $nodeData['data']['id'] ?? '';
                     
-                    // 如果是临时ID（字符串），创建新节点
+                    // 如果是临时ID（字符串），检查是否已存在，避免重复创建
                     if (!is_numeric($tempId)) {
-                        $newNode = $knowledgeNodeRepo->createNode([
-                            'course_id' => $courseId,
-                            'name' => $nodeData['data']['label'] ?? $nodeData['data']['name'] ?? '未命名节点',
-                            'type' => $nodeData['data']['type'] ?? 'concept',
-                            'description' => $nodeData['data']['description'] ?? '',
-                            'position_x' => $nodeData['position']['x'] ?? 0,
-                            'position_y' => $nodeData['position']['y'] ?? 0,
-                            'properties' => $nodeData['data']['properties'] ?? [],
-                            'style_config' => $nodeData['style'] ?? [],
-                            'status' => 1, // 已发布
-                            'created_by' => $userId
-                        ]);
+                        // 提取资源绑定信息（用于查找已存在的节点）
+                        $chapterId = $nodeData['data']['chapter_id'] ?? null;
+                        $primaryResourceType = $nodeData['data']['primary_resource_type'] ?? null;
+                        $primaryResourceId = $nodeData['data']['primary_resource_id'] ?? null;
                         
-                        if ($newNode) {
-                            $idMap[$tempId] = $newNode->id;
+                        // 先尝试通过资源绑定查找已存在的节点
+                        $existingNode = null;
+                        if ($chapterId && $primaryResourceType && $primaryResourceId) {
+                            $existingNode = $knowledgeNodeRepo->findByResource(
+                                $courseId,
+                                $primaryResourceType,
+                                $primaryResourceId
+                            );
+                        }
+                        
+                        if ($existingNode) {
+                            // 节点已存在，更新位置
+                            $existingNode->position_x = $nodeData['position']['x'] ?? $existingNode->position_x;
+                            $existingNode->position_y = $nodeData['position']['y'] ?? $existingNode->position_y;
+                            $existingNode->save();
+                            $idMap[$tempId] = $existingNode->id;
+                        } else {
+                            // 节点不存在，创建新节点
+                            $newNode = $knowledgeNodeRepo->createNode([
+                                'course_id' => $courseId,
+                                'name' => $nodeData['data']['label'] ?? $nodeData['data']['name'] ?? '未命名节点',
+                                'type' => $nodeData['data']['type'] ?? 'concept',
+                                'description' => $nodeData['data']['description'] ?? '',
+                                'chapter_id' => $chapterId,
+                                'primary_resource_type' => $primaryResourceType,
+                                'primary_resource_id' => $primaryResourceId,
+                                'position_x' => $nodeData['position']['x'] ?? 0,
+                                'position_y' => $nodeData['position']['y'] ?? 0,
+                                'properties' => $nodeData['data']['properties'] ?? [],
+                                'style_config' => $nodeData['style'] ?? [],
+                                'status' => 1, // 已发布
+                                'created_by' => $userId
+                            ]);
+                            
+                            if ($newNode) {
+                                $idMap[$tempId] = $newNode->id;
+                            }
                         }
                     } else {
                         // 真实ID，更新位置

@@ -31,6 +31,29 @@ class KnowledgeNode extends Repository
     }
 
     /**
+     * 根据绑定的资源查找节点（避免重复创建）
+     *
+     * @param int $courseId
+     * @param string $resourceType
+     * @param int $resourceId
+     * @return KnowledgeNodeModel|null
+     */
+    public function findByResource(int $courseId, string $resourceType, int $resourceId): ?KnowledgeNodeModel
+    {
+        $result = KnowledgeNodeModel::findFirst([
+            'conditions' => 'course_id = :course_id: AND primary_resource_type = :type: AND primary_resource_id = :resource_id:',
+            'bind' => [
+                'course_id' => $courseId,
+                'type' => $resourceType,
+                'resource_id' => $resourceId
+            ]
+        ]);
+        
+        // Phalcon的findFirst在找不到时返回false，需要转换为null
+        return $result ?: null;
+    }
+
+    /**
      * 根据课程ID查找节点
      *
      * @param int $courseId
@@ -236,6 +259,10 @@ class KnowledgeNode extends Repository
         $node->status = $data['status'] ?? KnowledgeNodeModel::STATUS_DRAFT;
         $node->sort_order = $data['sort_order'] ?? 0;
         $node->created_by = $data['created_by'] ?? 0;
+        
+        // 资源绑定字段（用于避免重复创建）
+        $node->primary_resource_type = $data['primary_resource_type'] ?? null;
+        $node->primary_resource_id = $data['primary_resource_id'] ?? null;
 
         // 扩展属性（必须设置为有效JSON，即使为空）
         if (isset($data['properties'])) {
