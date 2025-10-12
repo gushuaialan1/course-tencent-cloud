@@ -1254,13 +1254,25 @@ class KnowledgeGraphController extends Controller
     public function generateSimpleAction()
     {
         try {
+            // 尝试获取JSON请求体
             $request = $this->request->getJsonRawBody(true);
             
-            if (!isset($request['course_id'])) {
+            // 如果JSON解析失败，尝试从POST获取
+            if (empty($request)) {
+                $request = $this->request->getPost();
+            }
+            
+            // 验证参数
+            if (empty($request) || !isset($request['course_id'])) {
                 return $this->jsonError('缺少课程ID参数');
             }
             
             $courseId = intval($request['course_id']);
+            
+            // 验证course_id有效性
+            if ($courseId <= 0) {
+                return $this->jsonError('无效的课程ID');
+            }
             
             // 使用生成服务
             $generator = new \App\Services\KnowledgeGraphGenerator();
@@ -1272,6 +1284,10 @@ class KnowledgeGraphController extends Controller
             ]);
             
         } catch (\Exception $e) {
+            // 记录详细错误日志
+            error_log('generateSimpleAction Error: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
             return $this->jsonError('生成失败：' . $e->getMessage());
         }
     }

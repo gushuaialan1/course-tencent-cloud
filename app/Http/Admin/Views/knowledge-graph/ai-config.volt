@@ -248,14 +248,16 @@
         var layer = layui.layer;
         var $ = layui.jquery;
 
-        var currentProvider = '{{ ai_config["provider"] }}';
+        var currentProvider = '{{ ai_config["provider"] }}' || 'disabled';
 
         // 显示对应的配置面板
         function showProviderConfig(provider) {
+            // 隐藏所有配置区域
             $('#deepseek-config').hide();
             $('#siliconflow-config').hide();
             $('.provider-info-card').hide();
 
+            // 根据选择显示对应区域
             if (provider === 'deepseek') {
                 $('#deepseek-config').show();
                 $('#provider-info-deepseek').show();
@@ -264,11 +266,17 @@
                 $('#provider-info-siliconflow').show();
             }
 
+            // 触发表单重新渲染
             form.render();
         }
 
-        // 初始化显示
-        showProviderConfig(currentProvider);
+        // 页面加载完成后初始化显示
+        $(document).ready(function() {
+            // 延迟执行，确保DOM完全加载
+            setTimeout(function() {
+                showProviderConfig(currentProvider);
+            }, 100);
+        });
 
         // 监听提供商切换
         form.on('select(provider)', function(data) {
