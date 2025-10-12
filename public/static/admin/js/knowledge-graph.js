@@ -1110,6 +1110,46 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
         },
 
         /**
+         * 处理AJAX错误（包括CSRF token过期）
+         */
+        handleAjaxError: function(xhr, defaultMsg) {
+            defaultMsg = defaultMsg || '操作失败';
+            
+            // 检查是否是CSRF token错误
+            if (xhr.status === 400 && xhr.responseJSON) {
+                var error = xhr.responseJSON;
+                
+                // CSRF token错误
+                if (error.code === 'security.invalid_csrf_token' || 
+                    error.msg === '无效的CSRF令牌' ||
+                    error.errmsg === '无效的CSRF令牌') {
+                    
+                    layer.confirm('安全令牌已过期，需要刷新页面。是否立即刷新？', {
+                        title: '提示',
+                        icon: 3,
+                        btn: ['刷新页面', '取消']
+                    }, function() {
+                        location.reload();
+                    });
+                    return;
+                }
+                
+                // 其他错误
+                if (error.msg || error.errmsg) {
+                    layer.msg(error.msg || error.errmsg, {icon: 2});
+                    return;
+                }
+            }
+            
+            // 默认错误处理
+            var errorMsg = defaultMsg;
+            if (xhr.status) {
+                errorMsg += '（错误码：' + xhr.status + '）';
+            }
+            layer.msg(errorMsg, {icon: 2});
+        },
+
+        /**
          * 从章节简单生成知识图谱
          */
         generateFromChapters: function() {
@@ -1151,11 +1191,7 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     },
                     error: function(xhr) {
                         layer.close(loadingIndex);
-                        var errorMsg = '生成失败：' + xhr.status;
-                        if (xhr.responseJSON && xhr.responseJSON.errmsg) {
-                            errorMsg = xhr.responseJSON.errmsg;
-                        }
-                        layer.msg(errorMsg, {icon: 2});
+                        self.handleAjaxError(xhr, '生成失败');
                     }
                 });
             });
@@ -1204,11 +1240,7 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     },
                     error: function(xhr) {
                         layer.close(loadingIndex);
-                        var errorMsg = 'AI生成失败：' + xhr.status;
-                        if (xhr.responseJSON && xhr.responseJSON.errmsg) {
-                            errorMsg = xhr.responseJSON.errmsg;
-                        }
-                        layer.msg(errorMsg, {icon: 2});
+                        self.handleAjaxError(xhr, 'AI生成失败');
                     }
                 });
             });
