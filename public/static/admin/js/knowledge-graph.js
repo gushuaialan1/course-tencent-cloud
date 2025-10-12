@@ -135,11 +135,18 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                             'line-style': 'data(lineStyle)',
                             'label': 'data(label)',
                             'text-rotation': 'autorotate',
-                            'font-size': '10px',
-                            'text-margin-y': -10,
+                            'font-size': '9px',  // 减小字体
+                            'font-weight': 'normal',
+                            'text-margin-y': -8,
+                            'text-background-color': '#fff',  // 白色背景
+                            'text-background-opacity': 0.85,  // 半透明背景
+                            'text-background-padding': '2px',
+                            'text-border-width': 0,
                             'source-endpoint': 'outside-to-node',
                             'target-endpoint': 'outside-to-node',
-                            'z-index': 5
+                            'z-index': 1,  // 降低层级，避免遮挡节点
+                            'text-wrap': 'none',
+                            'text-max-width': '60px'
                         }
                     },
                     // 选中边样式
