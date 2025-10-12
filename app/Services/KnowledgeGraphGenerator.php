@@ -79,12 +79,21 @@ class KnowledgeGraphGenerator extends Service
             $nodes[] = [
                 'data' => [
                     'id' => $nodeId,
-                    'name' => $chapterArray['title'],
+                    'label' => $chapterArray['title'],  // 修复：使用label而不是name
+                    'name' => $chapterArray['title'],   // 保留name用于兼容
                     'type' => 'concept',
                     'description' => '章节：' . $chapterArray['title'],
                     'chapter_id' => $chapterArray['id'],
                     'primary_resource_type' => 'chapter',
-                    'primary_resource_id' => $chapterArray['id']
+                    'primary_resource_id' => $chapterArray['id'],
+                    // 添加样式属性
+                    'backgroundColor' => '#FF6B6B',
+                    'borderColor' => '#C92A2A',
+                    'borderWidth' => 2,
+                    'textColor' => '#fff',
+                    'fontSize' => '14px',
+                    'width' => 100,
+                    'height' => 100
                 ],
                 'position' => [
                     'x' => $x,
@@ -103,7 +112,15 @@ class KnowledgeGraphGenerator extends Service
                         'source' => $prevNodeId,
                         'target' => $nodeId,
                         'type' => 'prerequisite',
-                        'description' => '学习顺序：先学前一章节'
+                        'label' => '前置',  // 添加label
+                        'description' => '学习顺序：先学前一章节',
+                        // 添加样式属性
+                        'width' => 2,
+                        'lineColor' => '#FF9800',
+                        'arrowColor' => '#FF9800',
+                        'arrowShape' => 'triangle',
+                        'curveStyle' => 'bezier',
+                        'lineStyle' => 'solid'
                     ]
                 ];
             }
@@ -143,12 +160,21 @@ class KnowledgeGraphGenerator extends Service
                     $nodes[] = [
                         'data' => [
                             'id' => $lessonNodeId,
+                            'label' => $lessonArray['title'],  // 修复：使用label
                             'name' => $lessonArray['title'],
                             'type' => 'skill',
                             'description' => '课时：' . $lessonArray['title'],
                             'chapter_id' => $lessonArray['id'],
                             'primary_resource_type' => 'lesson',
-                            'primary_resource_id' => $lessonArray['id']
+                            'primary_resource_id' => $lessonArray['id'],
+                            // 添加样式属性
+                            'backgroundColor' => '#4CAF50',
+                            'borderColor' => '#388E3C',
+                            'borderWidth' => 2,
+                            'textColor' => '#fff',
+                            'fontSize' => '12px',
+                            'width' => 80,
+                            'height' => 80
                         ],
                         'position' => [
                             'x' => $x,
@@ -163,7 +189,15 @@ class KnowledgeGraphGenerator extends Service
                             'source' => $chapterNodeId,
                             'target' => $lessonNodeId,
                             'type' => 'contain',
-                            'description' => '章节包含课时'
+                            'label' => '包含',  // 添加label
+                            'description' => '章节包含课时',
+                            // 添加样式属性
+                            'width' => 2,
+                            'lineColor' => '#2196F3',
+                            'arrowColor' => '#2196F3',
+                            'arrowShape' => 'triangle',
+                            'curveStyle' => 'bezier',
+                            'lineStyle' => 'solid'
                         ]
                     ];
                     
@@ -411,9 +445,18 @@ PROMPT;
             $nodes[] = [
                 'data' => [
                     'id' => $nodeId,
+                    'label' => $nodeName,  // 添加label
                     'name' => $nodeName,
                     'type' => $node['type'] ?? 'concept',
-                    'description' => $node['description'] ?? ''
+                    'description' => $node['description'] ?? '',
+                    // 根据类型设置不同颜色
+                    'backgroundColor' => ($node['type'] ?? 'concept') === 'concept' ? '#FF6B6B' : '#4CAF50',
+                    'borderColor' => ($node['type'] ?? 'concept') === 'concept' ? '#C92A2A' : '#388E3C',
+                    'borderWidth' => 2,
+                    'textColor' => '#fff',
+                    'fontSize' => '12px',
+                    'width' => 80,
+                    'height' => 80
                 ],
                 'position' => [
                     'x' => $x,
@@ -433,13 +476,37 @@ PROMPT;
                 continue; // 跳过无效的关系
             }
             
+            $edgeType = $edge['type'] ?? 'related';
+            $edgeLabels = [
+                'prerequisite' => '前置',
+                'contain' => '包含',
+                'related' => '相关',
+                'extend' => '扩展',
+                'suggest' => '建议'
+            ];
+            $edgeColors = [
+                'prerequisite' => '#FF9800',
+                'contain' => '#2196F3',
+                'related' => '#9C27B0',
+                'extend' => '#4CAF50',
+                'suggest' => '#FFC107'
+            ];
+            
             $edges[] = [
                 'data' => [
                     'id' => 'edge_' . $edgeIdCounter++,
                     'source' => $nodeIdMap[$sourceName],
                     'target' => $nodeIdMap[$targetName],
-                    'type' => $edge['type'] ?? 'related',
-                    'description' => $edge['description'] ?? ''
+                    'type' => $edgeType,
+                    'label' => $edgeLabels[$edgeType] ?? $edgeType,  // 添加label
+                    'description' => $edge['description'] ?? '',
+                    // 添加样式属性
+                    'width' => 2,
+                    'lineColor' => $edgeColors[$edgeType] ?? '#666',
+                    'arrowColor' => $edgeColors[$edgeType] ?? '#666',
+                    'arrowShape' => 'triangle',
+                    'curveStyle' => 'bezier',
+                    'lineStyle' => 'solid'
                 ]
             ];
         }
