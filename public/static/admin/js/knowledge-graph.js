@@ -1181,12 +1181,13 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     success: function(response) {
                         layer.close(loadingIndex);
                         
-                        if (response.errcode === 0 && response.data && response.data.graph) {
+                        // 统一使用 code 和 msg 字段（与后端jsonSuccess返回格式一致）
+                        if (response.code === 0 && response.data && response.data.graph) {
                             // 加载生成的图谱
                             self.loadGeneratedGraph(response.data.graph);
                             layer.msg(response.data.message || '生成成功！', {icon: 1, time: 2000});
                         } else {
-                            layer.msg(response.errmsg || '生成失败', {icon: 2});
+                            layer.msg(response.msg || '生成失败', {icon: 2});
                         }
                     },
                     error: function(xhr) {
@@ -1230,12 +1231,13 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                     success: function(response) {
                         layer.close(loadingIndex);
                         
-                        if (response.errcode === 0 && response.data && response.data.graph) {
+                        // 统一使用 code 和 msg 字段（与后端jsonSuccess返回格式一致）
+                        if (response.code === 0 && response.data && response.data.graph) {
                             // 加载生成的图谱
                             self.loadGeneratedGraph(response.data.graph);
                             layer.msg(response.data.message || 'AI生成成功！', {icon: 1, time: 2000});
                         } else {
-                            layer.msg(response.errmsg || 'AI生成失败', {icon: 2});
+                            layer.msg(response.msg || 'AI生成失败', {icon: 2});
                         }
                     },
                     error: function(xhr) {

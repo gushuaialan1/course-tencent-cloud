@@ -1279,9 +1279,12 @@ class KnowledgeGraphController extends Controller
             $generator = new \App\Services\KnowledgeGraphGenerator();
             $graphData = $generator->generateFromChapters($courseId);
             
+            // 返回前端期望的格式
             return $this->jsonSuccess([
-                'graph' => $graphData,
-                'message' => '生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
+                'data' => [
+                    'graph' => $graphData,
+                    'message' => '生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
+                ]
             ]);
             
         } catch (\Exception $e) {
@@ -1320,9 +1323,12 @@ class KnowledgeGraphController extends Controller
             $generator = new \App\Services\KnowledgeGraphGenerator();
             $graphData = $generator->generateWithAI($courseId, $options);
             
+            // 返回前端期望的格式
             return $this->jsonSuccess([
-                'graph' => $graphData,
-                'message' => 'AI生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
+                'data' => [
+                    'graph' => $graphData,
+                    'message' => 'AI生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
+                ]
             ]);
             
         } catch (\Exception $e) {
