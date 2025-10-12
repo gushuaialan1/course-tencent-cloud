@@ -45,12 +45,15 @@ class KnowledgeGraph extends LogicService
         // 调试日志
         error_log("=== 前台知识图谱加载 ===");
         error_log("Course ID: " . $course->id);
+        error_log("Nodes raw data: " . json_encode($nodes));
         error_log("Nodes count: " . count($nodes));
+        error_log("Edges raw data: " . json_encode($edges));
         error_log("Edges count: " . count($edges));
         
         // 转换为Cytoscape.js格式
         $cytoscapeData = $this->convertToCytoscapeFormat($nodes, $edges);
         
+        error_log("Cytoscape data: " . json_encode($cytoscapeData));
         error_log("Cytoscape nodes: " . count($cytoscapeData['nodes']));
         error_log("Cytoscape edges: " . count($cytoscapeData['edges']));
 
