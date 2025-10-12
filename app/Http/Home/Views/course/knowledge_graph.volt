@@ -66,6 +66,10 @@
     <script>
         // 图谱数据
         var graphData = {{ graph_data|json_encode|raw }};
+        console.log('=== 前台知识图谱数据 ===');
+        console.log('graphData:', graphData);
+        console.log('nodes count:', graphData.nodes ? graphData.nodes.length : 0);
+        console.log('edges count:', graphData.edges ? graphData.edges.length : 0);
     </script>
     
     {{ js_include('lib/cytoscape.min.js') }}
@@ -74,6 +78,8 @@
     layui.use(['jquery', 'layer'], function() {
         var $ = layui.jquery;
         var layer = layui.layer;
+        
+        console.log('初始化Cytoscape...');
         
         // 初始化Cytoscape
         var cy = cytoscape({
@@ -139,8 +145,18 @@
             autounselectify: false
         });
         
+        console.log('Cytoscape初始化完成');
+        console.log('节点数量:', cy.nodes().length);
+        console.log('边数量:', cy.edges().length);
+        
         // 隐藏加载提示
         $('.loading-overlay').fadeOut();
+        
+        // 如果没有节点，显示提示
+        if (cy.nodes().length === 0) {
+            console.warn('警告：图谱中没有节点！');
+            layer.msg('图谱数据为空', {icon: 0});
+        }
         
         // 节点点击事件 - 显示详情
         cy.on('tap', 'node', function(evt) {

@@ -30,16 +30,29 @@ class KnowledgeGraph extends LogicService
 
         $user = $this->getCurrentUser();
 
-        // 获取课程的所有知识节点
+        // 获取课程的所有知识节点（只查询已发布的节点）
         $nodeRepo = new KnowledgeNodeRepo();
-        $nodes = $nodeRepo->findByCourseId($course->id);
+        $nodes = $nodeRepo->findByCourseId($course->id, [
+            'status' => \App\Models\KnowledgeNode::STATUS_PUBLISHED
+        ]);
 
-        // 获取课程的所有知识关系（边）
+        // 获取课程的所有知识关系（边）（只查询激活的关系）
         $relationRepo = new KnowledgeRelationRepo();
-        $edges = $relationRepo->findByCourseId($course->id);
+        $edges = $relationRepo->findByCourseId($course->id, [
+            'status' => \App\Models\KnowledgeRelation::STATUS_ACTIVE
+        ]);
 
+        // 调试日志
+        error_log("=== 前台知识图谱加载 ===");
+        error_log("Course ID: " . $course->id);
+        error_log("Nodes count: " . count($nodes));
+        error_log("Edges count: " . count($edges));
+        
         // 转换为Cytoscape.js格式
         $cytoscapeData = $this->convertToCytoscapeFormat($nodes, $edges);
+        
+        error_log("Cytoscape nodes: " . count($cytoscapeData['nodes']));
+        error_log("Cytoscape edges: " . count($cytoscapeData['edges']));
 
         // 如果用户已登录，可以获取学习进度（可选功能）
         if ($user->id > 0) {
