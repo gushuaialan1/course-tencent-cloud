@@ -44,11 +44,11 @@ class KnowledgeGraphGenerator extends Service
         }
         
         // 获取所有顶层章节（parent_id = 0）
+        // 注意：不过滤 published 字段，因为原项目章节管理没有发布控制
         $chaptersResult = $chapterRepo->findAll([
             'course_id' => $courseId,
             'parent_id' => 0,
-            'deleted' => 0,
-            'published' => 1
+            'deleted' => 0
         ]);
         
         if (count($chaptersResult) === 0) {
@@ -294,11 +294,11 @@ class KnowledgeGraphGenerator extends Service
         $chapterRepo = new ChapterRepo();
         
         $course = $courseRepo->findById($courseId);
+        // 注意：不过滤 published 字段，因为原项目章节管理没有发布控制
         $chapters = $chapterRepo->findAll([
             'course_id' => $courseId,
             'parent_id' => 0,
-            'deleted' => 0,
-            'published' => 1
+            'deleted' => 0
         ]);
         
         $content = [
