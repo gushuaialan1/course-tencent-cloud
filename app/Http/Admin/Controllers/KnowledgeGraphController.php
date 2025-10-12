@@ -271,7 +271,7 @@ class KnowledgeGraphController extends Controller
     }
 
     /**
-     * 保存图谱数据（批量保存节点位置）
+     * 保存图谱数据（完整保存：节点 + 关系 + 位置）
      * 
      * @Post("/save/{courseId:[0-9]+}", name="admin.knowledge_graph.save")
      */
@@ -286,20 +286,104 @@ class KnowledgeGraphController extends Controller
                 return $this->jsonError(['message' => '请求数据格式错误，期望JSON格式']);
             }
             
-            // 检查是否有positions数据
-            if (!isset($data['positions'])) {
-                return $this->jsonError(['message' => '缺少positions字段']);
-            }
-            
-            if (empty($data['positions'])) {
-                return $this->jsonError(['message' => '没有需要保存的位置数据']);
-            }
-            
-            // 批量更新节点位置
             $knowledgeNodeRepo = new KnowledgeNodeRepo();
-            $updated = $knowledgeNodeRepo->updateNodesPosition($data['positions']);
+            $knowledgeRelationRepo = new KnowledgeRelationRepo();
             
-            return $this->jsonSuccess(['message' => '保存成功', 'updated' => count($data['positions'])]);
+            // 获取当前用户ID
+            $userId = $this->session->get('user_id') ?? 0;
+            
+            // 临时ID到真实ID的映射
+            $idMap = [];
+            
+            // 第一步：处理节点
+            if (!empty($data['nodes'])) {
+                foreach ($data['nodes'] as $nodeData) {
+                    $tempId = $nodeData['data']['id'] ?? '';
+                    
+                    // 如果是临时ID（字符串），创建新节点
+                    if (!is_numeric($tempId)) {
+                        $newNode = $knowledgeNodeRepo->createNode([
+                            'course_id' => $courseId,
+                            'name' => $nodeData['data']['label'] ?? $nodeData['data']['name'] ?? '未命名节点',
+                            'type' => $nodeData['data']['type'] ?? 'concept',
+                            'description' => $nodeData['data']['description'] ?? '',
+                            'position_x' => $nodeData['position']['x'] ?? 0,
+                            'position_y' => $nodeData['position']['y'] ?? 0,
+                            'properties' => $nodeData['data']['properties'] ?? [],
+                            'style_config' => $nodeData['style'] ?? [],
+                            'status' => 1, // 已发布
+                            'created_by' => $userId
+                        ]);
+                        
+                        if ($newNode) {
+                            $idMap[$tempId] = $newNode->id;
+                        }
+                    } else {
+                        // 真实ID，更新位置
+                        $nodeId = intval($tempId);
+                        $node = $knowledgeNodeRepo->findById($nodeId);
+                        if ($node) {
+                            $node->position_x = $nodeData['position']['x'] ?? $node->position_x;
+                            $node->position_y = $nodeData['position']['y'] ?? $node->position_y;
+                            $node->save();
+                            $idMap[$tempId] = $nodeId;
+                        }
+                    }
+                }
+            }
+            
+            // 第二步：处理关系
+            if (!empty($data['edges'])) {
+                foreach ($data['edges'] as $edgeData) {
+                    $sourceId = $edgeData['data']['source'] ?? '';
+                    $targetId = $edgeData['data']['target'] ?? '';
+                    
+                    // 将临时ID映射为真实ID
+                    $realSourceId = $idMap[$sourceId] ?? $sourceId;
+                    $realTargetId = $idMap[$targetId] ?? $targetId;
+                    
+                    // 跳过无效的关系
+                    if (!is_numeric($realSourceId) || !is_numeric($realTargetId)) {
+                        continue;
+                    }
+                    
+                    // 检查关系是否已存在
+                    $existingRelation = $knowledgeRelationRepo->findRelation(
+                        intval($realSourceId),
+                        intval($realTargetId),
+                        $edgeData['data']['type'] ?? 'prerequisite'
+                    );
+                    
+                    if (!$existingRelation) {
+                        // 创建新关系
+                        $knowledgeRelationRepo->createRelation([
+                            'from_node_id' => intval($realSourceId),
+                            'to_node_id' => intval($realTargetId),
+                            'relation_type' => $edgeData['data']['type'] ?? 'prerequisite',
+                            'description' => $edgeData['data']['description'] ?? '',
+                            'weight' => $edgeData['data']['weight'] ?? 1.0,
+                            'properties' => $edgeData['data']['properties'] ?? [],
+                            'style_config' => $edgeData['style'] ?? [],
+                            'status' => 1, // 激活
+                            'created_by' => $userId
+                        ]);
+                    }
+                }
+            }
+            
+            // 第三步：仅更新位置的兼容处理（兼容旧的保存格式）
+            if (!empty($data['positions']) && empty($data['nodes'])) {
+                $knowledgeNodeRepo->updateNodesPosition($data['positions']);
+            }
+            
+            return $this->jsonSuccess([
+                'message' => '保存成功！',
+                'statistics' => [
+                    'nodes_created' => count(array_filter($idMap, function($k) { return !is_numeric($k); }, ARRAY_FILTER_USE_KEY)),
+                    'nodes_updated' => count(array_filter($idMap, function($k) { return is_numeric($k); }, ARRAY_FILTER_USE_KEY)),
+                    'id_map' => $idMap
+                ]
+            ]);
             
         } catch (\Exception $e) {
             return $this->jsonError(['message' => '保存失败: ' . $e->getMessage()]);

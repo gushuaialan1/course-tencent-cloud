@@ -1038,7 +1038,7 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
         },
 
         /**
-         * 保存图谱
+         * 保存图谱（完整保存：节点 + 关系 + 位置）
          */
         saveGraph: function() {
             var self = this;
@@ -1048,41 +1048,113 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                 return;
             }
 
-            // 获取所有节点位置
-            var positions = [];
+            // 准备节点数据
+            var nodes = [];
             this.cy.nodes().forEach(function(node) {
-                // 修复：从 node_123 中提取数字ID
-                var nodeId = node.id().replace('node_', '');
-                positions.push({
-                    id: parseInt(nodeId),
-                    x: Math.round(node.position('x')),
-                    y: Math.round(node.position('y'))
+                nodes.push({
+                    data: node.data(),
+                    position: {
+                        x: Math.round(node.position('x')),
+                        y: Math.round(node.position('y'))
+                    },
+                    style: {
+                        'background-color': node.data('backgroundColor'),
+                        'border-color': node.data('borderColor'),
+                        'border-width': node.data('borderWidth'),
+                        'color': node.data('textColor'),
+                        'font-size': node.data('fontSize'),
+                        'width': node.data('width'),
+                        'height': node.data('height'),
+                        'shape': node.data('shape') || 'ellipse'
+                    }
                 });
             });
 
-            // 保存位置信息
+            // 准备关系数据
+            var edges = [];
+            this.cy.edges().forEach(function(edge) {
+                edges.push({
+                    data: edge.data(),
+                    style: {
+                        'line-color': edge.data('lineColor'),
+                        'target-arrow-color': edge.data('arrowColor'),
+                        'target-arrow-shape': edge.data('arrowShape'),
+                        'curve-style': edge.data('curveStyle'),
+                        'line-style': edge.data('lineStyle'),
+                        'width': edge.data('width'),
+                        'label': edge.data('label')
+                    }
+                });
+            });
+
+            // 显示保存提示
+            var loadingIndex = layer.load(1, {
+                shade: [0.3, '#000'],
+                content: '正在保存图谱...'
+            });
+
+            // 完整保存图谱数据
             $.ajax({
-                url: this.options.apiBase + '/save/' + this.options.courseId,  // 修复：使用正确的路由
+                url: this.options.apiBase + '/save/' + this.options.courseId,
                 method: 'POST',
                 contentType: 'application/json',
                 headers: {
                     'X-Csrf-Token': $('meta[name="csrf-token"]').attr('content')
                 },
-                data: JSON.stringify({positions: positions}),
+                data: JSON.stringify({
+                    nodes: nodes,
+                    edges: edges
+                }),
                 success: function(response) {
+                    layer.close(loadingIndex);
+                    
                     if (response.code === 0) {
                         self.isModified = false;
-                        layer.msg('保存成功', {icon: 1});
+                        
+                        var stats = response.data.statistics || {};
+                        var message = '保存成功！';
+                        if (stats.nodes_created > 0 || stats.nodes_updated > 0) {
+                            message += '创建 ' + (stats.nodes_created || 0) + ' 个节点，';
+                            message += '更新 ' + (stats.nodes_updated || 0) + ' 个节点';
+                        }
+                        
+                        layer.msg(message, {icon: 1, time: 2000});
+                        
+                        // 如果有ID映射，更新节点ID（临时ID -> 真实ID）
+                        if (stats.id_map) {
+                            self.updateNodeIds(stats.id_map);
+                        }
                     } else {
                         layer.msg(response.message || '保存失败', {icon: 2});
                     }
                 },
                 error: function(xhr) {
+                    layer.close(loadingIndex);
+                    
                     var errorMsg = '网络错误：' + xhr.status;
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMsg = xhr.responseJSON.message;
                     }
                     layer.msg(errorMsg, {icon: 2});
+                }
+            });
+        },
+        
+        /**
+         * 更新节点ID（将临时ID替换为真实ID）
+         */
+        updateNodeIds: function(idMap) {
+            var self = this;
+            
+            // 遍历ID映射，更新节点
+            Object.keys(idMap).forEach(function(tempId) {
+                var realId = idMap[tempId];
+                var node = self.cy.getElementById(tempId);
+                
+                if (node.length > 0 && tempId !== realId.toString()) {
+                    // 更新节点的dbId
+                    node.data('dbId', realId);
+                    // 注意：Cytoscape不允许直接修改节点ID，所以保留临时ID，但记录真实ID
                 }
             });
         },

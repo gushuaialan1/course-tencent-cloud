@@ -159,7 +159,7 @@ class KnowledgeRelation extends Repository
      */
     public function findRelation(int $fromNodeId, int $toNodeId, string $relationType): ?KnowledgeRelationModel
     {
-        return KnowledgeRelationModel::findFirst([
+        $result = KnowledgeRelationModel::findFirst([
             'conditions' => 'from_node_id = :from: AND to_node_id = :to: AND relation_type = :type:',
             'bind' => [
                 'from' => $fromNodeId,
@@ -167,6 +167,9 @@ class KnowledgeRelation extends Repository
                 'type' => $relationType
             ]
         ]);
+        
+        // Phalcon的findFirst在找不到时返回false，需要转换为null
+        return $result ?: null;
     }
 
     /**
