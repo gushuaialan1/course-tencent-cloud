@@ -1255,41 +1255,58 @@ class KnowledgeGraphController extends Controller
     public function generateSimpleAction()
     {
         try {
+            error_log('=== generateSimpleAction START ===');
+            
             // 尝试获取JSON请求体
             $request = $this->request->getJsonRawBody(true);
+            error_log('JSON Request: ' . json_encode($request));
             
             // 如果JSON解析失败，尝试从POST获取
             if (empty($request)) {
                 $request = $this->request->getPost();
+                error_log('POST Request: ' . json_encode($request));
             }
             
             // 验证参数
             if (empty($request) || !isset($request['course_id'])) {
+                error_log('ERROR: Missing course_id');
                 return $this->jsonError('缺少课程ID参数');
             }
             
             $courseId = intval($request['course_id']);
+            error_log('Course ID: ' . $courseId);
             
             // 验证course_id有效性
             if ($courseId <= 0) {
+                error_log('ERROR: Invalid course_id');
                 return $this->jsonError('无效的课程ID');
             }
             
             // 使用生成服务
+            error_log('Creating generator service...');
             $generator = new \App\Services\KnowledgeGraphGenerator();
+            
+            error_log('Calling generateFromChapters...');
             $graphData = $generator->generateFromChapters($courseId);
+            error_log('Graph data generated: nodes=' . count($graphData['nodes']) . ', edges=' . count($graphData['edges']));
             
             // 返回前端期望的格式
-            return $this->jsonSuccess([
+            $response = [
                 'data' => [
                     'graph' => $graphData,
                     'message' => '生成成功！共生成 ' . $graphData['statistics']['total_nodes'] . ' 个节点，' . $graphData['statistics']['total_edges'] . ' 条关系'
                 ]
-            ]);
+            ];
+            error_log('Response prepared: ' . json_encode(array_keys($response)));
+            
+            error_log('=== generateSimpleAction END ===');
+            return $this->jsonSuccess($response);
             
         } catch (\Exception $e) {
             // 记录详细错误日志
-            error_log('generateSimpleAction Error: ' . $e->getMessage());
+            error_log('=== generateSimpleAction EXCEPTION ===');
+            error_log('Error: ' . $e->getMessage());
+            error_log('File: ' . $e->getFile() . ':' . $e->getLine());
             error_log('Stack trace: ' . $e->getTraceAsString());
             
             return $this->jsonError('生成失败：' . $e->getMessage());
