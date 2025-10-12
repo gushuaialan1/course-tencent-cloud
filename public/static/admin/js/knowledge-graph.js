@@ -488,8 +488,15 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                             id: 'node_' + element.data.id,  // 修复：添加前缀避免ID冲突
                             dbId: element.data.id,  // 保存原始数据库ID
                             label: element.data.label,
+                            name: element.data.name || element.data.label,  // 兼容字段
                             type: element.data.type,
                             description: element.data.description || '',
+                            weight: element.data.weight || 1,
+                            // 修复：保留资源绑定字段
+                            chapter_id: element.data.chapter_id,
+                            primary_resource_type: element.data.primary_resource_type,
+                            primary_resource_id: element.data.primary_resource_id,
+                            properties: element.data.properties || {},
                             // 样式数据
                             backgroundColor: element.style['background-color'] || '#009688',
                             borderColor: element.style['border-color'] || '#00695C',
@@ -513,7 +520,10 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
                             source: 'node_' + element.data.source,  // 修复：添加前缀匹配节点ID
                             target: 'node_' + element.data.target,  // 修复：添加前缀匹配节点ID
                             type: element.data.type,
-                            label: element.style.label || '',
+                            label: element.style.label || element.data.label || '',
+                            weight: element.data.weight || 1,
+                            description: element.data.description || '',
+                            properties: element.data.properties || {},
                             // 样式数据
                             lineColor: element.style['line-color'] || '#666',
                             arrowColor: element.style['target-arrow-color'] || '#666',

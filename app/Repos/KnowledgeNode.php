@@ -193,9 +193,14 @@ class KnowledgeNode extends Repository
                 'data' => [
                     'id' => $node['id'],
                     'label' => $node['name'],
+                    'name' => $node['name'],  // 兼容字段
                     'type' => $node['type'],
                     'description' => $node['description'],
                     'weight' => $node['weight'],
+                    // 修复：包含资源绑定字段，避免重复创建节点
+                    'chapter_id' => $node['chapter_id'],
+                    'primary_resource_type' => $node['primary_resource_type'],
+                    'primary_resource_id' => $node['primary_resource_id'],
                     'properties' => $nodeModel->getPropertiesData()
                 ],
                 'position' => [
