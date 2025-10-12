@@ -101,29 +101,9 @@ class KnowledgeGraphGenerator extends Service
                 ]
             ];
             
-            // 如果不是第一个章节，创建与前一个章节的前置关系
-            if ($chapterIndex > 0) {
-                $prevChapterId = $chapters[$chapterIndex - 1]->id;
-                $prevNodeId = $chapterNodeMap[$prevChapterId];
-                
-                $edges[] = [
-                    'data' => [
-                        'id' => 'edge_' . $edgeIdCounter++,
-                        'source' => $prevNodeId,
-                        'target' => $nodeId,
-                        'type' => 'prerequisite',
-                        'label' => '前置',  // 添加label
-                        'description' => '学习顺序：先学前一章节',
-                        // 添加样式属性
-                        'width' => 2,
-                        'lineColor' => '#FF9800',
-                        'arrowColor' => '#FF9800',
-                        'arrowShape' => 'triangle',
-                        'curveStyle' => 'bezier',
-                        'lineStyle' => 'solid'
-                    ]
-                ];
-            }
+            // 注释：章节间的前置关系由用户根据实际需要手动添加
+            // 不自动生成前置关系，避免强制假设所有章节都有严格顺序
+            // 如果需要前置关系，可以在编辑器中手动添加
             
             $chapterIndex++;
         }
