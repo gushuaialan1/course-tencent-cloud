@@ -1,24 +1,41 @@
 <!-- 调试信息（开发阶段） -->
 <div style="padding: 10px; background: #fff3cd; border: 1px solid #ffc107; margin-bottom: 10px;">
     <strong>调试信息：</strong>
-    graph_data 是否定义: {{ graph_data is defined ? 'YES' : 'NO' }} |
-    nodes 数量: {{ graph_data.nodes is defined ? graph_data.nodes|length : 'N/A' }} |
-    edges 数量: {{ graph_data.edges is defined ? graph_data.edges|length : 'N/A' }} |
-    node_count: {{ node_count }} |
+    {% if graph_data is defined %}
+        graph_data: 已定义 | 
+        {% if graph_data.nodes is defined %}
+            nodes 数量: {{ graph_data.nodes|length }} | 
+        {% else %}
+            nodes: 未定义 | 
+        {% endif %}
+        {% if graph_data.edges is defined %}
+            edges 数量: {{ graph_data.edges|length }} | 
+        {% else %}
+            edges: 未定义 | 
+        {% endif %}
+    {% else %}
+        graph_data: 未定义 | 
+    {% endif %}
+    node_count: {{ node_count }} | 
     edge_count: {{ edge_count }}
 </div>
 
 <script>
 console.log('=== 前台知识图谱页面加载 ===');
-console.log('graph_data 是否定义:', {{ graph_data is defined ? 'true' : 'false' }});
 {% if graph_data is defined %}
 console.log('graph_data:', {{ graph_data|json_encode|raw }});
-console.log('nodes 数量:', {{ graph_data.nodes is defined ? graph_data.nodes|length : 0 }});
-console.log('edges 数量:', {{ graph_data.edges is defined ? graph_data.edges|length : 0 }});
+    {% if graph_data.nodes is defined %}
+console.log('nodes 数量:', {{ graph_data.nodes|length }});
+    {% endif %}
+    {% if graph_data.edges is defined %}
+console.log('edges 数量:', {{ graph_data.edges|length }});
+    {% endif %}
+{% else %}
+console.log('graph_data: 未定义');
 {% endif %}
 </script>
 
-{% if graph_data.nodes|length > 0 %}
+{% if graph_data is defined and graph_data.nodes is defined and graph_data.nodes|length > 0 %}
     <div class="knowledge-graph-container">
         <div class="graph-toolbar" style="margin-bottom: 15px; padding: 15px; background: #FAFAFA; border-radius: 2px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
