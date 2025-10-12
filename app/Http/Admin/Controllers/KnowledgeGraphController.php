@@ -337,7 +337,7 @@ class KnowledgeGraphController extends Controller
                                 'position_y' => $nodeData['position']['y'] ?? 0,
                                 'properties' => $nodeData['data']['properties'] ?? [],
                                 'style_config' => $nodeData['style'] ?? [],
-                                'status' => 1, // 已发布
+                                'status' => \App\Models\KnowledgeNode::STATUS_PUBLISHED,  // 修复：使用字符串常量
                                 'created_by' => $userId
                             ]);
                             
@@ -391,7 +391,7 @@ class KnowledgeGraphController extends Controller
                             'weight' => $edgeData['data']['weight'] ?? 1.0,
                             'properties' => $edgeData['data']['properties'] ?? [],
                             'style_config' => $edgeData['style'] ?? [],
-                            'status' => 1, // 激活
+                            'status' => \App\Models\KnowledgeRelation::STATUS_ACTIVE,  // 修复：使用字符串常量
                             'created_by' => $userId
                         ]);
                     }
@@ -404,11 +404,13 @@ class KnowledgeGraphController extends Controller
             }
             
             return $this->jsonSuccess([
-                'message' => '保存成功！',
-                'statistics' => [
-                    'nodes_created' => count(array_filter($idMap, function($k) { return !is_numeric($k); }, ARRAY_FILTER_USE_KEY)),
-                    'nodes_updated' => count(array_filter($idMap, function($k) { return is_numeric($k); }, ARRAY_FILTER_USE_KEY)),
-                    'id_map' => $idMap
+                'data' => [
+                    'message' => '保存成功！',
+                    'statistics' => [
+                        'nodes_created' => count(array_filter($idMap, function($k) { return !is_numeric($k); }, ARRAY_FILTER_USE_KEY)),
+                        'nodes_updated' => count(array_filter($idMap, function($k) { return is_numeric($k); }, ARRAY_FILTER_USE_KEY)),
+                        'id_map' => $idMap
+                    ]
                 ]
             ]);
             

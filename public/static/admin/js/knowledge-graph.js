@@ -430,9 +430,12 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
             // 修复：使用后台数据API路径 /admin/knowledge-graph/data/{courseId}
             $.get(this.options.apiBase + '/data/' + this.options.courseId)
                 .done(function(response) {
+                    console.log('加载图谱响应：', response);
                     if (response.code === 0) {
                         // 修复：API返回的数据可能在response.data或直接在response中
                         self.graphData = response.data || response;
+                        console.log('图谱数据：', self.graphData);
+                        console.log('元素数量：', self.graphData.elements ? self.graphData.elements.length : 0);
                         self.renderGraph(self.graphData);
                         layer.closeAll('loading');
                     } else {
@@ -450,16 +453,22 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
          * 渲染图谱
          */
         renderGraph: function(graphData) {
+            console.log('renderGraph 被调用，graphData：', graphData);
+            
             if (!graphData || !graphData.elements) {
-                console.warn('图谱数据为空');
+                console.warn('图谱数据为空或缺少elements字段', graphData);
+                layer.msg('图谱数据为空', {icon: 0, time: 2000});
                 return;
             }
+
+            console.log('开始渲染，元素数量：', graphData.elements.length);
 
             // 清空现有元素
             this.cy.elements().remove();
 
             // 转换数据格式
             var elements = this.convertDataFormat(graphData.elements);
+            console.log('转换后的元素数量：', elements.length);
 
             // 添加元素到图谱
             this.cy.add(elements);
@@ -471,6 +480,7 @@ layui.define(['jquery', 'layer', 'form'], function(exports) {
             this.cy.fit();
 
             console.log('图谱渲染完成，节点数：', this.cy.nodes().length, '边数：', this.cy.edges().length);
+            layer.msg('图谱加载完成！节点数：' + this.cy.nodes().length, {icon: 1, time: 2000});
         },
 
         /**
