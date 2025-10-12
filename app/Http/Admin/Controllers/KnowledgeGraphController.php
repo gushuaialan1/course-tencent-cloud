@@ -1270,7 +1270,7 @@ class KnowledgeGraphController extends Controller
             // 验证参数
             if (empty($request) || !isset($request['course_id'])) {
                 error_log('ERROR: Missing course_id');
-                return $this->jsonError('缺少课程ID参数');
+                return $this->jsonError(['msg' => '缺少课程ID参数']);
             }
             
             $courseId = intval($request['course_id']);
@@ -1279,7 +1279,7 @@ class KnowledgeGraphController extends Controller
             // 验证course_id有效性
             if ($courseId <= 0) {
                 error_log('ERROR: Invalid course_id');
-                return $this->jsonError('无效的课程ID');
+                return $this->jsonError(['msg' => '无效的课程ID']);
             }
             
             // 使用生成服务
@@ -1309,7 +1309,7 @@ class KnowledgeGraphController extends Controller
             error_log('File: ' . $e->getFile() . ':' . $e->getLine());
             error_log('Stack trace: ' . $e->getTraceAsString());
             
-            return $this->jsonError('生成失败：' . $e->getMessage());
+            return $this->jsonError(['msg' => $e->getMessage()]);
         }
     }
     
@@ -1324,7 +1324,7 @@ class KnowledgeGraphController extends Controller
             $request = $this->request->getJsonRawBody(true);
             
             if (!isset($request['course_id'])) {
-                return $this->jsonError('缺少课程ID参数');
+                return $this->jsonError(['msg' => '缺少课程ID参数']);
             }
             
             $courseId = intval($request['course_id']);
@@ -1333,7 +1333,7 @@ class KnowledgeGraphController extends Controller
             // 检查AI是否已配置
             $aiConfigRepo = new KgAiConfigRepo();
             if (!$aiConfigRepo->isAiConfigured()) {
-                return $this->jsonError('AI功能未配置，请先在系统设置中配置AI服务');
+                return $this->jsonError(['msg' => 'AI功能未配置，请先在系统设置中配置AI服务']);
             }
             
             // 使用生成服务
@@ -1349,7 +1349,7 @@ class KnowledgeGraphController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            return $this->jsonError('AI生成失败：' . $e->getMessage());
+            return $this->jsonError(['msg' => 'AI生成失败：' . $e->getMessage()]);
         }
     }
     
@@ -1365,7 +1365,7 @@ class KnowledgeGraphController extends Controller
             $node = $nodeRepo->findById($nodeId);
             
             if (!$node) {
-                return $this->jsonError('节点不存在');
+                return $this->jsonError(['msg' => '节点不存在']);
             }
             
             $nodeArray = is_object($node) ? $node->toArray() : $node;
@@ -1379,7 +1379,7 @@ class KnowledgeGraphController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            return $this->jsonError('获取节点详情失败：' . $e->getMessage());
+            return $this->jsonError(['msg' => '获取节点详情失败：' . $e->getMessage()]);
         }
     }
     
