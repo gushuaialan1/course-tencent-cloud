@@ -195,7 +195,7 @@ class KnowledgeGraphGenerator extends Service
                             'id' => 'edge_' . $edgeIdCounter++,
                             'source' => $chapterNodeId,
                             'target' => $lessonNodeId,
-                            'type' => 'contain',
+                            'type' => 'contains',  // 修复：使用正确的关系类型
                             'label' => '包含',  // 添加label
                             'description' => '章节包含课时',
                             // 添加样式属性
