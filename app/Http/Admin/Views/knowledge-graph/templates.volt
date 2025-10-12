@@ -2,6 +2,22 @@
 
 {% block content %}
 
+    {# 强制转换所有变量为数组，避免 Phalcon View 的对象转换问题 #}
+    <?php
+    // 转换主要变量
+    $templates = is_array($templates) ? $templates : (array)$templates;
+    $categories = is_array($categories) ? $categories : (array)$categories;
+    $difficulty_levels = is_array($difficulty_levels) ? $difficulty_levels : (array)$difficulty_levels;
+    $statistics = is_array($statistics) ? $statistics : (array)$statistics;
+    
+    // 转换templates数组中的每个元素
+    if (!empty($templates)) {
+        foreach ($templates as $k => $v) {
+            $templates[$k] = is_array($v) ? $v : (array)$v;
+        }
+    }
+    ?>
+
     {% set list_url = url({'for':'admin.knowledge_graph.list'}) %}
     {% set create_url = url({'for':'admin.knowledge_graph.template_create'}) %}
 
