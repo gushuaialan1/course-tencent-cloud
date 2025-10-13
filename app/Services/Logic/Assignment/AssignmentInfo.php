@@ -118,7 +118,7 @@ class AssignmentInfo extends LogicService
     {
         $submissionRepo = new SubmissionRepo();
 
-        $submission = $submissionRepo->findSubmission($assignmentId, $userId);
+        $submission = $submissionRepo->findByAssignmentAndUser($assignmentId, $userId);
 
         if (!$submission) {
             return null;
