@@ -84,8 +84,36 @@
                             {# 题目答案区 #}
                             <div class="question-answer" style="margin-top: 15px; padding-left: 40px;">
                                 
-                                {% if question.type == 'choice_single' %}
-                                    {# 单选题 #}
+                                {% if question.type == 'choice' %}
+                                    {# 选择题（根据multiple判断单选/多选）#}
+                                    {% if question.multiple %}
+                                        {# 多选题 #}
+                                        {% for key, option in question.options %}
+                                            <div style="margin: 10px 0;">
+                                                <input type="checkbox" 
+                                                       name="answer_{{ question.id }}[]" 
+                                                       value="{{ key }}" 
+                                                       title="{{ option }}" 
+                                                       lay-filter="question-{{ question.id }}"
+                                                       {% if assignment.submission and assignment.submission.answers[question.id] and key in assignment.submission.answers[question.id] %}checked{% endif %}>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        {# 单选题 #}
+                                        {% for key, option in question.options %}
+                                            <div style="margin: 10px 0;">
+                                                <input type="radio" 
+                                                       name="answer_{{ question.id }}" 
+                                                       value="{{ key }}" 
+                                                       title="{{ option }}" 
+                                                       lay-filter="question-{{ question.id }}"
+                                                       {% if assignment.submission and assignment.submission.answers[question.id] == key %}checked{% endif %}>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    
+                                {% elseif question.type == 'choice_single' %}
+                                    {# 兼容旧数据：单选题 #}
                                     {% for key, option in question.options %}
                                         <div style="margin: 10px 0;">
                                             <input type="radio" 
