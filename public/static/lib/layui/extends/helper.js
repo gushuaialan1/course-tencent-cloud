@@ -33,6 +33,48 @@ layui.define(['jquery', 'layer'], function (exports) {
         });
     };
 
+    /**
+     * 前端日志记录器 - 将日志发送到服务器error_log
+     * @param {string} level - 日志级别: info, warn, error
+     * @param {string} message - 日志消息
+     * @param {*} data - 可选的附加数据
+     */
+    helper.serverLog = function(level, message, data) {
+        var logData = {
+            level: level || 'info',
+            message: message,
+            url: window.location.href,
+            timestamp: new Date().toISOString()
+        };
+        
+        if (data !== undefined) {
+            logData.data = typeof data === 'object' ? JSON.stringify(data) : String(data);
+        }
+        
+        // 发送到后端记录日志（使用beacon避免阻塞）
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/log/frontend', JSON.stringify(logData));
+        } else {
+            $.ajax({
+                url: '/api/log/frontend',
+                type: 'POST',
+                data: JSON.stringify(logData),
+                contentType: 'application/json',
+                async: true,
+                timeout: 1000
+            });
+        }
+        
+        // 同时输出到浏览器控制台（开发调试用）
+        if (level === 'error') {
+            console.error('[ServerLog]', message, data);
+        } else if (level === 'warn') {
+            console.warn('[ServerLog]', message, data);
+        } else {
+            console.log('[ServerLog]', message, data);
+        }
+    };
+
     helper.checkLogin = function (callback) {
         if (window.user.id === '0') {
             layer.msg('继续操作前请先登录', {icon: 2, anim: 6});
