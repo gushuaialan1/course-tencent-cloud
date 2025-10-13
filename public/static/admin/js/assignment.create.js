@@ -17,9 +17,22 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
     // 如果是编辑模式，解析作业数据
     if (isEditMode) {
         try {
-            var dataStr = $('#assignment-data').val();
-            if (dataStr) {
-                assignmentData = JSON.parse(dataStr);
+            var dataEl = document.getElementById('assignment-data');
+            if (dataEl) {
+                var raw = dataEl.textContent || dataEl.innerText || '';
+                // 某些环境可能带有 HTML 实体或转义，先尝试直接 JSON 解析
+                try {
+                    assignmentData = JSON.parse(raw);
+                } catch (innerErr) {
+                    // 回退：尝试还原常见实体再解析
+                    var unescaped = raw
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&amp;/g, '&');
+                    assignmentData = JSON.parse(unescaped);
+                }
                 console.log('编辑模式，作业数据:', assignmentData);
             }
         } catch (e) {
@@ -65,11 +78,13 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         }
 
         $.get('/admin/course/' + courseId + '/chapters', function (res) {
-            if (res.code === 200 || res.code === 0) {
+            if (res && (res.code === 200 || res.code === 0)) {
                 var options = '<option value="">选择章节(可选)</option>';
-                var chapters = res.data.chapters || res.chapters || [];
+                var chapters = (res.data && res.data.chapters) ? res.data.chapters : (res.chapters || []);
                 $.each(chapters, function (i, chapter) {
-                    options += '<option value="' + chapter.id + '">' + chapter.title + '</option>';
+                    if (chapter && chapter.id != null) {
+                        options += '<option value="' + chapter.id + '">' + (chapter.title || ('章节' + chapter.id)) + '</option>';
+                    }
                 });
                 $('select[name="chapter_id"]').html(options);
                 form.render('select');

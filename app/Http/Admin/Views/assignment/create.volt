@@ -37,7 +37,7 @@
             {% if is_edit is defined and is_edit %}
             <input type="hidden" name="id" value="{{ assignment.id }}">
             <input type="hidden" id="edit-mode" value="1">
-            <input type="hidden" id="assignment-data" value="{{ assignment|json_encode }}">
+            <script id="assignment-data" type="application/json">{{ assignment|json_encode }}</script>
             {% endif %}
             
             <!-- 基本信息卡片 -->
