@@ -75,9 +75,10 @@
                         </a>
                         {% set time_left = item.deadline - time() %}
                         {% if time_left > 0 and time_left < 86400 %}
+                            {% set hours_left = (time_left / 3600)|number_format(1, '.', '') %}
                             <span style="color: #FF5722; margin-left: 10px; font-size: 12px;">
                                 <i class="layui-icon layui-icon-time"></i> 
-                                距截止还有 {{ (time_left / 3600)|round(1) }} 小时
+                                距截止还有 {{ hours_left }} 小时
                             </span>
                         {% endif %}
                     {% endif %}
