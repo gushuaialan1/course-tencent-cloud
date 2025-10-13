@@ -35,11 +35,11 @@
                         <i class="layui-icon layui-icon-form"></i> {{ item.question_count }} 道题
                     </span>
                     <span style="margin-right: 20px;">
-                        <i class="layui-icon layui-icon-praise"></i> 总分 {{ item.total_score }} 分
+                        <i class="layui-icon layui-icon-praise"></i> 总分 {{ item.max_score }} 分
                     </span>
                     <span style="margin-right: 20px;">
                         <i class="layui-icon layui-icon-time"></i> 
-                        截止时间: {{ date('Y-m-d H:i', item.deadline) }}
+                        截止时间: {{ item.due_date_text }}
                     </span>
                     {% if item.submission and item.submission.status == 'graded' %}
                         <span style="color: #16BAAA; font-weight: bold;">
