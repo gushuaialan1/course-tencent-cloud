@@ -202,11 +202,10 @@ class CourseController extends Controller
     {
         $service = new CourseAssignmentListService();
 
-        $result = $service->handle($id);
+        $pager = $service->handle($id);
 
         $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
-        $this->view->setVar('assignments', $result['assignments']);
-        $this->view->setVar('count', $result['count']);
+        $this->view->setVar('pager', $pager);
     }
 
     /**
