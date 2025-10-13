@@ -51,20 +51,6 @@ layui.define(['jquery', 'layer'], function (exports) {
             logData.data = typeof data === 'object' ? JSON.stringify(data) : String(data);
         }
         
-        // 发送到后端记录日志（使用beacon避免阻塞）
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon('/api/log/frontend', JSON.stringify(logData));
-        } else {
-            $.ajax({
-                url: '/api/log/frontend',
-                type: 'POST',
-                data: JSON.stringify(logData),
-                contentType: 'application/json',
-                async: true,
-                timeout: 1000
-            });
-        }
-        
         // 同时输出到浏览器控制台（开发调试用）
         if (level === 'error') {
             console.error('[ServerLog]', message, data);
@@ -73,6 +59,22 @@ layui.define(['jquery', 'layer'], function (exports) {
         } else {
             console.log('[ServerLog]', message, data);
         }
+        
+        // 发送到后端记录日志（使用$.ajax确保兼容性）
+        $.ajax({
+            url: '/api/log/frontend',
+            type: 'POST',
+            data: JSON.stringify(logData),
+            contentType: 'application/json',
+            async: true,
+            timeout: 2000,
+            success: function() {
+                // 日志发送成功
+            },
+            error: function(xhr, status, error) {
+                console.error('[ServerLog] 发送失败:', status, error, xhr);
+            }
+        });
     };
 
     helper.checkLogin = function (callback) {

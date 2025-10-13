@@ -8,7 +8,7 @@
 namespace App\Http\Api\Controllers;
 
 /**
- * 日志控制器 - 接收前端日志
+ * @RoutePrefix("/api/log")
  */
 class LogController extends Controller
 {
@@ -23,13 +23,15 @@ class LogController extends Controller
         $rawData = $this->request->getRawBody();
         
         if (empty($rawData)) {
-            return $this->jsonError('empty_data');
+            error_log("[前端日志-ERROR] 接收到空数据");
+            return $this->jsonSuccess(['status' => 'ok']);
         }
         
         $logData = json_decode($rawData, true);
         
         if (!$logData || !isset($logData['message'])) {
-            return $this->jsonError('invalid_data');
+            error_log("[前端日志-ERROR] 日志数据格式无效: " . $rawData);
+            return $this->jsonSuccess(['status' => 'ok']);
         }
         
         // 构建日志消息
@@ -55,9 +57,8 @@ class LogController extends Controller
         // 写入PHP错误日志
         error_log($logMessage);
         
-        // 返回成功（204 No Content）
-        $this->response->setStatusCode(204);
-        return $this->response;
+        // 返回成功
+        return $this->jsonSuccess(['status' => 'ok']);
     }
 }
 
