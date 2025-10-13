@@ -35,7 +35,7 @@ class SubmissionDraft extends LogicService
         $submissionRepo = new SubmissionRepo();
 
         // 查找或创建草稿
-        $submission = $submissionRepo->findSubmission($assignment->id, $user->id);
+        $submission = $submissionRepo->findByAssignmentAndUser($assignment->id, $user->id);
 
         if ($submission) {
             // 如果已提交，不允许保存草稿
@@ -43,7 +43,7 @@ class SubmissionDraft extends LogicService
                 throw new \Exception('作业已提交，无法保存草稿');
             }
 
-            $submission->answers = $answers;
+            $submission->content = $answers;
             $submission->update_time = time();
 
             $submission->update();
@@ -54,7 +54,7 @@ class SubmissionDraft extends LogicService
             $submission->assignment_id = $assignment->id;
             $submission->user_id = $user->id;
             $submission->course_id = $assignment->course_id;
-            $submission->answers = $answers;
+            $submission->content = $answers;
             $submission->status = 'draft';
             $submission->create_time = time();
             $submission->update_time = time();

@@ -28,7 +28,7 @@ class AssignmentSubmit extends LogicService
             throw new \Exception('作业不存在');
         }
 
-        if ($assignment->deleted == 1) {
+        if ($assignment->delete_time > 0) {
             throw new \Exception('作业已删除');
         }
 
@@ -37,9 +37,9 @@ class AssignmentSubmit extends LogicService
         }
 
         // 检查是否已截止
-        if ($assignment->deadline > 0 && $assignment->deadline < time()) {
-            if ($assignment->allow_resubmit == 0) {
-                throw new \Exception('作业已截止，不允许提交');
+        if ($assignment->due_date > 0 && $assignment->due_date < time()) {
+            if ($assignment->allow_late == 0) {
+                throw new \Exception('作业已截止，不允许迟交');
             }
         }
 
@@ -59,20 +59,20 @@ class AssignmentSubmit extends LogicService
         $submissionRepo = new SubmissionRepo();
 
         // 检查是否已有提交
-        $submission = $submissionRepo->findSubmission($assignment->id, $user->id);
+        $submission = $submissionRepo->findByAssignmentAndUser($assignment->id, $user->id);
 
-        $isLate = $assignment->deadline > 0 && time() > $assignment->deadline;
+        $isLate = $assignment->due_date > 0 && time() > $assignment->due_date;
 
         if ($submission) {
             // 重新提交
-            if ($assignment->allow_resubmit == 0) {
-                throw new \Exception('不允许重新提交');
+            if ($assignment->allow_late == 0 && $isLate) {
+                throw new \Exception('作业已截止，不允许迟交');
             }
 
-            $submission->answers = json_encode($answers);
+            $submission->content = json_encode($answers);
             $submission->status = 'pending';
             $submission->is_late = $isLate ? 1 : 0;
-            $submission->submitted_at = time();
+            $submission->submit_time = time();
             $submission->update_time = time();
 
             $submission->update();
@@ -83,10 +83,10 @@ class AssignmentSubmit extends LogicService
             $submission->assignment_id = $assignment->id;
             $submission->user_id = $user->id;
             $submission->course_id = $assignment->course_id;
-            $submission->answers = json_encode($answers);
+            $submission->content = json_encode($answers);
             $submission->status = 'pending';
             $submission->is_late = $isLate ? 1 : 0;
-            $submission->submitted_at = time();
+            $submission->submit_time = time();
             $submission->create_time = time();
             $submission->update_time = time();
 
