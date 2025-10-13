@@ -441,6 +441,17 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         // 富文本内容
         formData.instructions = $('#instructions-editor').val();
 
+        // 转换日期字符串为时间戳
+        if (formData.due_date) {
+            formData.due_date = Math.floor(new Date(formData.due_date).getTime() / 1000);
+        }
+        if (formData.publish_time) {
+            formData.publish_time = Math.floor(new Date(formData.publish_time).getTime() / 1000);
+        }
+
+        // 处理复选框值（未选中时不会出现在serializeArray中）
+        formData.allow_late = $('input[name="allow_late"]').is(':checked') ? 1 : 0;
+
         // 题目数据
         var questions = [];
         $('#questions-container .kg-question-item').each(function (index) {
