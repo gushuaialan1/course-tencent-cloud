@@ -53,7 +53,6 @@ class SubmissionDraft extends LogicService
 
             $submission->assignment_id = $assignment->id;
             $submission->user_id = $user->id;
-            $submission->course_id = $assignment->course_id;
             $submission->content = $answers;
             $submission->status = 'draft';
             $submission->create_time = time();

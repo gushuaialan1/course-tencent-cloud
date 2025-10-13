@@ -82,7 +82,6 @@ class AssignmentSubmit extends LogicService
 
             $submission->assignment_id = $assignment->id;
             $submission->user_id = $user->id;
-            $submission->course_id = $assignment->course_id;
             $submission->content = json_encode($answers);
             $submission->status = 'pending';
             $submission->is_late = $isLate ? 1 : 0;
