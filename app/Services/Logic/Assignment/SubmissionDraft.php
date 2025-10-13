@@ -57,8 +57,13 @@ class SubmissionDraft extends LogicService
             $submission->status = 'draft';
             $submission->create_time = time();
             $submission->update_time = time();
+            $submission->delete_time = 0;
 
-            $submission->create();
+            if (!$submission->create()) {
+                $messages = $submission->getMessages();
+                $errorMsg = !empty($messages) ? $messages[0]->getMessage() : '草稿创建失败';
+                throw new \Exception($errorMsg);
+            }
         }
 
         return $submission;
