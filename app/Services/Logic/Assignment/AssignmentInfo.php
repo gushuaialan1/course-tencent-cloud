@@ -11,7 +11,6 @@ use App\Models\Assignment as AssignmentModel;
 use App\Models\AssignmentSubmission as SubmissionModel;
 use App\Models\User as UserModel;
 use App\Repos\Assignment as AssignmentRepo;
-use App\Repos\AssignmentQuestion as AssignmentQuestionRepo;
 use App\Repos\AssignmentSubmission as SubmissionRepo;
 use App\Repos\Course as CourseRepo;
 use App\Services\Logic\Service as LogicService;
@@ -85,33 +84,26 @@ class AssignmentInfo extends LogicService
 
     protected function handleQuestions($assignmentId)
     {
-        $questionRepo = new AssignmentQuestionRepo();
-
-        $questions = $questionRepo->findAll([
-            'assignment_id' => $assignmentId,
-            'deleted' => 0,
-        ], ['priority' => 1], 100);
-
-        $result = [];
-
-        if ($questions->count() > 0) {
-            foreach ($questions as $question) {
-                $result[] = [
-                    'id' => $question->id,
-                    'assignment_id' => $question->assignment_id,
-                    'type' => $question->type,
-                    'title' => $question->title,
-                    'content' => $question->content,
-                    'options' => $question->options ? json_decode($question->options, true) : [],
-                    'answer' => $question->answer,
-                    'score' => $question->score,
-                    'priority' => $question->priority,
-                    'required' => $question->required,
-                ];
-            }
+        $assignmentRepo = new AssignmentRepo();
+        $assignment = $assignmentRepo->findById($assignmentId);
+        
+        if (!$assignment || !$assignment->content) {
+            return [];
         }
 
-        return $result;
+        // content字段存储的是题目数组的JSON
+        $questions = json_decode($assignment->content, true);
+        
+        if (!is_array($questions)) {
+            return [];
+        }
+
+        // content可能直接是题目数组，也可能是包含questions键的对象
+        if (isset($questions['questions']) && is_array($questions['questions'])) {
+            $questions = $questions['questions'];
+        }
+
+        return $questions;
     }
 
     protected function handleSubmission($assignmentId, $userId)
@@ -124,7 +116,7 @@ class AssignmentInfo extends LogicService
             return null;
         }
 
-        $answers = $submission->answers ? json_decode($submission->answers, true) : [];
+        $answers = $submission->content ? json_decode($submission->content, true) : [];
 
         return [
             'id' => $submission->id,
@@ -134,8 +126,8 @@ class AssignmentInfo extends LogicService
             'status' => $submission->status,
             'answers' => $answers,
             'is_late' => $submission->is_late,
-            'submitted_at' => $submission->submitted_at,
-            'graded_at' => $submission->graded_at,
+            'submitted_at' => $submission->submit_time,
+            'graded_at' => $submission->grade_time,
             'create_time' => $submission->create_time,
             'update_time' => $submission->update_time,
         ];
