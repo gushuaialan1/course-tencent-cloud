@@ -28,7 +28,8 @@
         {% set show_tab_chapters = course.lesson_count > 0 %}
         {% set show_tab_packages = course.package_count > 0 %}
         {% set show_tab_assignments = course.assignment_count > 0 %}
-        {% set show_tab_knowledge_graph = course.knowledge_graph_node_count > 0 %}
+        {# 临时修复：知识图谱标签页始终显示（用于调试） #}
+        {% set show_tab_knowledge_graph = true %}
         {% set show_tab_consults = course.consult_count > 0 %}
         {% set show_tab_reviews = course.review_count > 0 %}
         {% set show_tab_resources = course.resource_count > 0 %}
