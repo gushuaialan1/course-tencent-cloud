@@ -671,23 +671,47 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                 // 清空默认选项
                 $question.find('.kg-choice-options').empty();
 
-                // 添加选项
+                // 添加选项（兼容两种结构：
+                // 1) options 为对象映射 { A: '文本', B: '文本' }
+                // 2) options 为数组 [{label:'A', content:'文本', is_correct:true}, ...]）
                 var options = questionData.options || {};
                 var correctAnswer = questionData.correct_answer || [];
-                var optionLabels = Object.keys(options);
-                
-                optionLabels.forEach(function(label) {
-                    var isCorrect = correctAnswer.indexOf(label) !== -1;
-                    var optionHtml = `
-                        <div class="kg-choice-option">
-                            <span class="kg-option-label">${label}.</span>
-                            <input type="text" name="questions[${questionCount}][options][${label}]" value="${options[label]}" placeholder="选项${label}" class="layui-input">
-                            <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
-                            ${optionLabels.length > 2 ? '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>' : ''}
-                        </div>
-                    `;
-                    $question.find('.kg-choice-options').append(optionHtml);
-                });
+
+                if (Array.isArray(options)) {
+                    // 数组结构
+                    options.forEach(function (opt) {
+                        if (!opt) return;
+                        var label = opt.label || '';
+                        var text = opt.content != null ? String(opt.content) : '';
+                        var isCorrect = (opt.is_correct === true) || (correctAnswer.indexOf(label) !== -1);
+                        if (!label) return;
+                        var optionHtml = `
+                            <div class="kg-choice-option">
+                                <span class="kg-option-label">${label}.</span>
+                                <input type="text" name="questions[${questionCount}][options][${label}]" value="${text.replace(/"/g, '&quot;')}" placeholder="选项${label}" class="layui-input">
+                                <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
+                                <button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>
+                            </div>
+                        `;
+                        $question.find('.kg-choice-options').append(optionHtml);
+                    });
+                } else {
+                    // 对象映射结构
+                    var optionLabels = Object.keys(options);
+                    optionLabels.forEach(function(label) {
+                        var text = options[label] != null ? String(options[label]) : '';
+                        var isCorrect = correctAnswer.indexOf(label) !== -1;
+                        var optionHtml = `
+                            <div class="kg-choice-option">
+                                <span class="kg-option-label">${label}.</span>
+                                <input type="text" name="questions[${questionCount}][options][${label}]" value="${text.replace(/"/g, '&quot;')}" placeholder="选项${label}" class="layui-input">
+                                <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
+                                ${optionLabels.length > 2 ? '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>' : ''}
+                            </div>
+                        `;
+                        $question.find('.kg-choice-options').append(optionHtml);
+                    });
+                }
                 break;
 
             case 'essay':
