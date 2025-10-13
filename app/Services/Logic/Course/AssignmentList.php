@@ -130,7 +130,12 @@ class AssignmentList extends LogicService
 
         // 解析content获取题目数量
         $content = $assignment['content'] ? json_decode($assignment['content'], true) : [];
-        $questions = $content['questions'] ?? [];
+        // content可能直接是题目数组，也可能是包含questions键的对象
+        if (is_array($content)) {
+            $questions = isset($content['questions']) ? $content['questions'] : $content;
+        } else {
+            $questions = [];
+        }
         $result['question_count'] = count($questions);
 
         // 如果有提交记录，添加提交信息
