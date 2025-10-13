@@ -175,7 +175,7 @@
                             </button>
                             {% endif %}
                             
-                            <a href="{{ url({'for':'admin.assignment.submission.list'}) }}?assignment_id={{ assignment.id }}" 
+                            <a href="{{ url({'for':'admin.assignment.grading.list'}) }}?assignment_id={{ assignment.id }}" 
                                class="layui-btn layui-btn-xs layui-btn-warm" title="查看提交">
                                 <i class="layui-icon layui-icon-list"></i>
                             </a>
