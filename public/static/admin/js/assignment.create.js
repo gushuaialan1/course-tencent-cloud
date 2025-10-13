@@ -48,7 +48,7 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
             return;
         }
 
-        $.get('/admin/course/chapters', { course_id: courseId }, function (res) {
+        $.get('/admin/course/' + courseId + '/chapters', function (res) {
             if (res.code === 200) {
                 var options = '<option value="">选择章节(可选)</option>';
                 $.each(res.data.chapters, function (i, chapter) {
@@ -57,6 +57,8 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                 $('select[name="chapter_id"]').html(options);
                 form.render('select');
             }
+        }).fail(function(xhr) {
+            layer.msg('加载章节失败，请重试', { icon: 2 });
         });
     }
 

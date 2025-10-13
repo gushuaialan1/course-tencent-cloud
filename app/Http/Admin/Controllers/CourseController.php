@@ -182,6 +182,14 @@ class CourseController extends Controller
         $course = $courseService->getCourse($id);
         $chapters = $courseService->getChapters($id);
 
+        // 如果是AJAX请求，返回JSON数据
+        if ($this->request->isAjax()) {
+            return $this->jsonSuccess([
+                'chapters' => $chapters,
+                'course' => $course
+            ]);
+        }
+
         $this->view->setVar('course', $course);
         $this->view->setVar('chapters', $chapters);
     }
