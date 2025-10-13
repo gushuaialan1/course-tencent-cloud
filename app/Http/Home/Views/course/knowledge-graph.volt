@@ -1,40 +1,3 @@
-<!-- 调试信息（开发阶段） -->
-<div style="padding: 10px; background: #fff3cd; border: 1px solid #ffc107; margin-bottom: 10px;">
-    <strong>调试信息：</strong>
-    {% if graph_data is defined %}
-        graph_data: 已定义 | 
-        {% if graph_data.nodes is defined %}
-            nodes 数量: {{ graph_data.nodes|length }} | 
-        {% else %}
-            nodes: 未定义 | 
-        {% endif %}
-        {% if graph_data.edges is defined %}
-            edges 数量: {{ graph_data.edges|length }} | 
-        {% else %}
-            edges: 未定义 | 
-        {% endif %}
-    {% else %}
-        graph_data: 未定义 | 
-    {% endif %}
-    node_count: {{ node_count }} | 
-    edge_count: {{ edge_count }}
-</div>
-
-<script>
-console.log('=== 前台知识图谱页面加载 ===');
-{% if graph_data is defined %}
-console.log('graph_data:', {{ graph_data|json_encode|raw }});
-    {% if graph_data.nodes is defined %}
-console.log('nodes 数量:', {{ graph_data.nodes|length }});
-    {% endif %}
-    {% if graph_data.edges is defined %}
-console.log('edges 数量:', {{ graph_data.edges|length }});
-    {% endif %}
-{% else %}
-console.log('graph_data: 未定义');
-{% endif %}
-</script>
-
 {% if graph_data is defined and graph_data.nodes is defined and graph_data.nodes|length > 0 %}
     <div class="knowledge-graph-container">
         <div class="graph-toolbar" style="margin-bottom: 15px; padding: 15px; background: #FAFAFA; border-radius: 2px;">
@@ -103,42 +66,6 @@ console.log('graph_data: 未定义');
     <script>
         // 图谱数据
         var graphData = {{ graph_data|json_encode|raw }};
-        
-        console.log('[DEBUG] 知识图谱脚本开始执行');
-        console.log('[DEBUG] jQuery是否存在:', typeof jQuery !== 'undefined');
-        console.log('[DEBUG] graphData:', graphData);
-        
-        // 等待jQuery加载后测试日志功能
-        (function testLog() {
-            if (typeof jQuery === 'undefined') {
-                console.log('[DEBUG] jQuery未加载，100ms后重试...');
-                setTimeout(testLog, 100);
-                return;
-            }
-            
-            console.log('[测试] jQuery已加载，准备发送测试日志到 /api/log/frontend');
-            jQuery.ajax({
-                url: '/api/log/frontend',
-                type: 'POST',
-                data: JSON.stringify({
-                    level: 'info',
-                    message: '[测试] 知识图谱页面加载 - 节点:' + (graphData.nodes ? graphData.nodes.length : 0) + ', 边:' + (graphData.edges ? graphData.edges.length : 0),
-                    url: window.location.href,
-                    timestamp: new Date().toISOString()
-                }),
-                contentType: 'application/json',
-                success: function(response) {
-                    console.log('[测试] ✅ 日志发送成功，响应:', response);
-                },
-                error: function(xhr, status, error) {
-                    console.error('[测试] ❌ 日志发送失败');
-                    console.error('[测试] 状态:', status);
-                    console.error('[测试] 错误:', error);
-                    console.error('[测试] 状态码:', xhr.status);
-                    console.error('[测试] 响应文本:', xhr.responseText);
-                }
-            });
-        })();
     </script>
     
     {{ js_include('lib/cytoscape.min.js') }}
