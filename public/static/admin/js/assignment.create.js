@@ -11,6 +11,22 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
 
     var questionCount = 0;
     var attachments = [];
+    var isEditMode = $('#edit-mode').val() === '1';
+    var assignmentData = null;
+
+    // 如果是编辑模式，解析作业数据
+    if (isEditMode) {
+        try {
+            var dataStr = $('#assignment-data').val();
+            if (dataStr) {
+                assignmentData = JSON.parse(dataStr);
+                console.log('编辑模式，作业数据:', assignmentData);
+            }
+        } catch (e) {
+            layer.msg('加载作业数据失败', { icon: 2 });
+            console.error('解析作业数据失败:', e);
+        }
+    }
 
     // 初始化日期时间选择器
     laydate.render({
@@ -41,7 +57,7 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
     });
 
     // 加载课程章节
-    function loadChapters(courseId) {
+    function loadChapters(courseId, callback) {
         if (!courseId) {
             $('select[name="chapter_id"]').html('<option value="">选择章节(可选)</option>');
             form.render('select');
@@ -49,13 +65,16 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         }
 
         $.get('/admin/course/' + courseId + '/chapters', function (res) {
-            if (res.code === 200) {
+            if (res.code === 200 || res.code === 0) {
                 var options = '<option value="">选择章节(可选)</option>';
-                $.each(res.data.chapters, function (i, chapter) {
+                var chapters = res.data.chapters || res.chapters || [];
+                $.each(chapters, function (i, chapter) {
                     options += '<option value="' + chapter.id + '">' + chapter.title + '</option>';
                 });
                 $('select[name="chapter_id"]').html(options);
                 form.render('select');
+                
+                if (callback) callback();
             }
         }).fail(function(xhr) {
             layer.msg('加载章节失败，请重试', { icon: 2 });
@@ -404,17 +423,18 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         formData.status = status;
 
         var loading = layer.load(1, { shade: [0.5, '#000'] });
+        var url = isEditMode ? '/admin/assignment/update' : '/admin/assignment/create';
 
-        $.post('/admin/assignment/create', formData, function (res) {
+        $.post(url, formData, function (res) {
             layer.close(loading);
             
-            if (res.code === 0) {  // 修复：检查 code === 0
-                var message = status === 'draft' ? '草稿保存成功' : '作业发布成功';
+            if (res.code === 0) {
+                var message = isEditMode ? '作业更新成功' : (status === 'draft' ? '草稿保存成功' : '作业发布成功');
                 layer.msg(message, { icon: 1 }, function () {
-                    location.href = '/admin/assignment/list';  // 修复：正确的路径
+                    location.href = '/admin/assignment/list';
                 });
             } else {
-                layer.msg(res.msg || res.message || '操作失败', { icon: 2 });  // 修复：正确的字段
+                layer.msg(res.msg || res.message || '操作失败', { icon: 2 });
             }
         }).fail(function (xhr) {
             layer.close(loading);
@@ -527,5 +547,164 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
             area: ['800px', '600px']
         });
     });
+
+    // 编辑模式：回填数据
+    if (isEditMode && assignmentData) {
+        fillFormData(assignmentData);
+    }
+
+    /**
+     * 回填表单数据（编辑模式）
+     */
+    function fillFormData(data) {
+        console.log('开始回填数据', data);
+
+        // 基本信息
+        $('input[name="title"]').val(data.title || '');
+        $('select[name="assignment_type"]').val(data.assignment_type || '');
+        $('select[name="course_id"]').val(data.course_id || '');
+        $('textarea[name="description"]').val(data.description || '');
+
+        // 加载章节（如果有课程ID）
+        if (data.course_id) {
+            loadChapters(data.course_id, function() {
+                $('select[name="chapter_id"]').val(data.chapter_id || '');
+                form.render('select');
+            });
+        }
+
+        // 评分设置
+        $('input[name="max_score"]').val(data.max_score || 100);
+        $('select[name="grade_mode"]').val(data.grade_mode || 'manual');
+        $('input[name="max_attempts"]').val(data.max_attempts || 1);
+
+        // 时间设置
+        if (data.due_date && data.due_date > 0) {
+            var dueDate = new Date(data.due_date * 1000);
+            var dueDateStr = formatDateTime(dueDate);
+            $('input[name="due_date"]').val(dueDateStr);
+        }
+        $('input[name="time_limit"]').val(data.time_limit || 0);
+        $('input[name="allow_late"]').prop('checked', data.allow_late == 1);
+        $('input[name="late_penalty"]').val(data.late_penalty || 0);
+
+        // 作业说明
+        $('#instructions-editor').val(data.instructions || '');
+
+        // 发布设置
+        $('select[name="status"]').val(data.status || 'draft');
+
+        // 附件
+        if (data.attachments && typeof data.attachments === 'string') {
+            try {
+                attachments = JSON.parse(data.attachments);
+            } catch (e) {
+                attachments = [];
+            }
+        } else if (Array.isArray(data.attachments)) {
+            attachments = data.attachments;
+        }
+        renderAttachmentsList();
+
+        // 题目内容
+        if (data.content) {
+            var questions = [];
+            if (typeof data.content === 'string') {
+                try {
+                    questions = JSON.parse(data.content);
+                } catch (e) {
+                    questions = [];
+                }
+            } else if (Array.isArray(data.content)) {
+                questions = data.content;
+            }
+
+            // 添加题目
+            questions.forEach(function(q, index) {
+                addQuestionFromData(q, index + 1);
+            });
+        }
+
+        // 刷新表单渲染
+        form.render();
+    }
+
+    /**
+     * 从数据添加题目（编辑模式）
+     */
+    function addQuestionFromData(questionData, index) {
+        questionCount = index;
+        var type = questionData.type || 'choice';
+        var questionHtml = createQuestionHtml(questionCount, type);
+        $('#questions-container').append(questionHtml);
+
+        var $question = $('.kg-question-item[data-question-id="' + questionCount + '"]');
+        
+        // 填充题目数据
+        $question.find('textarea[name*="[title]"]').val(questionData.title || '');
+        $question.find('input[name*="[score]"]').val(questionData.score || 10);
+
+        switch (type) {
+            case 'choice':
+                // 单选/多选
+                if (questionData.multiple) {
+                    $question.find('input[name*="[multiple]"][value="1"]').prop('checked', true);
+                } else {
+                    $question.find('input[name*="[multiple]"][value="0"]').prop('checked', true);
+                }
+
+                // 清空默认选项
+                $question.find('.kg-choice-options').empty();
+
+                // 添加选项
+                var options = questionData.options || {};
+                var correctAnswer = questionData.correct_answer || [];
+                var optionLabels = Object.keys(options);
+                
+                optionLabels.forEach(function(label) {
+                    var isCorrect = correctAnswer.indexOf(label) !== -1;
+                    var optionHtml = `
+                        <div class="kg-choice-option">
+                            <span class="kg-option-label">${label}.</span>
+                            <input type="text" name="questions[${questionCount}][options][${label}]" value="${options[label]}" placeholder="选项${label}" class="layui-input">
+                            <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
+                            ${optionLabels.length > 2 ? '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>' : ''}
+                        </div>
+                    `;
+                    $question.find('.kg-choice-options').append(optionHtml);
+                });
+                break;
+
+            case 'essay':
+                $question.find('input[name*="[min_length]"]').val(questionData.min_length || '');
+                $question.find('input[name*="[max_length]"]').val(questionData.max_length || '');
+                $question.find('textarea[name*="[reference_answer]"]').val(questionData.reference_answer || '');
+                break;
+
+            case 'upload':
+                var allowedTypes = questionData.allowed_types || [];
+                $question.find('input[name*="[allowed_types]"]').each(function() {
+                    var $checkbox = $(this);
+                    $checkbox.prop('checked', allowedTypes.indexOf($checkbox.val()) !== -1);
+                });
+                $question.find('input[name*="[max_files]"]').val(questionData.max_files || 1);
+                break;
+        }
+
+        form.render();
+    }
+
+    /**
+     * 格式化日期时间
+     */
+    function formatDateTime(date) {
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        var hour = String(date.getHours()).padStart(2, '0');
+        var minute = String(date.getMinutes()).padStart(2, '0');
+        var second = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+    }
 
 });

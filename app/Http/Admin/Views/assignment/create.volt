@@ -33,6 +33,13 @@
     <!-- 左侧：作业内容编辑 -->
     <div class="layui-col-md9">
         <form class="layui-form" lay-filter="assignment-form" id="assignment-form">
+            <!-- 隐藏字段：编辑模式标记 -->
+            {% if is_edit is defined and is_edit %}
+            <input type="hidden" name="id" value="{{ assignment.id }}">
+            <input type="hidden" id="edit-mode" value="1">
+            <input type="hidden" id="assignment-data" value="{{ assignment|json_encode }}">
+            {% endif %}
+            
             <!-- 基本信息卡片 -->
             <div class="layui-card">
                 <div class="layui-card-header">
