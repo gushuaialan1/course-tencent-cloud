@@ -210,21 +210,35 @@ class AssignmentController extends Controller
             'owner_id' => $this->authUser->id
         ];
 
-        // 处理JSON字段
+        // 处理JSON字段 - 确保JSON字段有默认值，避免数据库报错
         if (!empty($postData['attachments'])) {
             $data['attachments'] = json_decode($postData['attachments'], true);
+        } else {
+            $data['attachments'] = [];
         }
+        
         if (!empty($postData['rubric'])) {
             $data['rubric'] = json_decode($postData['rubric'], true);
+        } else {
+            $data['rubric'] = [];  // 评分标准为空时设置为空数组
         }
+        
         if (!empty($postData['content'])) {
             $data['content'] = json_decode($postData['content'], true);
+        } else {
+            $data['content'] = [];  // 题目内容为空时设置为空数组
         }
+        
         if (!empty($postData['reference_answer'])) {
             $data['reference_answer'] = json_decode($postData['reference_answer'], true);
+        } else {
+            $data['reference_answer'] = [];
         }
+        
         if (!empty($postData['visibility'])) {
             $data['visibility'] = json_decode($postData['visibility'], true);
+        } else {
+            $data['visibility'] = [];
         }
 
         try {
@@ -292,21 +306,35 @@ class AssignmentController extends Controller
         }
 
         try {
-            // 处理JSON字段
+            // 处理JSON字段 - 确保JSON字段有默认值，避免数据库报错
             if (!empty($postData['attachments'])) {
                 $postData['attachments'] = json_decode($postData['attachments'], true);
+            } else {
+                $postData['attachments'] = [];
             }
+            
             if (!empty($postData['rubric'])) {
                 $postData['rubric'] = json_decode($postData['rubric'], true);
+            } else {
+                $postData['rubric'] = [];  // 评分标准为空时设置为空数组
             }
+            
             if (!empty($postData['content'])) {
                 $postData['content'] = json_decode($postData['content'], true);
+            } else {
+                $postData['content'] = [];  // 题目内容为空时设置为空数组
             }
+            
             if (!empty($postData['reference_answer'])) {
                 $postData['reference_answer'] = json_decode($postData['reference_answer'], true);
+            } else {
+                $postData['reference_answer'] = [];
             }
+            
             if (!empty($postData['visibility'])) {
                 $postData['visibility'] = json_decode($postData['visibility'], true);
+            } else {
+                $postData['visibility'] = [];
             }
 
             $assignmentRepo->update($assignment, $postData);
