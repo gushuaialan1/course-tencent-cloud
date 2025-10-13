@@ -73,14 +73,6 @@
                         <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
                             <i class="layui-icon layui-icon-edit"></i> 开始作业
                         </a>
-                        {% set time_left = item.deadline - time() %}
-                        {% if time_left > 0 and time_left < 86400 %}
-                            {% set hours_left = (time_left / 3600)|number_format(1, '.', '') %}
-                            <span style="color: #FF5722; margin-left: 10px; font-size: 12px;">
-                                <i class="layui-icon layui-icon-time"></i> 
-                                距截止还有 {{ hours_left }} 小时
-                            </span>
-                        {% endif %}
                     {% endif %}
                 </div>
             </div>
