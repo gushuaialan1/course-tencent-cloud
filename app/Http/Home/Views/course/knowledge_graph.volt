@@ -103,6 +103,34 @@ console.log('graph_data: 未定义');
     <script>
         // 图谱数据
         var graphData = {{ graph_data|json_encode|raw }};
+        
+        // 等待jQuery加载后测试日志功能
+        (function testLog() {
+            if (typeof jQuery === 'undefined') {
+                setTimeout(testLog, 100);
+                return;
+            }
+            
+            console.log('[测试] jQuery已加载，发送测试日志');
+            jQuery.ajax({
+                url: '/api/log/frontend',
+                type: 'POST',
+                data: JSON.stringify({
+                    level: 'info',
+                    message: '[测试] 知识图谱页面加载 - 节点:' + (graphData.nodes ? graphData.nodes.length : 0) + ', 边:' + (graphData.edges ? graphData.edges.length : 0),
+                    url: window.location.href,
+                    timestamp: new Date().toISOString()
+                }),
+                contentType: 'application/json',
+                success: function() {
+                    console.log('[测试] ✅ 日志发送成功');
+                },
+                error: function(xhr, status, error) {
+                    console.error('[测试] ❌ 日志发送失败:', status, error);
+                    console.error('[测试] 响应:', xhr.responseText);
+                }
+            });
+        })();
     </script>
     
     {{ js_include('lib/cytoscape.min.js') }}

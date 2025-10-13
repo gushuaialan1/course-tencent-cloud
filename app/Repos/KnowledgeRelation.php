@@ -55,13 +55,11 @@ class KnowledgeRelation extends Repository
             'columns' => 'id'
         ]);
         
-        if (count($nodes) === 0) {
-            error_log("KnowledgeRelation::findByCourseId - 课程 {$courseId} 没有找到节点");
-            return [];
-        }
-        
-        $nodeIds = array_column($nodes->toArray(), 'id');
-        error_log("KnowledgeRelation::findByCourseId - 课程 {$courseId} 找到 " . count($nodeIds) . " 个节点");
+            if (count($nodes) === 0) {
+                return [];
+            }
+            
+            $nodeIds = array_column($nodes->toArray(), 'id');
         
         $conditions = [];
         $bind = [];
@@ -100,10 +98,7 @@ class KnowledgeRelation extends Repository
             }
         }
 
-        $relations = KnowledgeRelationModel::find($params)->toArray();
-        error_log("KnowledgeRelation::findByCourseId - 找到 " . count($relations) . " 个关系");
-        
-        return $relations;
+            return KnowledgeRelationModel::find($params)->toArray();
     }
 
     /**

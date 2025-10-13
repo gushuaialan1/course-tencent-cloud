@@ -25,27 +25,21 @@ class KnowledgeGraph extends LogicService
      */
     public function handle($courseId)
     {
-        error_log("=== 前台知识图谱加载开始 ===");
-        error_log("Course ID: " . $courseId);
+        error_log("[KG-前台] Course {$courseId} - 开始加载");
         
         // 检查课程是否存在
         $course = $this->checkCourse($courseId);
-        error_log("Course found: " . $course->title . " (ID: " . $course->id . ")");
 
         $user = $this->getCurrentUser();
-        error_log("User ID: " . $user->id);
 
         // 获取课程的所有知识节点（只查询已发布的节点）
         $nodeRepo = new KnowledgeNodeRepo();
         $nodes = $nodeRepo->findByCourseId($course->id, [
             'status' => \App\Models\KnowledgeNode::STATUS_PUBLISHED
         ]);
-        error_log("查询到的节点数量: " . count($nodes));
         
-        if (count($nodes) > 0) {
-            error_log("第一个节点示例: " . json_encode($nodes[0]));
-        } else {
-            error_log("警告：没有找到任何已发布的节点！");
+        if (count($nodes) === 0) {
+            error_log("[KG-前台] Course {$courseId} - 警告：没有找到已发布的节点");
         }
 
         // 获取课程的所有知识关系（边）（只查询激活的关系）
@@ -53,43 +47,27 @@ class KnowledgeGraph extends LogicService
         $edges = $relationRepo->findByCourseId($course->id, [
             'status' => \App\Models\KnowledgeRelation::STATUS_ACTIVE
         ]);
-        error_log("查询到的关系数量: " . count($edges));
         
-        if (count($edges) > 0) {
-            error_log("第一个关系示例: " . json_encode($edges[0]));
-        } else {
-            error_log("警告：没有找到任何活跃的关系！");
+        if (count($edges) === 0) {
+            error_log("[KG-前台] Course {$courseId} - 警告：没有找到活跃的关系");
         }
         
         // 转换为Cytoscape.js格式
         $cytoscapeData = $this->convertToCytoscapeFormat($nodes, $edges);
         
-        error_log("转换后的Cytoscape节点数: " . count($cytoscapeData['nodes']));
-        error_log("转换后的Cytoscape边数: " . count($cytoscapeData['edges']));
-        
-        if (count($cytoscapeData['nodes']) > 0) {
-            error_log("第一个Cytoscape节点: " . json_encode($cytoscapeData['nodes'][0]));
-        }
-        if (count($cytoscapeData['edges']) > 0) {
-            error_log("第一个Cytoscape边: " . json_encode($cytoscapeData['edges'][0]));
-        }
+        error_log("[KG-前台] Course {$courseId} - 完成：节点=" . count($cytoscapeData['nodes']) . ", 边=" . count($cytoscapeData['edges']));
 
         // 如果用户已登录，可以获取学习进度（可选功能）
         if ($user->id > 0) {
             $cytoscapeData = $this->enrichWithUserProgress($cytoscapeData, $course->id, $user->id);
         }
 
-        $result = [
-            'graph_data' => $cytoscapeData,
-            'node_count' => count($nodes),
-            'edge_count' => count($edges),
-            'course_title' => $course->title,
-        ];
-        
-        error_log("=== 前台知识图谱加载完成 ===");
-        error_log("返回数据: node_count=" . $result['node_count'] . ", edge_count=" . $result['edge_count']);
-
-        return $result;
+            return [
+                'graph_data' => $cytoscapeData,
+                'node_count' => count($nodes),
+                'edge_count' => count($edges),
+                'course_title' => $course->title,
+            ];
     }
 
     /**
