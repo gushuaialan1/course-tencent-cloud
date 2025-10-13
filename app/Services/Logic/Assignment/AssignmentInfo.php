@@ -43,19 +43,19 @@ class AssignmentInfo extends LogicService
         $submission = $this->handleSubmission($assignment->id, $user->id);
         $me = $this->handleMeInfo($assignment, $user);
 
-        $isOverdue = $assignment->deadline > 0 && $assignment->deadline < time();
+        $isOverdue = $assignment->due_date > 0 && $assignment->due_date < time();
 
         return [
             'id' => $assignment->id,
             'title' => $assignment->title,
             'description' => $assignment->description,
             'course_id' => $assignment->course_id,
-            'deadline' => $assignment->deadline,
-            'total_score' => $assignment->total_score,
-            'question_count' => $assignment->question_count,
+            'deadline' => $assignment->due_date,
+            'total_score' => $assignment->max_score,
+            'question_count' => count($questions),
             'status' => $assignment->status,
-            'allow_resubmit' => $assignment->allow_resubmit,
-            'deleted' => $assignment->deleted,
+            'allow_resubmit' => $assignment->allow_late,
+            'deleted' => $assignment->delete_time > 0 ? 1 : 0,
             'create_time' => $assignment->create_time,
             'update_time' => $assignment->update_time,
             'course' => $course,
