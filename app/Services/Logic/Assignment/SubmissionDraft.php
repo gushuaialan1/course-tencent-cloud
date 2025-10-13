@@ -7,7 +7,6 @@
 
 namespace App\Services\Logic\Assignment;
 
-use App\Library\Validators\Common as CommonValidator;
 use App\Models\AssignmentSubmission as SubmissionModel;
 use App\Repos\Assignment as AssignmentRepo;
 use App\Repos\AssignmentSubmission as SubmissionRepo;
@@ -30,9 +29,8 @@ class SubmissionDraft extends LogicService
 
         $post = $this->request->getPost();
 
-        $validator = new CommonValidator();
-
-        $answers = $validator->checkJsonField($post, 'answers');
+        // 获取答案数据（可能是JSON字符串）
+        $answers = $post['answers'] ?? '';
 
         $submissionRepo = new SubmissionRepo();
 

@@ -7,11 +7,9 @@
 
 namespace App\Services\Logic\Assignment;
 
-use App\Library\Validators\Common as CommonValidator;
 use App\Models\Assignment as AssignmentModel;
 use App\Models\AssignmentSubmission as SubmissionModel;
 use App\Repos\Assignment as AssignmentRepo;
-use App\Repos\AssignmentQuestion as QuestionRepo;
 use App\Repos\AssignmentSubmission as SubmissionRepo;
 use App\Services\Logic\Service as LogicService;
 
@@ -47,10 +45,9 @@ class AssignmentSubmit extends LogicService
 
         $post = $this->request->getPost();
 
-        $validator = new CommonValidator();
-
-        $answers = $validator->checkJsonField($post, 'answers');
-        $answers = json_decode($answers, true);
+        // 获取并解析答案数据
+        $answersJson = $post['answers'] ?? '';
+        $answers = $answersJson ? json_decode($answersJson, true) : [];
 
         if (!$answers || !is_array($answers)) {
             throw new \Exception('请先完成作业');
@@ -104,35 +101,56 @@ class AssignmentSubmit extends LogicService
 
     protected function checkRequiredQuestions($assignmentId, $answers)
     {
-        $questionRepo = new QuestionRepo();
+        $assignmentRepo = new AssignmentRepo();
+        $assignment = $assignmentRepo->findById($assignmentId);
+        
+        if (!$assignment || !$assignment->content) {
+            return;
+        }
 
-        $questions = $questionRepo->findAll([
-            'assignment_id' => $assignmentId,
-            'required' => 1,
-            'deleted' => 0,
-        ]);
+        // 从content字段解析题目
+        $questions = json_decode($assignment->content, true);
+        
+        if (!is_array($questions)) {
+            return;
+        }
+        
+        // 兼容两种数据结构
+        if (isset($questions['questions']) && is_array($questions['questions'])) {
+            $questions = $questions['questions'];
+        }
 
-        if ($questions->count() == 0) {
+        if (empty($questions)) {
             return;
         }
 
         $answeredIds = array_keys($answers);
 
         foreach ($questions as $question) {
-            if (!in_array($question->id, $answeredIds)) {
-                throw new \Exception("请完成必答题：{$question->title}");
+            // 检查是否为必答题
+            if (empty($question['required']) || $question['required'] != 1) {
+                continue;
+            }
+            
+            $questionId = $question['id'] ?? null;
+            if (!$questionId) {
+                continue;
             }
 
-            $answer = $answers[$question->id];
+            if (!in_array($questionId, $answeredIds)) {
+                throw new \Exception("请完成必答题：{$question['title']}");
+            }
+
+            $answer = $answers[$questionId];
 
             // 检查答案是否为空
-            if ($question->type == 'choice_single' || $question->type == 'choice_multiple') {
+            if ($question['type'] == 'choice' || $question['type'] == 'choice_single' || $question['type'] == 'choice_multiple') {
                 if (empty($answer)) {
-                    throw new \Exception("请完成必答题：{$question->title}");
+                    throw new \Exception("请完成必答题：{$question['title']}");
                 }
-            } elseif ($question->type == 'text' || $question->type == 'essay') {
+            } elseif ($question['type'] == 'text' || $question['type'] == 'essay') {
                 if (trim($answer) === '') {
-                    throw new \Exception("请完成必答题：{$question->title}");
+                    throw new \Exception("请完成必答题：{$question['title']}");
                 }
             }
         }
