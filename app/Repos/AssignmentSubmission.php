@@ -77,13 +77,15 @@ class AssignmentSubmission extends Repository
      */
     public function findByAssignmentAndUser(int $assignmentId, int $userId): ?AssignmentSubmissionModel
     {
-        return AssignmentSubmissionModel::findFirst([
+        $result = AssignmentSubmissionModel::findFirst([
             'conditions' => 'assignment_id = :assignment_id: AND user_id = :user_id: AND delete_time = 0',
             'bind' => [
                 'assignment_id' => $assignmentId,
                 'user_id' => $userId
             ]
         ]);
+        
+        return $result ?: null;
     }
 
     /**
