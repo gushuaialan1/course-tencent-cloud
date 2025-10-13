@@ -26,6 +26,10 @@ layui.define(['jquery', 'layer'], function (exports) {
         $target.html(html);
         $.get(url, function (html) {
             $target.html(html);
+        }).fail(function(xhr, status, error) {
+            console.error('AJAX加载失败:', url, status, error, xhr);
+            var errorHtml = '<div class="no-records"><p><i class="layui-icon layui-icon-face-cry" style="font-size: 48px; color: #E6E6E6;"></i></p><p>加载失败：' + (xhr.statusText || '服务器错误') + '</p></div>';
+            $target.html(errorHtml);
         });
     };
 
