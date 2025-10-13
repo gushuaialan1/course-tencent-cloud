@@ -36,25 +36,40 @@ class KnowledgeRelation extends Repository
      */
     public function findByCourseId(int $courseId, array $options = []): array
     {
-        // 先获取课程的所有节点ID
+        // 先获取课程的所有已发布节点ID
+        $nodeConditions = 'course_id = :course_id:';
+        $nodeBind = ['course_id' => $courseId];
+        
+        // 如果选项中指定了状态，则使用指定的状态，否则只查询已发布的节点
+        if (isset($options['node_status'])) {
+            $nodeConditions .= ' AND status = :node_status:';
+            $nodeBind['node_status'] = $options['node_status'];
+        } else {
+            $nodeConditions .= ' AND status = :node_status:';
+            $nodeBind['node_status'] = 'published';
+        }
+        
         $nodes = KnowledgeNodeModel::find([
-            'conditions' => 'course_id = :course_id:',
-            'bind' => ['course_id' => $courseId],
+            'conditions' => $nodeConditions,
+            'bind' => $nodeBind,
             'columns' => 'id'
         ]);
         
         if (count($nodes) === 0) {
+            error_log("KnowledgeRelation::findByCourseId - 课程 {$courseId} 没有找到节点");
             return [];
         }
         
         $nodeIds = array_column($nodes->toArray(), 'id');
+        error_log("KnowledgeRelation::findByCourseId - 课程 {$courseId} 找到 " . count($nodeIds) . " 个节点");
         
         $conditions = [];
         $bind = [];
         
-        // 节点ID过滤 - 使用IN而不是子查询
+        // 节点ID过滤 - from_node_id 和 to_node_id 都必须在节点列表中
         $nodeIdList = implode(',', array_map('intval', $nodeIds));
         $conditions[] = 'from_node_id IN (' . $nodeIdList . ')';
+        $conditions[] = 'to_node_id IN (' . $nodeIdList . ')';
 
         // 关系类型过滤
         if (!empty($options['relation_type'])) {
@@ -85,7 +100,10 @@ class KnowledgeRelation extends Repository
             }
         }
 
-        return KnowledgeRelationModel::find($params)->toArray();
+        $relations = KnowledgeRelationModel::find($params)->toArray();
+        error_log("KnowledgeRelation::findByCourseId - 找到 " . count($relations) . " 个关系");
+        
+        return $relations;
     }
 
     /**
