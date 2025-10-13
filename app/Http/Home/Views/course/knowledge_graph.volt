@@ -117,12 +117,33 @@ console.log('graph_data: 未定义');
         var layer = layui.layer;
         
         console.log('初始化Cytoscape...');
+        console.log('graphData structure:', graphData);
+        
+        // 检查数据格式
+        if (!graphData || !graphData.nodes || !graphData.edges) {
+            console.error('图谱数据格式错误！', graphData);
+            $('.loading-overlay').hide();
+            layer.msg('图谱数据格式错误', {icon: 0});
+            return;
+        }
+        
+        // 将nodes和edges合并为Cytoscape需要的格式
+        var elements = [];
+        if (Array.isArray(graphData.nodes)) {
+            elements = elements.concat(graphData.nodes);
+        }
+        if (Array.isArray(graphData.edges)) {
+            elements = elements.concat(graphData.edges);
+        }
+        
+        console.log('合并后的elements:', elements);
+        console.log('elements数量:', elements.length);
         
         // 初始化Cytoscape
         var cy = cytoscape({
             container: document.getElementById('knowledge-graph'),
             
-            elements: graphData,
+            elements: elements,
             
             style: [
                 {
