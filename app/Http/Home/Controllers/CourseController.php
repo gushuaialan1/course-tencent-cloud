@@ -218,6 +218,7 @@ class CourseController extends Controller
         $result = $service->handle($id);
 
         $this->view->setRenderLevel(View::LEVEL_ACTION_VIEW);
+        $this->view->pick('course/knowledge-graph');  // 明确指定视图文件
         $this->view->setVar('graph_data', $result['graph_data']);
         $this->view->setVar('node_count', $result['node_count']);
         $this->view->setVar('edge_count', $result['edge_count']);
