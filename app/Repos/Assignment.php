@@ -8,12 +8,85 @@
 
 namespace App\Repos;
 
+use App\Library\Paginator\Adapter\QueryBuilder as PagerQueryBuilder;
 use App\Models\Assignment as AssignmentModel;
 use App\Models\AssignmentSubmission as AssignmentSubmissionModel;
 use Phalcon\Mvc\Model\Query\Builder;
 
 class Assignment extends Repository
 {
+    /**
+     * 分页查询作业
+     *
+     * @param array $where 查询条件
+     * @param string $sort 排序方式
+     * @param int $page 页码
+     * @param int $limit 每页数量
+     * @return mixed
+     */
+    public function paginate($where = [], $sort = 'latest', $page = 1, $limit = 15)
+    {
+        $builder = $this->modelsManager->createBuilder();
+        
+        $builder->from(AssignmentModel::class);
+        
+        $builder->where('1 = 1');
+        
+        if (!empty($where['id'])) {
+            $builder->andWhere('id = :id:', ['id' => $where['id']]);
+        }
+        
+        if (!empty($where['course_id'])) {
+            $builder->andWhere('course_id = :course_id:', ['course_id' => $where['course_id']]);
+        }
+        
+        if (!empty($where['chapter_id'])) {
+            $builder->andWhere('chapter_id = :chapter_id:', ['chapter_id' => $where['chapter_id']]);
+        }
+        
+        if (!empty($where['owner_id'])) {
+            $builder->andWhere('owner_id = :owner_id:', ['owner_id' => $where['owner_id']]);
+        }
+        
+        if (!empty($where['status'])) {
+            if (is_array($where['status'])) {
+                $builder->inWhere('status', $where['status']);
+            } else {
+                $builder->andWhere('status = :status:', ['status' => $where['status']]);
+            }
+        }
+        
+        if (isset($where['deleted'])) {
+            $builder->andWhere('deleted = :deleted:', ['deleted' => $where['deleted']]);
+        } else {
+            // 默认不显示已删除的
+            $builder->andWhere('delete_time = 0');
+        }
+        
+        // 排序
+        switch ($sort) {
+            case 'oldest':
+                $orderBy = 'id ASC';
+                break;
+            case 'due_date':
+                $orderBy = 'due_date ASC, id DESC';
+                break;
+            default:
+                $orderBy = 'id DESC';
+                break;
+        }
+        
+        $builder->orderBy($orderBy);
+        
+        $pager = new PagerQueryBuilder([
+            'builder' => $builder,
+            'page' => $page,
+            'limit' => $limit,
+        ]);
+        
+        return $pager->paginate();
+    }
+    
     /**
      * 根据ID查找作业
      *

@@ -24,7 +24,7 @@ class AssignmentList extends LogicService
      * 处理课程作业列表
      *
      * @param int $courseId 课程ID
-     * @return array
+     * @return mixed 返回分页器对象
      */
     public function handle($courseId)
     {
@@ -33,37 +33,64 @@ class AssignmentList extends LogicService
 
         $user = $this->getCurrentUser();
 
+        // 使用分页器查询
+        $pagerQuery = new PagerQuery();
+        $page = $pagerQuery->getPage();
+        $limit = $pagerQuery->getLimit();
+        $sort = $pagerQuery->getSort();
+
         // 获取课程所有已发布的作业
         $assignmentRepo = new AssignmentRepo();
-        $assignments = $assignmentRepo->findByCourseId($course->id, [
+        
+        $params = [
+            'course_id' => $course->id,
             'status' => AssignmentModel::STATUS_PUBLISHED,
-            'order' => 'create_time DESC'
-        ]);
-
-        // 如果用户已登录，获取用户的提交状态
+        ];
+        
+        // 使用paginate返回分页器
+        $pager = $assignmentRepo->paginate($params, $sort, $page, $limit);
+        
+        // 处理分页数据
+        return $this->handleAssignments($pager, $user->id);
+    }
+    
+    /**
+     * 处理作业分页数据
+     *
+     * @param mixed $pager 分页器对象
+     * @param int $userId 用户ID
+     * @return mixed
+     */
+    protected function handleAssignments($pager, $userId)
+    {
+        if ($pager->total_pages == 0) {
+            return $pager;
+        }
+        
         $submissionRepo = new AssignmentSubmissionRepo();
         $submissions = [];
         
-        if ($user->id > 0) {
-            foreach ($assignments as $assignment) {
-                $submission = $submissionRepo->findByAssignmentAndUser($assignment['id'], $user->id);
+        // 如果用户已登录，获取用户的提交状态
+        if ($userId > 0) {
+            $assignmentIds = array_column($pager->items->toArray(), 'id');
+            foreach ($assignmentIds as $assignmentId) {
+                $submission = $submissionRepo->findByAssignmentAndUser($assignmentId, $userId);
                 if ($submission) {
-                    $submissions[$assignment['id']] = $submission->toArray();
+                    $submissions[$assignmentId] = $submission->toArray();
                 }
             }
         }
-
-        // 处理作业数据
-        $result = [];
-        foreach ($assignments as $assignment) {
-            $item = $this->handleAssignment($assignment, $submissions[$assignment['id']] ?? null);
-            $result[] = $item;
+        
+        // 处理每个作业
+        $items = [];
+        foreach ($pager->items as $assignment) {
+            $item = $this->handleAssignment($assignment->toArray(), $submissions[$assignment->id] ?? null);
+            $items[] = $item;
         }
-
-        return [
-            'assignments' => $result,
-            'count' => count($result),
-        ];
+        
+        $pager->items = $items;
+        
+        return $pager;
     }
 
     /**
