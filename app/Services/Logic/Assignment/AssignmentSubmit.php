@@ -88,12 +88,13 @@ class AssignmentSubmit extends LogicService
             $submission->submit_time = time();
             $submission->create_time = time();
             $submission->update_time = time();
-            $submission->delete_time = 0;
 
-            if (!$submission->create()) {
+            $result = $submission->create();
+            
+            if (!$result) {
                 $messages = $submission->getMessages();
                 $errorMsg = !empty($messages) ? $messages[0]->getMessage() : '提交失败';
-                throw new \Exception($errorMsg);
+                throw new \Exception('作业提交失败: ' . $errorMsg);
             }
         }
 
