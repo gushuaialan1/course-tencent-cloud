@@ -9,7 +9,6 @@ namespace App\Services\Logic\Assignment;
 
 use App\Models\User as UserModel;
 use App\Repos\Assignment as AssignmentRepo;
-use App\Repos\AssignmentQuestion as QuestionRepo;
 use App\Repos\AssignmentSubmission as SubmissionRepo;
 use App\Repos\Course as CourseRepo;
 use App\Services\Logic\Service as LogicService;
@@ -31,11 +30,11 @@ class SubmissionResult extends LogicService
 
         $submissionRepo = new SubmissionRepo();
 
-        $submission = $submissionRepo->findSubmission($assignment->id, $user->id);
+        $submission = $submissionRepo->findByAssignmentAndUser($assignment->id, $user->id);
 
         $assignmentInfo = $this->handleAssignment($assignment);
         $submissionInfo = $this->handleSubmission($submission);
-        $questions = $this->handleQuestionsWithAnswers($assignment->id, $submission);
+        $questions = $this->handleQuestionsWithAnswers($assignment, $submission);
 
         return [
             'assignment' => $assignmentInfo,
@@ -49,13 +48,20 @@ class SubmissionResult extends LogicService
         $courseRepo = new CourseRepo();
 
         $course = $courseRepo->findById($assignment->course_id);
+        
+        // 从content解析题目数量
+        $questions = json_decode($assignment->content, true);
+        if (isset($questions['questions'])) {
+            $questions = $questions['questions'];
+        }
+        $questionCount = is_array($questions) ? count($questions) : 0;
 
         return [
             'id' => $assignment->id,
             'title' => $assignment->title,
             'description' => $assignment->description,
-            'total_score' => $assignment->total_score,
-            'question_count' => $assignment->question_count,
+            'total_score' => $assignment->max_score,
+            'question_count' => $questionCount,
             'course' => [
                 'id' => $course->id,
                 'title' => $course->title,
@@ -69,7 +75,7 @@ class SubmissionResult extends LogicService
             return null;
         }
 
-        $answers = $submission->answers ? json_decode($submission->answers, true) : [];
+        $answers = $submission->content ? json_decode($submission->content, true) : [];
 
         return [
             'id' => $submission->id,
@@ -78,53 +84,76 @@ class SubmissionResult extends LogicService
             'answers' => $answers,
             'feedback' => $submission->feedback,
             'is_late' => $submission->is_late,
-            'submitted_at' => $submission->submitted_at,
-            'graded_at' => $submission->graded_at,
+            'submitted_at' => $submission->submit_time,
+            'graded_at' => $submission->grade_time,
         ];
     }
 
-    protected function handleQuestionsWithAnswers($assignmentId, $submission)
+    protected function handleQuestionsWithAnswers($assignment, $submission)
     {
-        $questionRepo = new QuestionRepo();
-
-        $questions = $questionRepo->findAll([
-            'assignment_id' => $assignmentId,
-            'deleted' => 0,
-        ], ['priority' => 1], 100);
+        // 从assignment.content解析题目
+        $questions = json_decode($assignment->content, true);
+        
+        if (!is_array($questions)) {
+            return [];
+        }
+        
+        // 兼容两种数据结构
+        if (isset($questions['questions']) && is_array($questions['questions'])) {
+            $questions = $questions['questions'];
+        }
 
         $result = [];
-
         $userAnswers = [];
-        $questionScores = [];
 
-        if ($submission && $submission->answers) {
-            $userAnswers = json_decode($submission->answers, true);
+        if ($submission && $submission->content) {
+            $userAnswers = json_decode($submission->content, true);
         }
 
-        if ($submission && $submission->question_scores) {
-            $questionScores = json_decode($submission->question_scores, true);
-        }
-
-        if ($questions->count() > 0) {
-            foreach ($questions as $question) {
-                $questionId = $question->id;
-
-                $userAnswer = isset($userAnswers[$questionId]) ? $userAnswers[$questionId] : null;
-                $earnedScore = isset($questionScores[$questionId]) ? $questionScores[$questionId] : 0;
-
-                $result[] = [
-                    'id' => $question->id,
-                    'type' => $question->type,
-                    'title' => $question->title,
-                    'content' => $question->content,
-                    'options' => $question->options ? json_decode($question->options, true) : [],
-                    'answer' => $question->answer,
-                    'score' => $question->score,
-                    'user_answer' => $userAnswer,
-                    'earned_score' => $earnedScore,
-                    'feedback' => isset($questionScores[$questionId . '_feedback']) ? $questionScores[$questionId . '_feedback'] : '',
-                ];
+        foreach ($questions as $question) {
+            $questionId = $question['id'] ?? null;
+            
+            if (!$questionId) {
+                continue;
             }
+
+            $userAnswer = isset($userAnswers[$questionId]) ? $userAnswers[$questionId] : null;
+            
+            // 计算得分（从自动评分结果中获取，如果有的话）
+            $earnedScore = 0;
+            if ($question['type'] === 'choice') {
+                $correctAnswer = $question['correct_answer'] ?? [];
+                $isCorrect = false;
+                
+                if ($question['multiple'] ?? false) {
+                    // 多选题
+                    if (is_array($userAnswer) && is_array($correctAnswer)) {
+                        sort($correctAnswer);
+                        sort($userAnswer);
+                        $isCorrect = ($correctAnswer === $userAnswer);
+                    }
+                } else {
+                    // 单选题
+                    if (is_array($correctAnswer) && count($correctAnswer) > 0) {
+                        $isCorrect = ($correctAnswer[0] === $userAnswer);
+                    }
+                }
+                
+                $earnedScore = $isCorrect ? floatval($question['score'] ?? 0) : 0;
+            }
+
+            $result[] = [
+                'id' => $questionId,
+                'type' => $question['type'],
+                'title' => $question['title'] ?? '',
+                'content' => $question['content'] ?? '',
+                'options' => $question['options'] ?? [],
+                'correct_answer' => $question['correct_answer'] ?? [],
+                'score' => $question['score'] ?? 0,
+                'user_answer' => $userAnswer,
+                'earned_score' => $earnedScore,
+                'feedback' => '',
+            ];
         }
 
         return $result;
