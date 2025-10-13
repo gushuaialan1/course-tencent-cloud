@@ -104,14 +104,19 @@ console.log('graph_data: 未定义');
         // 图谱数据
         var graphData = {{ graph_data|json_encode|raw }};
         
+        console.log('[DEBUG] 知识图谱脚本开始执行');
+        console.log('[DEBUG] jQuery是否存在:', typeof jQuery !== 'undefined');
+        console.log('[DEBUG] graphData:', graphData);
+        
         // 等待jQuery加载后测试日志功能
         (function testLog() {
             if (typeof jQuery === 'undefined') {
+                console.log('[DEBUG] jQuery未加载，100ms后重试...');
                 setTimeout(testLog, 100);
                 return;
             }
             
-            console.log('[测试] jQuery已加载，发送测试日志');
+            console.log('[测试] jQuery已加载，准备发送测试日志到 /api/log/frontend');
             jQuery.ajax({
                 url: '/api/log/frontend',
                 type: 'POST',
@@ -122,12 +127,15 @@ console.log('graph_data: 未定义');
                     timestamp: new Date().toISOString()
                 }),
                 contentType: 'application/json',
-                success: function() {
-                    console.log('[测试] ✅ 日志发送成功');
+                success: function(response) {
+                    console.log('[测试] ✅ 日志发送成功，响应:', response);
                 },
                 error: function(xhr, status, error) {
-                    console.error('[测试] ❌ 日志发送失败:', status, error);
-                    console.error('[测试] 响应:', xhr.responseText);
+                    console.error('[测试] ❌ 日志发送失败');
+                    console.error('[测试] 状态:', status);
+                    console.error('[测试] 错误:', error);
+                    console.error('[测试] 状态码:', xhr.status);
+                    console.error('[测试] 响应文本:', xhr.responseText);
                 }
             });
         })();

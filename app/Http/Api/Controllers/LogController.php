@@ -19,8 +19,12 @@ class LogController extends Controller
      */
     public function frontendAction()
     {
+        // 立即写入日志，测试Controller是否被调用
+        error_log("[前端日志-TEST] LogController::frontendAction 被调用了！");
+        
         // 获取原始POST数据
         $rawData = $this->request->getRawBody();
+        error_log("[前端日志-TEST] 接收到的数据长度: " . strlen($rawData));
         
         if (empty($rawData)) {
             error_log("[前端日志-ERROR] 接收到空数据");
