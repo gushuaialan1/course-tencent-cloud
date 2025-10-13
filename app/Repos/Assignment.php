@@ -316,22 +316,12 @@ class Assignment extends Repository
         $assignment->publish_time = $data['publish_time'] ?? 0;
         $assignment->owner_id = $data['owner_id'] ?? 0;
 
-        // JSON字段
-        if (!empty($data['attachments'])) {
-            $assignment->setAttachmentsData($data['attachments']);
-        }
-        if (!empty($data['rubric'])) {
-            $assignment->setRubricData($data['rubric']);
-        }
-        if (!empty($data['content'])) {
-            $assignment->setContentData($data['content']);
-        }
-        if (!empty($data['reference_answer'])) {
-            $assignment->setReferenceAnswerData($data['reference_answer']);
-        }
-        if (!empty($data['visibility'])) {
-            $assignment->setVisibilityData($data['visibility']);
-        }
+        // JSON字段 - 确保即使为空也设置默认值
+        $assignment->setAttachmentsData($data['attachments'] ?? []);
+        $assignment->setRubricData($data['rubric'] ?? []);
+        $assignment->setContentData($data['content'] ?? []);
+        $assignment->setReferenceAnswerData($data['reference_answer'] ?? []);
+        $assignment->setVisibilityData($data['visibility'] ?? []);
 
         $assignment->save();
         
@@ -388,21 +378,21 @@ class Assignment extends Repository
             $assignment->publish_time = $data['publish_time'];
         }
 
-        // JSON字段
+        // JSON字段 - 确保即使为空也设置默认值
         if (isset($data['attachments'])) {
-            $assignment->setAttachmentsData($data['attachments']);
+            $assignment->setAttachmentsData($data['attachments'] ?: []);
         }
         if (isset($data['rubric'])) {
-            $assignment->setRubricData($data['rubric']);
+            $assignment->setRubricData($data['rubric'] ?: []);
         }
         if (isset($data['content'])) {
-            $assignment->setContentData($data['content']);
+            $assignment->setContentData($data['content'] ?: []);
         }
         if (isset($data['reference_answer'])) {
-            $assignment->setReferenceAnswerData($data['reference_answer']);
+            $assignment->setReferenceAnswerData($data['reference_answer'] ?: []);
         }
         if (isset($data['visibility'])) {
-            $assignment->setVisibilityData($data['visibility']);
+            $assignment->setVisibilityData($data['visibility'] ?: []);
         }
 
         return $assignment->save();
