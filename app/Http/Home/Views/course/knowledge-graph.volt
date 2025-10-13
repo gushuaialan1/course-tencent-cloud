@@ -65,7 +65,11 @@
     
     <script>
         // 图谱数据
-        var graphData = {{ graph_data|json_encode|raw }};
+        {% if graph_data is defined %}
+        var graphData = {{ graph_data|json_encode }};
+        {% else %}
+        var graphData = {"nodes":[],"edges":[]};
+        {% endif %}
     </script>
     
     {{ js_include('lib/cytoscape.min.js') }}
