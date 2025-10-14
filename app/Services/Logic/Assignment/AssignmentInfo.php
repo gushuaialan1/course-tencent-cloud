@@ -38,7 +38,7 @@ class AssignmentInfo extends LogicService
     protected function handleAssignment(AssignmentModel $assignment, UserModel $user)
     {
         $course = $this->handleCourseInfo($assignment->course_id);
-        $questions = $this->handleQuestions($assignment->id);
+        $questions = $this->handleQuestions($assignment); // 传递assignment对象而不是ID
         $submission = $this->handleSubmission($assignment->id, $user->id);
         $me = $this->handleMeInfo($assignment, $user);
 
@@ -82,15 +82,8 @@ class AssignmentInfo extends LogicService
         ];
     }
 
-    protected function handleQuestions($assignmentId)
+    protected function handleQuestions(AssignmentModel $assignment)
     {
-        $assignmentRepo = new AssignmentRepo();
-        $assignment = $assignmentRepo->findById($assignmentId);
-        
-        if (!$assignment) {
-            return [];
-        }
-
         // 使用模型的getContentData()方法，确保正确解析JSON
         $content = $assignment->getContentData();
         
@@ -104,6 +97,14 @@ class AssignmentInfo extends LogicService
         } else {
             // 直接是题目数组
             $questions = $content;
+        }
+
+        // 添加调试信息（临时）
+        if (empty($questions)) {
+            error_log("AssignmentInfo: No questions found for assignment ID " . $assignment->id);
+            error_log("Content data: " . json_encode($content));
+        } else {
+            error_log("AssignmentInfo: Found " . count($questions) . " questions for assignment ID " . $assignment->id);
         }
 
         return is_array($questions) ? $questions : [];
