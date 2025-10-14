@@ -9,12 +9,13 @@ namespace App\Listeners;
 
 use App\Services\Service as AppService;
 use App\Traits\Service as ServiceTrait;
+use App\Traits\Auth as AuthTrait;
 use Phalcon\Mvc\User\Plugin as UserPlugin;
 
 class Listener extends UserPlugin
 {
 
-    use ServiceTrait;
+    use ServiceTrait, AuthTrait;
 
     public function getLogger($channel = 'listen')
     {
