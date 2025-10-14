@@ -156,11 +156,17 @@ class AssignmentList extends LogicService
 
             // 根据提交状态设置状态文字和徽章颜色
             if ($submission['status'] == AssignmentSubmissionModel::STATUS_GRADED) {
-                $result['status_text'] = '已批改';
-                $result['status_badge'] = 'layui-bg-green';
+                // 区分批改完成和批改中（混合模式）
+                if ($submission['grade_status'] == 'completed') {
+                    $result['status_text'] = '已批改';
+                    $result['status_badge'] = 'layui-bg-green';
+                } else {
+                    $result['status_text'] = '批改中';
+                    $result['status_badge'] = 'layui-bg-blue';
+                }
             } elseif ($submission['status'] == AssignmentSubmissionModel::STATUS_SUBMITTED) {
                 $result['status_text'] = '待批改';
-                $result['status_badge'] = 'layui-bg-blue';
+                $result['status_badge'] = 'layui-bg-cyan';
             } elseif ($submission['status'] == AssignmentSubmissionModel::STATUS_DRAFT) {
                 $result['status_text'] = '草稿';
                 $result['status_badge'] = 'layui-bg-gray';
