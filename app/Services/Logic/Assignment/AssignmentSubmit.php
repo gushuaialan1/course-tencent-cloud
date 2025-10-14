@@ -112,20 +112,26 @@ class AssignmentSubmit extends LogicService
         $assignmentRepo = new AssignmentRepo();
         $assignment = $assignmentRepo->findById($assignmentId);
         
-        if (!$assignment || !$assignment->content) {
+        if (!$assignment) {
             return;
         }
 
-        // 从content字段解析题目
-        $questions = json_decode($assignment->content, true);
+        // 使用模型的getContentData()方法解析题目
+        $content = $assignment->getContentData();
         
-        if (!is_array($questions)) {
+        if (!is_array($content)) {
             return;
         }
         
         // 兼容两种数据结构
-        if (isset($questions['questions']) && is_array($questions['questions'])) {
-            $questions = $questions['questions'];
+        if (isset($content['questions']) && is_array($content['questions'])) {
+            $questions = $content['questions'];
+        } else {
+            $questions = $content;
+        }
+        
+        if (!is_array($questions)) {
+            return;
         }
 
         if (empty($questions)) {

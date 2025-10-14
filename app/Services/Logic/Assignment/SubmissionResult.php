@@ -49,12 +49,15 @@ class SubmissionResult extends LogicService
 
         $course = $courseRepo->findById($assignment->course_id);
         
-        // 从content解析题目数量
-        $questions = json_decode($assignment->content, true);
-        if (isset($questions['questions'])) {
-            $questions = $questions['questions'];
+        // 使用模型的getContentData()方法解析题目数量
+        $content = $assignment->getContentData();
+        
+        if (isset($content['questions']) && is_array($content['questions'])) {
+            $questions = $content['questions'];
+        } else {
+            $questions = is_array($content) ? $content : [];
         }
-        $questionCount = is_array($questions) ? count($questions) : 0;
+        $questionCount = count($questions);
 
         return [
             'id' => $assignment->id,
@@ -75,7 +78,8 @@ class SubmissionResult extends LogicService
             return null;
         }
 
-        $answers = $submission->content ? json_decode($submission->content, true) : [];
+        // 使用模型的getContentData()方法解析学生答案
+        $answers = $submission->getContentData();
 
         return [
             'id' => $submission->id,
@@ -95,23 +99,29 @@ class SubmissionResult extends LogicService
 
     protected function handleQuestionsWithAnswers($assignment, $submission)
     {
-        // 从assignment.content解析题目
-        $questions = json_decode($assignment->content, true);
+        // 使用模型的getContentData()方法解析题目
+        $content = $assignment->getContentData();
         
-        if (!is_array($questions)) {
+        if (!is_array($content)) {
             return [];
         }
         
         // 兼容两种数据结构
-        if (isset($questions['questions']) && is_array($questions['questions'])) {
-            $questions = $questions['questions'];
+        if (isset($content['questions']) && is_array($content['questions'])) {
+            $questions = $content['questions'];
+        } else {
+            $questions = $content;
+        }
+        
+        if (!is_array($questions)) {
+            return [];
         }
 
         $result = [];
         $userAnswers = [];
 
-        if ($submission && $submission->content) {
-            $userAnswers = json_decode($submission->content, true);
+        if ($submission) {
+            $userAnswers = $submission->getContentData();
         }
 
         foreach ($questions as $question) {

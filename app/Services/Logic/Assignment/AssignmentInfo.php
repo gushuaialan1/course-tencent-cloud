@@ -87,23 +87,26 @@ class AssignmentInfo extends LogicService
         $assignmentRepo = new AssignmentRepo();
         $assignment = $assignmentRepo->findById($assignmentId);
         
-        if (!$assignment || !$assignment->content) {
+        if (!$assignment) {
             return [];
         }
 
-        // content字段存储的是题目数组的JSON
-        $questions = json_decode($assignment->content, true);
+        // 使用模型的getContentData()方法，确保正确解析JSON
+        $content = $assignment->getContentData();
         
-        if (!is_array($questions)) {
+        if (!is_array($content)) {
             return [];
         }
 
         // content可能直接是题目数组，也可能是包含questions键的对象
-        if (isset($questions['questions']) && is_array($questions['questions'])) {
-            $questions = $questions['questions'];
+        if (isset($content['questions']) && is_array($content['questions'])) {
+            $questions = $content['questions'];
+        } else {
+            // 直接是题目数组
+            $questions = $content;
         }
 
-        return $questions;
+        return is_array($questions) ? $questions : [];
     }
 
     protected function handleSubmission($assignmentId, $userId)
@@ -116,7 +119,8 @@ class AssignmentInfo extends LogicService
             return null;
         }
 
-        $content = $submission->content ? json_decode($submission->content, true) : [];
+        // 使用模型的getContentData()方法解析学生答案
+        $content = $submission->getContentData();
 
         return [
             'id' => $submission->id,

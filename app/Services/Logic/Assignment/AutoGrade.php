@@ -35,17 +35,23 @@ class AutoGrade extends LogicService
             return ['success' => false, 'reason' => '手动评分模式，不进行自动评分'];
         }
 
-        // 解析题目和用户答案
-        $questions = json_decode($assignment->content, true);
-        $userAnswers = json_decode($submission->content, true);
+        // 使用模型的getContentData()方法解析题目和用户答案
+        $content = $assignment->getContentData();
+        $userAnswers = $submission->getContentData();
         
-        if (!is_array($questions) || !is_array($userAnswers)) {
+        if (!is_array($content) || !is_array($userAnswers)) {
             return ['success' => false, 'reason' => '数据格式错误'];
         }
 
         // 兼容两种数据结构
-        if (isset($questions['questions']) && is_array($questions['questions'])) {
-            $questions = $questions['questions'];
+        if (isset($content['questions']) && is_array($content['questions'])) {
+            $questions = $content['questions'];
+        } else {
+            $questions = $content;
+        }
+        
+        if (!is_array($questions)) {
+            return ['success' => false, 'reason' => '题目数据格式错误'];
         }
 
         $totalScore = 0;

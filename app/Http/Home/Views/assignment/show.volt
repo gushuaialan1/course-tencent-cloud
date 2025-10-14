@@ -36,7 +36,7 @@
                         <i class="layui-icon layui-icon-form"></i> 题目数量：<strong style="color: #333;">{{ assignment.question_count }}</strong> 道
                     </span>
                     <span style="margin-right: 25px;">
-                        <i class="layui-icon layui-icon-praise"></i> 总分：<strong style="color: #333;">{{ assignment.max_score }}</strong> 分
+                        <i class="layui-icon layui-icon-praise"></i> 总分：<strong style="color: #333;">{{ assignment.max_score }}</strong> 分pu
                     </span>
                     {% if assignment.due_date > 0 %}
                         <span style="margin-right: 25px;">
