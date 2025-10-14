@@ -28,7 +28,7 @@ class AssignmentController extends Controller
 
         $assignment = $service->handle($id);
 
-        if ($assignment['deleted'] == 1) {
+        if ($assignment['delete_time'] > 0) {
             $this->notFound();
         }
 
