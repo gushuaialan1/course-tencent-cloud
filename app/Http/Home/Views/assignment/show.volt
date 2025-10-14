@@ -36,13 +36,13 @@
                         <i class="layui-icon layui-icon-form"></i> 题目数量：<strong style="color: #333;">{{ assignment.question_count }}</strong> 道
                     </span>
                     <span style="margin-right: 25px;">
-                        <i class="layui-icon layui-icon-praise"></i> 总分：<strong style="color: #333;">{{ assignment.total_score }}</strong> 分
+                        <i class="layui-icon layui-icon-praise"></i> 总分：<strong style="color: #333;">{{ assignment.max_score }}</strong> 分
                     </span>
-                    {% if assignment.deadline > 0 %}
+                    {% if assignment.due_date > 0 %}
                         <span style="margin-right: 25px;">
                             <i class="layui-icon layui-icon-time"></i> 截止时间：
                             <strong style="color: {% if assignment.is_overdue %}#FF5722{% else %}#333{% endif %};">
-                                {{ date('Y-m-d H:i', assignment.deadline) }}
+                                {{ date('Y-m-d H:i', assignment.due_date) }}
                             </strong>
                         </span>
                     {% endif %}
