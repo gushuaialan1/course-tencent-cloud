@@ -95,7 +95,7 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if assignment.submission and assignment.submission.answers[question.id] and key in assignment.submission.answers[question.id] %}checked{% endif %}>
+                                                       {% if assignment.submission and assignment.submission.content[question.id] and key in assignment.submission.content[question.id] %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
                                     {% else %}
@@ -107,7 +107,7 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if assignment.submission and assignment.submission.answers[question.id] == key %}checked{% endif %}>
+                                                       {% if assignment.submission and assignment.submission.content[question.id] == key %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
                                     {% endif %}
@@ -121,7 +121,7 @@
                                                    value="{{ key }}" 
                                                    title="{{ option }}" 
                                                    lay-filter="question-{{ question.id }}"
-                                                   {% if assignment.submission and assignment.submission.answers[question.id] == key %}checked{% endif %}>
+                                                   {% if assignment.submission and assignment.submission.content[question.id] == key %}checked{% endif %}>
                                         </div>
                                     {% endfor %}
                                     
@@ -134,7 +134,7 @@
                                                    value="{{ key }}" 
                                                    title="{{ option }}" 
                                                    lay-filter="question-{{ question.id }}"
-                                                   {% if assignment.submission and assignment.submission.answers[question.id] and key in assignment.submission.answers[question.id] %}checked{% endif %}>
+                                                   {% if assignment.submission and assignment.submission.content[question.id] and key in assignment.submission.content[question.id] %}checked{% endif %}>
                                         </div>
                                     {% endfor %}
                                     
@@ -145,7 +145,7 @@
                                         placeholder="请输入您的答案..." 
                                         class="layui-textarea" 
                                         style="min-height: {% if question.type == 'essay' %}200px{% else %}100px{% endif %}; resize: vertical;"
-                                        lay-filter="question-{{ question.id }}">{% if assignment.submission and assignment.submission.answers[question.id] %}{{ assignment.submission.answers[question.id] }}{% endif %}</textarea>
+                                        lay-filter="question-{{ question.id }}">{% if assignment.submission and assignment.submission.content[question.id] %}{{ assignment.submission.content[question.id] }}{% endif %}</textarea>
                                     
                                 {% elseif question.type == 'file' %}
                                     {# 文件题 #}
@@ -157,13 +157,13 @@
                                         </button>
                                         <input type="hidden" 
                                                name="answer_{{ question.id }}" 
-                                               value="{% if assignment.submission and assignment.submission.answers[question.id] %}{{ assignment.submission.answers[question.id] }}{% endif %}" 
+                                               value="{% if assignment.submission and assignment.submission.content[question.id] %}{{ assignment.submission.content[question.id] }}{% endif %}" 
                                                lay-filter="question-{{ question.id }}">
                                         <div class="file-preview" id="file-preview-{{ question.id }}" style="margin-top: 10px;">
-                                            {% if assignment.submission and assignment.submission.answers[question.id] %}
+                                            {% if assignment.submission and assignment.submission.content[question.id] %}
                                                 <div class="file-item" style="padding: 8px 12px; background: #fff; border: 1px solid #E6E6E6; border-radius: 2px; display: inline-block;">
                                                     <i class="layui-icon layui-icon-file"></i>
-                                                    <span>{{ assignment.submission.answers[question.id] }}</span>
+                                                    <span>{{ assignment.submission.content[question.id] }}</span>
                                                     <a href="javascript:;" class="remove-file" style="color: #FF5722; margin-left: 10px;">删除</a>
                                                 </div>
                                             {% endif %}
@@ -259,7 +259,7 @@
     </div>
 
     <input type="hidden" id="assignment-id" value="{{ assignment.id }}">
-    <input type="hidden" id="assignment-deadline" value="{{ assignment.due_date }}">
+    <input type="hidden" id="assignment-due-date" value="{{ assignment.due_date }}">
     <input type="hidden" id="assignment-question-count" value="{{ assignment.question_count }}">
     <input type="hidden" id="submit-url" value="{{ submit_url }}">
     <input type="hidden" id="draft-url" value="{{ draft_url }}">

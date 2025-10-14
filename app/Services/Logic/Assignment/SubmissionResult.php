@@ -88,11 +88,9 @@ class SubmissionResult extends LogicService
             'status' => $submission->status,
             'grade_status' => $submission->grade_status,
             'content' => $answers,
-            'answers' => $answers, // 兼容旧前端字段
             'feedback' => $submission->feedback,
             'is_late' => $submission->is_late,
             'submit_time' => $submission->submit_time,
-            'graded_at' => $submission->grade_time, // 兼容旧前端字段
             'grade_time' => $submission->grade_time,
         ];
     }
@@ -162,11 +160,25 @@ class SubmissionResult extends LogicService
             
             // 计算得分（从自动评分结果中获取，如果有的话）
             $earnedScore = 0;
+            
+            // 判断是否为选择题（兼容多种类型字段）
+            $isChoiceQuestion = false;
+            $isMultipleChoice = false;
+            
             if ($question['type'] === 'choice') {
+                $isChoiceQuestion = true;
+                $isMultipleChoice = ($question['choice_type'] ?? '') === 'multiple' || 
+                                   ($question['multiple'] ?? false);
+            } elseif (in_array($question['type'], ['choice_single', 'choice_multiple'])) {
+                $isChoiceQuestion = true;
+                $isMultipleChoice = ($question['type'] === 'choice_multiple');
+            }
+            
+            if ($isChoiceQuestion) {
                 $correctAnswer = $question['correct_answer'] ?? [];
                 $isCorrect = false;
                 
-                if ($question['multiple'] ?? false) {
+                if ($isMultipleChoice) {
                     // 多选题
                     if (is_array($userAnswer) && is_array($correctAnswer)) {
                         sort($correctAnswer);
@@ -183,13 +195,32 @@ class SubmissionResult extends LogicService
                 $earnedScore = $isCorrect ? floatval($question['score'] ?? 0) : 0;
             }
 
+            // 使用前面已经计算好的多选题标识
+            $questionType = $question['type'];
+            if ($isChoiceQuestion) {
+                $questionType = $isMultipleChoice ? 'choice_multiple' : 'choice_single';
+            }
+            
+            // 设置参考答案，统一为answer字段（result.volt使用的字段名）
+            $answer = '';
+            if (isset($question['correct_answer'])) {
+                if (is_array($question['correct_answer'])) {
+                    $answer = implode(', ', $question['correct_answer']);
+                } else {
+                    $answer = $question['correct_answer'];
+                }
+            } elseif (isset($question['answer'])) {
+                $answer = $question['answer'];
+            }
+
             $result[] = [
                 'id' => $questionId,
-                'type' => $question['type'],
+                'type' => $questionType,  // 统一类型字段
                 'title' => $question['title'] ?? '',
                 'content' => $question['content'] ?? '',
-                'options' => $normalizedOptions, // 使用标准化的选项
+                'options' => $normalizedOptions,
                 'correct_answer' => $question['correct_answer'] ?? [],
+                'answer' => $answer,  // result.volt模板使用的字段
                 'score' => $question['score'] ?? 0,
                 'user_answer' => $userAnswer,
                 'earned_score' => $earnedScore,

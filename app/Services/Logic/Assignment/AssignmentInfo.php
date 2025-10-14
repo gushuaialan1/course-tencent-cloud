@@ -53,12 +53,8 @@ class AssignmentInfo extends LogicService
             'title' => $assignment->title,
             'description' => $assignment->description,
             'course_id' => $assignment->course_id,
-            // 标准字段名
             'due_date' => $assignment->due_date,
             'max_score' => $assignment->max_score,
-            // 兼容旧前端代码的字段名
-            'deadline' => $assignment->due_date,
-            'total_score' => $assignment->max_score,
             'question_count' => count($questions),
             'status' => $assignment->status,
             'allow_late' => $assignment->allow_late,
@@ -201,13 +197,10 @@ class AssignmentInfo extends LogicService
             'score' => $submission->score,
             'status' => $submission->status,
             'grade_status' => $submission->grade_status,
-            'content' => $content,  // 使用标准字段名
-            'answers' => $content,  // 兼容旧前端代码，保留answers字段映射
+            'content' => $content,
             'is_late' => $submission->is_late,
-            'submit_time' => $submission->submit_time,  // 使用标准字段名
-            'submitted_at' => $submission->submit_time,  // 兼容旧前端代码
-            'grade_time' => $submission->grade_time,     // 使用标准字段名
-            'graded_at' => $submission->grade_time,      // 兼容旧前端代码
+            'submit_time' => $submission->submit_time,
+            'grade_time' => $submission->grade_time,
             'create_time' => $submission->create_time,
             'update_time' => $submission->update_time,
         ];
