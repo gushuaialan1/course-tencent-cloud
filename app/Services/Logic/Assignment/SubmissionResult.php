@@ -133,6 +133,20 @@ class SubmissionResult extends LogicService
 
             $userAnswer = isset($userAnswers[$questionId]) ? $userAnswers[$questionId] : null;
             
+            // 标准化选项格式，确保是字符串
+            $normalizedOptions = [];
+            if (isset($question['options']) && is_array($question['options'])) {
+                foreach ($question['options'] as $key => $option) {
+                    if (is_array($option) && isset($option['content'])) {
+                        $normalizedOptions[$key] = $option['content'];
+                    } elseif (is_object($option) && isset($option->content)) {
+                        $normalizedOptions[$key] = $option->content;
+                    } else {
+                        $normalizedOptions[$key] = (string)$option;
+                    }
+                }
+            }
+            
             // 计算得分（从自动评分结果中获取，如果有的话）
             $earnedScore = 0;
             if ($question['type'] === 'choice') {
@@ -161,7 +175,7 @@ class SubmissionResult extends LogicService
                 'type' => $question['type'],
                 'title' => $question['title'] ?? '',
                 'content' => $question['content'] ?? '',
-                'options' => $question['options'] ?? [],
+                'options' => $normalizedOptions, // 使用标准化的选项
                 'correct_answer' => $question['correct_answer'] ?? [],
                 'score' => $question['score'] ?? 0,
                 'user_answer' => $userAnswer,

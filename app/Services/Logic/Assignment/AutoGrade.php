@@ -54,6 +54,23 @@ class AutoGrade extends LogicService
             return ['success' => false, 'reason' => '题目数据格式错误'];
         }
 
+        // 标准化题目数据，确保options格式正确
+        foreach ($questions as &$question) {
+            if (isset($question['options']) && is_array($question['options'])) {
+                $normalizedOptions = [];
+                foreach ($question['options'] as $key => $option) {
+                    if (is_array($option) && isset($option['content'])) {
+                        $normalizedOptions[$key] = $option['content'];
+                    } elseif (is_object($option) && isset($option->content)) {
+                        $normalizedOptions[$key] = $option->content;
+                    } else {
+                        $normalizedOptions[$key] = (string)$option;
+                    }
+                }
+                $question['options'] = $normalizedOptions;
+            }
+        }
+
         $totalScore = 0;
         $earnedScore = 0;
         $details = [];

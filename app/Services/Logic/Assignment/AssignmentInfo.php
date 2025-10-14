@@ -107,6 +107,26 @@ class AssignmentInfo extends LogicService
             error_log("AssignmentInfo: Found " . count($questions) . " questions for assignment ID " . $assignment->id);
         }
 
+        // 标准化题目数据，确保options格式正确
+        if (is_array($questions)) {
+            foreach ($questions as &$question) {
+                if (isset($question['options']) && is_array($question['options'])) {
+                    $normalizedOptions = [];
+                    foreach ($question['options'] as $key => $option) {
+                        // 如果option是对象，提取content字段；如果是字符串，直接使用
+                        if (is_array($option) && isset($option['content'])) {
+                            $normalizedOptions[$key] = $option['content'];
+                        } elseif (is_object($option) && isset($option->content)) {
+                            $normalizedOptions[$key] = $option->content;
+                        } else {
+                            $normalizedOptions[$key] = (string)$option;
+                        }
+                    }
+                    $question['options'] = $normalizedOptions;
+                }
+            }
+        }
+
         return is_array($questions) ? $questions : [];
     }
 
