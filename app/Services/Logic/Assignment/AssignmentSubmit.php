@@ -86,6 +86,7 @@ class AssignmentSubmit extends LogicService
             $submission->status = 'pending';
             $submission->is_late = $isLate ? 1 : 0;
             $submission->submit_time = time();
+            $submission->grader_id = null; // 提交时未批改，设置为null
             $submission->create_time = time();
             $submission->update_time = time();
 

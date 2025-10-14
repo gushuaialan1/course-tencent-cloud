@@ -55,6 +55,7 @@ class SubmissionDraft extends LogicService
             $submission->user_id = $user->id;
             $submission->content = $answers;
             $submission->status = 'draft';
+            $submission->grader_id = null; // 草稿状态，未批改
             $submission->create_time = time();
             $submission->update_time = time();
 
