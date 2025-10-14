@@ -105,6 +105,8 @@ class AssignmentInfo extends LogicService
             error_log("Content data: " . json_encode($content));
         } else {
             error_log("AssignmentInfo: Found " . count($questions) . " questions for assignment ID " . $assignment->id);
+            error_log("AssignmentInfo: Questions structure: " . json_encode(array_slice($questions, 0, 2))); // 只记录前2题
+            error_log("AssignmentInfo: Questions keys: " . implode(', ', array_keys($questions)));
         }
 
         // 标准化题目数据，确保options格式正确
@@ -127,7 +129,8 @@ class AssignmentInfo extends LogicService
             }
         }
 
-        return is_array($questions) ? $questions : [];
+        // 确保返回的是连续索引的数组，Volt循环需要
+        return is_array($questions) ? array_values($questions) : [];
     }
 
     protected function handleSubmission($assignmentId, $userId)
