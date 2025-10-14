@@ -33,18 +33,8 @@ layui.use(['jquery', 'layer', 'form', 'element'], function () {
             saveDraft(true); // 手动保存，显示提示
         });
 
-        // 底部兜底按钮：保存草稿
-        $('#save-draft-btn-bottom').on('click', function () {
-            saveDraft(true);
-        });
-
         // 提交作业按钮
         $('#submit-btn').on('click', function () {
-            submitAssignment();
-        });
-
-        // 底部兜底按钮：提交作业
-        $('#submit-btn-bottom').on('click', function () {
             submitAssignment();
         });
 
