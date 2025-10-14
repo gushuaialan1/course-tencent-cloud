@@ -10,11 +10,17 @@
                     <div class="assignment-status">
                         {% if item.submission %}
                             {% if item.submission.status == 'graded' %}
-                                <span class="layui-badge layui-bg-green">已批改</span>
-                            {% elseif item.submission.status == 'grading' %}
-                                <span class="layui-badge layui-bg-blue">批改中</span>
-                            {% else %}
+                                {% if item.submission.grade_status == 'completed' %}
+                                    <span class="layui-badge layui-bg-green">已批改</span>
+                                {% else %}
+                                    <span class="layui-badge layui-bg-blue">批改中</span>
+                                {% endif %}
+                            {% elseif item.submission.status == 'submitted' %}
                                 <span class="layui-badge layui-bg-cyan">已提交</span>
+                            {% elseif item.submission.status == 'returned' %}
+                                <span class="layui-badge layui-bg-orange">已退回</span>
+                            {% else %}
+                                <span class="layui-badge layui-bg-gray">草稿</span>
                             {% endif %}
                         {% elseif item.is_overdue %}
                             <span class="layui-badge layui-bg-gray">已截止</span>
@@ -51,18 +57,30 @@
                 
                 <div class="assignment-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E6E6E6;">
                     {% if item.submission %}
-                        {% if item.submission.status == 'graded' %}
+                        {% if item.submission.status == 'graded' and item.submission.grade_status == 'completed' %}
+                            {# 批改完成，可以查看成绩 #}
                             <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
                                 <i class="layui-icon layui-icon-read"></i> 查看成绩
                             </a>
-                            {% if item.allow_resubmit and not item.is_overdue %}
+                            {% if item.allow_late and not item.is_overdue %}
                                 <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-primary" target="_blank">
                                     <i class="layui-icon layui-icon-edit"></i> 重新提交
                                 </a>
                             {% endif %}
-                        {% else %}
+                        {% elseif item.submission.status == 'graded' %}
+                            {# 部分批改（混合模式），显示当前分数但仍在批改中 #}
+                            <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-warm" target="_blank">
+                                <i class="layui-icon layui-icon-time"></i> 批改中（当前{{ item.submission.score }}分）
+                            </a>
+                        {% elseif item.submission.status == 'submitted' %}
+                            {# 已提交，等待批改 #}
                             <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-disabled" target="_blank">
                                 <i class="layui-icon layui-icon-time"></i> 等待批改
+                            </a>
+                        {% else %}
+                            {# 草稿状态，继续编辑 #}
+                            <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-primary" target="_blank">
+                                <i class="layui-icon layui-icon-edit"></i> 继续编辑
                             </a>
                         {% endif %}
                     {% elseif item.is_overdue %}

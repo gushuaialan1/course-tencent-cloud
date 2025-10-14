@@ -22,6 +22,19 @@
                     {{ assignment.title }}
                 </h2>
                 
+                {# 批改状态提示 #}
+                {% if submission.status == 'graded' and submission.grade_status == 'pending' %}
+                    <div class="layui-alert layui-alert-normal" style="margin: 0 auto 20px; max-width: 600px;">
+                        <i class="layui-icon layui-icon-tips"></i>
+                        选择题已自动批改，主观题正在批改中，当前分数为部分得分。老师批改完成后，最终成绩可能会有变化。
+                    </div>
+                {% elseif submission.status == 'graded' and submission.grade_status == 'completed' %}
+                    <div class="layui-alert layui-alert-success" style="margin: 0 auto 20px; max-width: 600px;">
+                        <i class="layui-icon layui-icon-ok-circle"></i>
+                        批改已完成，以下为您的最终成绩。
+                    </div>
+                {% endif %}
+                
                 <div class="score-display" style="margin: 30px 0;">
                     <div class="score-number" style="font-size: 72px; font-weight: bold; color: #16BAAA; line-height: 1;">
                         {{ submission.score }}

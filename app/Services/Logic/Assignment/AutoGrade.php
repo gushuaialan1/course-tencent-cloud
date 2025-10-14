@@ -99,13 +99,16 @@ class AutoGrade extends LogicService
         $submission->status = 'graded';
         $submission->grade_time = time();
         
-        // 根据批改模式设置批改人
+        // 根据批改模式设置批改人和批改状态
         if ($assignment->grade_mode === AssignmentModel::GRADE_MODE_AUTO) {
-            // 纯自动批改：无批改人
+            // 纯自动批改：无批改人，批改完成
             $submission->grader_id = null;
+            $submission->grade_status = 'completed';
         } else {
-            // 手动或混合模式：需要老师最终审核，设置为作业创建者
+            // 混合模式：选择题已自动批改，但主观题还需要老师批改
+            // 设置批改人为作业创建者，状态为待批改
             $submission->grader_id = $assignment->owner_id;
+            $submission->grade_status = 'pending';
         }
         
         $submission->update_time = time();
