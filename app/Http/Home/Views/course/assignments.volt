@@ -2,6 +2,7 @@
     <div class="assignment-list">
         {% for item in pager.items %}
             {% set assignment_url = url({'for':'home.assignment.show','id':item.id}) %}
+            {% set result_url = url({'for':'home.assignment.result','id':item.id}) %}
             <div class="assignment-card wrap" style="margin-bottom: 15px;">
                 <div class="assignment-header">
                     <h3 class="assignment-title">
@@ -59,7 +60,7 @@
                     {% if item.submission %}
                         {% if item.submission.status == 'graded' and item.submission.grade_status == 'completed' %}
                             {# 批改完成，可以查看成绩 #}
-                            <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
+                            <a href="{{ result_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
                                 <i class="layui-icon layui-icon-read"></i> 查看成绩
                             </a>
                             {% if item.allow_late and not item.is_overdue %}

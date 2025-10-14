@@ -155,7 +155,7 @@ class AutoGrade extends LogicService
 
         return [
             'success' => true,
-            'total_score' => $totalScore,
+            'max_score' => $totalScore,
             'earned_score' => $earnedScore,
             'details' => $details
         ];
