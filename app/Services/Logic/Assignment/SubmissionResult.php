@@ -133,16 +133,28 @@ class SubmissionResult extends LogicService
 
             $userAnswer = isset($userAnswers[$questionId]) ? $userAnswers[$questionId] : null;
             
-            // 标准化选项格式，确保是字符串
+            // 标准化选项格式，转换为Volt模板期望的格式
             $normalizedOptions = [];
             if (isset($question['options']) && is_array($question['options'])) {
-                foreach ($question['options'] as $key => $option) {
-                    if (is_array($option) && isset($option['content'])) {
-                        $normalizedOptions[$key] = $option['content'];
-                    } elseif (is_object($option) && isset($option->content)) {
-                        $normalizedOptions[$key] = $option->content;
-                    } else {
-                        $normalizedOptions[$key] = (string)$option;
+                // 检查是否是新格式（对象数组）
+                $firstOption = reset($question['options']);
+                if (is_array($firstOption) && isset($firstOption['label']) && isset($firstOption['content'])) {
+                    // 新格式：[{"label":"A","content":"xxx"}] -> {"A":"xxx"}
+                    foreach ($question['options'] as $option) {
+                        if (isset($option['label']) && isset($option['content'])) {
+                            $normalizedOptions[$option['label']] = $option['content'];
+                        }
+                    }
+                } else {
+                    // 旧格式或其他格式
+                    foreach ($question['options'] as $key => $option) {
+                        if (is_array($option) && isset($option['content'])) {
+                            $normalizedOptions[$key] = $option['content'];
+                        } elseif (is_object($option) && isset($option->content)) {
+                            $normalizedOptions[$key] = $option->content;
+                        } else {
+                            $normalizedOptions[$key] = (string)$option;
+                        }
                     }
                 }
             }

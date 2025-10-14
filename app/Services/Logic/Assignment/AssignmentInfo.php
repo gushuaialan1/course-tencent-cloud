@@ -106,22 +106,45 @@ class AssignmentInfo extends LogicService
             error_log("AssignmentInfo: Found " . count($questions) . " questions for assignment ID " . $assignment->id);
         }
 
-        // 标准化题目数据，确保options格式正确
+        // 标准化题目数据，转换options为Volt模板期望的格式
         if (is_array($questions)) {
             foreach ($questions as $index => $question) {
                 if (isset($question['options']) && is_array($question['options'])) {
                     $normalizedOptions = [];
-                    foreach ($question['options'] as $key => $option) {
-                        // 如果option是对象，提取content字段；如果是字符串，直接使用
-                        if (is_array($option) && isset($option['content'])) {
-                            $normalizedOptions[$key] = $option['content'];
-                        } elseif (is_object($option) && isset($option->content)) {
-                            $normalizedOptions[$key] = $option->content;
-                        } else {
-                            $normalizedOptions[$key] = (string)$option;
+                    
+                    // 检查是否是新格式（对象数组）
+                    $firstOption = reset($question['options']);
+                    if (is_array($firstOption) && isset($firstOption['label']) && isset($firstOption['content'])) {
+                        // 新格式：[{"label":"A","content":"xxx"}] -> {"A":"xxx"}
+                        foreach ($question['options'] as $option) {
+                            if (isset($option['label']) && isset($option['content'])) {
+                                $normalizedOptions[$option['label']] = $option['content'];
+                            }
+                        }
+                    } else {
+                        // 旧格式或其他格式
+                        foreach ($question['options'] as $key => $option) {
+                            if (is_array($option) && isset($option['content'])) {
+                                $normalizedOptions[$key] = $option['content'];
+                            } elseif (is_object($option) && isset($option->content)) {
+                                $normalizedOptions[$key] = $option->content;
+                            } else {
+                                $normalizedOptions[$key] = (string)$option;
+                            }
                         }
                     }
+                    
                     $questions[$index]['options'] = $normalizedOptions;
+                    error_log("Normalized options for Q{$question['id']}: " . json_encode(array_keys($normalizedOptions)));
+                }
+                
+                // 处理多选题标识，统一为Volt模板期望的格式
+                if (isset($question['choice_type'])) {
+                    $questions[$index]['multiple'] = ($question['choice_type'] === 'multiple');
+                } elseif (isset($question['type']) && $question['type'] === 'choice_multiple') {
+                    $questions[$index]['multiple'] = true;
+                } else {
+                    $questions[$index]['multiple'] = false;
                 }
             }
         }

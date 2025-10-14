@@ -54,20 +54,33 @@ class AutoGrade extends LogicService
             return ['success' => false, 'reason' => '题目数据格式错误'];
         }
 
-        // 标准化题目数据，确保options格式正确
-        foreach ($questions as &$question) {
+        // 标准化题目数据，转换options为统一格式
+        foreach ($questions as $index => $question) {
             if (isset($question['options']) && is_array($question['options'])) {
                 $normalizedOptions = [];
-                foreach ($question['options'] as $key => $option) {
-                    if (is_array($option) && isset($option['content'])) {
-                        $normalizedOptions[$key] = $option['content'];
-                    } elseif (is_object($option) && isset($option->content)) {
-                        $normalizedOptions[$key] = $option->content;
-                    } else {
-                        $normalizedOptions[$key] = (string)$option;
+                
+                // 检查是否是新格式（对象数组）
+                $firstOption = reset($question['options']);
+                if (is_array($firstOption) && isset($firstOption['label']) && isset($firstOption['content'])) {
+                    // 新格式：[{"label":"A","content":"xxx"}] -> {"A":"xxx"}
+                    foreach ($question['options'] as $option) {
+                        if (isset($option['label']) && isset($option['content'])) {
+                            $normalizedOptions[$option['label']] = $option['content'];
+                        }
+                    }
+                } else {
+                    // 旧格式或其他格式
+                    foreach ($question['options'] as $key => $option) {
+                        if (is_array($option) && isset($option['content'])) {
+                            $normalizedOptions[$key] = $option['content'];
+                        } elseif (is_object($option) && isset($option->content)) {
+                            $normalizedOptions[$key] = $option->content;
+                        } else {
+                            $normalizedOptions[$key] = (string)$option;
+                        }
                     }
                 }
-                $question['options'] = $normalizedOptions;
+                $questions[$index]['options'] = $normalizedOptions;
             }
         }
 
