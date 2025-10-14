@@ -54,6 +54,8 @@ class SubmissionDraft extends LogicService
             $submission->assignment_id = $assignment->id;
             $submission->user_id = $user->id;
             $submission->content = $answers;
+            $submission->attachments = json_encode([]); // 初始化为空JSON数组
+            $submission->grade_details = json_encode([]); // 初始化为空JSON数组
             $submission->status = 'draft';
             $submission->grader_id = null; // 草稿状态，未批改
             $submission->create_time = time();

@@ -83,6 +83,8 @@ class AssignmentSubmit extends LogicService
             $submission->assignment_id = $assignment->id;
             $submission->user_id = $user->id;
             $submission->content = json_encode($answers);
+            $submission->attachments = json_encode([]); // 初始化为空JSON数组
+            $submission->grade_details = json_encode([]); // 初始化为空JSON数组
             $submission->status = 'pending';
             $submission->is_late = $isLate ? 1 : 0;
             $submission->submit_time = time();
