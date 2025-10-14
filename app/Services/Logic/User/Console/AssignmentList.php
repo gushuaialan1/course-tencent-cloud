@@ -62,7 +62,8 @@ class AssignmentList extends LogicService
             }
 
             // 解析content获取题目数量
-            $content = $assignment->content ? json_decode($assignment->content, true) : [];
+            // 注意：toArray()已经通过getContentData()将content从JSON解析为数组了
+            $content = $assignment->content ?? [];
             if (is_array($content)) {
                 $questions = isset($content['questions']) ? $content['questions'] : $content;
             } else {

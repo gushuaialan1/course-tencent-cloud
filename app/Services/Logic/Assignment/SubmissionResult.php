@@ -60,7 +60,7 @@ class SubmissionResult extends LogicService
             'id' => $assignment->id,
             'title' => $assignment->title,
             'description' => $assignment->description,
-            'total_score' => $assignment->max_score,
+            'max_score' => $assignment->max_score,
             'question_count' => $questionCount,
             'course' => [
                 'id' => $course->id,
@@ -82,11 +82,13 @@ class SubmissionResult extends LogicService
             'score' => $submission->score,
             'status' => $submission->status,
             'grade_status' => $submission->grade_status,
-            'answers' => $answers,
+            'content' => $answers,
+            'answers' => $answers, // 兼容旧前端字段
             'feedback' => $submission->feedback,
             'is_late' => $submission->is_late,
-            'submitted_at' => $submission->submit_time,
-            'graded_at' => $submission->grade_time,
+            'submit_time' => $submission->submit_time,
+            'graded_at' => $submission->grade_time, // 兼容旧前端字段
+            'grade_time' => $submission->grade_time,
         ];
     }
 

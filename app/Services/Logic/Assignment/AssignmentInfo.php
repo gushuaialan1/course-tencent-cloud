@@ -116,7 +116,7 @@ class AssignmentInfo extends LogicService
             return null;
         }
 
-        $answers = $submission->content ? json_decode($submission->content, true) : [];
+        $content = $submission->content ? json_decode($submission->content, true) : [];
 
         return [
             'id' => $submission->id,
@@ -125,10 +125,13 @@ class AssignmentInfo extends LogicService
             'score' => $submission->score,
             'status' => $submission->status,
             'grade_status' => $submission->grade_status,
-            'answers' => $answers,
+            'content' => $content,  // 使用标准字段名
+            'answers' => $content,  // 兼容旧前端代码，保留answers字段映射
             'is_late' => $submission->is_late,
-            'submitted_at' => $submission->submit_time,
-            'graded_at' => $submission->grade_time,
+            'submit_time' => $submission->submit_time,  // 使用标准字段名
+            'submitted_at' => $submission->submit_time,  // 兼容旧前端代码
+            'grade_time' => $submission->grade_time,     // 使用标准字段名
+            'graded_at' => $submission->grade_time,      // 兼容旧前端代码
             'create_time' => $submission->create_time,
             'update_time' => $submission->update_time,
         ];

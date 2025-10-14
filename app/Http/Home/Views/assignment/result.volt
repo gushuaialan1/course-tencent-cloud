@@ -48,11 +48,11 @@
                 <div class="score-meta" style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #E6E6E6; color: #999; font-size: 14px;">
                     <span style="margin: 0 20px;">
                         <i class="layui-icon layui-icon-time"></i> 
-                        提交时间：{{ date('Y-m-d H:i:s', submission.submitted_at) }}
+                        提交时间：{{ date('Y-m-d H:i:s', submission.submit_time) }}
                     </span>
                     <span style="margin: 0 20px;">
                         <i class="layui-icon layui-icon-ok-circle"></i> 
-                        批改时间：{{ date('Y-m-d H:i:s', submission.graded_at) }}
+                        批改时间：{{ date('Y-m-d H:i:s', submission.grade_time) }}
                     </span>
                     {% if submission.is_late %}
                         <span class="layui-badge layui-bg-orange">逾期提交</span>
