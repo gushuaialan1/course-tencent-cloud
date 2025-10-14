@@ -18,30 +18,53 @@ class SubmissionResult extends LogicService
 
     public function handle($id)
     {
-        // 查看成绩需要用户登录
-        $user = $this->getLoginUser(true);
+        error_log("SubmissionResult: Starting handle for assignment ID {$id}");
+        
+        try {
+            // 查看成绩需要用户登录
+            $user = $this->getLoginUser(true);
+            error_log("SubmissionResult: User {$user->id} logged in");
 
-        $assignmentRepo = new AssignmentRepo();
+            $assignmentRepo = new AssignmentRepo();
+            $assignment = $assignmentRepo->findById($id);
 
-        $assignment = $assignmentRepo->findById($id);
+            if (!$assignment) {
+                error_log("SubmissionResult: Assignment {$id} not found");
+                throw new \Exception('作业不存在');
+            }
+            error_log("SubmissionResult: Assignment {$id} found - {$assignment->title}");
 
-        if (!$assignment) {
-            throw new \Exception('作业不存在');
+            $submissionRepo = new SubmissionRepo();
+            $submission = $submissionRepo->findByAssignmentAndUser($assignment->id, $user->id);
+
+            if (!$submission) {
+                error_log("SubmissionResult: No submission found for user {$user->id} assignment {$id}");
+                throw new \Exception('您还未提交此作业');  
+            }
+            error_log("SubmissionResult: Found submission ID {$submission->id} status {$submission->status}");
+
+            error_log("SubmissionResult: Processing assignment info...");
+            $assignmentInfo = $this->handleAssignment($assignment);
+            
+            error_log("SubmissionResult: Processing submission info...");
+            $submissionInfo = $this->handleSubmission($submission);
+            
+            error_log("SubmissionResult: Processing questions with answers...");
+            $questions = $this->handleQuestionsWithAnswers($assignment, $submission);
+            error_log("SubmissionResult: Found " . count($questions) . " questions");
+
+            error_log("SubmissionResult: Successfully completed handle");
+            return [
+                'assignment' => $assignmentInfo,
+                'submission' => $submissionInfo,
+                'questions' => $questions,
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("SubmissionResult: ERROR - " . $e->getMessage());
+            error_log("SubmissionResult: ERROR - " . $e->getTraceAsString());
+            throw $e;
         }
-
-        $submissionRepo = new SubmissionRepo();
-
-        $submission = $submissionRepo->findByAssignmentAndUser($assignment->id, $user->id);
-
-        $assignmentInfo = $this->handleAssignment($assignment);
-        $submissionInfo = $this->handleSubmission($submission);
-        $questions = $this->handleQuestionsWithAnswers($assignment, $submission);
-
-        return [
-            'assignment' => $assignmentInfo,
-            'submission' => $submissionInfo,
-            'questions' => $questions,
-        ];
     }
 
     protected function handleAssignment($assignment)
@@ -98,21 +121,28 @@ class SubmissionResult extends LogicService
 
     protected function handleQuestionsWithAnswers($assignment, $submission)
     {
+        error_log("SubmissionResult: handleQuestionsWithAnswers - assignment ID {$assignment->id}");
+        
         // 使用模型的getContentData()方法解析题目
         $content = $assignment->getContentData();
+        error_log("SubmissionResult: Content data type: " . gettype($content));
         
         if (!is_array($content)) {
+            error_log("SubmissionResult: Content is not array, returning empty");
             return [];
         }
         
         // 兼容两种数据结构
         if (isset($content['questions']) && is_array($content['questions'])) {
             $questions = $content['questions'];
+            error_log("SubmissionResult: Using content['questions'], count: " . count($questions));
         } else {
             $questions = $content;
+            error_log("SubmissionResult: Using content directly, count: " . count($questions));
         }
         
         if (!is_array($questions)) {
+            error_log("SubmissionResult: Questions is not array, returning empty");
             return [];
         }
 
@@ -121,16 +151,25 @@ class SubmissionResult extends LogicService
 
         if ($submission) {
             $userAnswers = $submission->getContentData();
+            error_log("SubmissionResult: User answers type: " . gettype($userAnswers) . ", count: " . (is_array($userAnswers) ? count($userAnswers) : 0));
+        } else {
+            error_log("SubmissionResult: No submission provided");
         }
 
-        foreach ($questions as $question) {
+        foreach ($questions as $index => $question) {
+            error_log("SubmissionResult: Processing question index {$index}");
+            
             $questionId = $question['id'] ?? null;
             
             if (!$questionId) {
+                error_log("SubmissionResult: Question has no ID, skipping");
                 continue;
             }
+            
+            error_log("SubmissionResult: Processing question ID {$questionId}, type: " . ($question['type'] ?? 'unknown'));
 
             $userAnswer = isset($userAnswers[$questionId]) ? $userAnswers[$questionId] : null;
+            error_log("SubmissionResult: User answer for Q{$questionId}: " . (is_null($userAnswer) ? 'null' : json_encode($userAnswer)));
             
             // 标准化选项格式，转换为Volt模板期望的格式
             $normalizedOptions = [];
