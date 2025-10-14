@@ -124,6 +124,7 @@ class AssignmentInfo extends LogicService
             'user_id' => $submission->user_id,
             'score' => $submission->score,
             'status' => $submission->status,
+            'grade_status' => $submission->grade_status,
             'answers' => $answers,
             'is_late' => $submission->is_late,
             'submitted_at' => $submission->submit_time,

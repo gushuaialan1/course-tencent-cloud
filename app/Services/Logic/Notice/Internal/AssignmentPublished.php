@@ -51,7 +51,7 @@ class AssignmentPublished extends LogicService
                 'assignment' => [
                     'id' => $assignment->id,
                     'title' => $assignment->title,
-                    'deadline' => $assignment->deadline,
+                    'due_date' => $assignment->due_date,
                 ],
             ];
 

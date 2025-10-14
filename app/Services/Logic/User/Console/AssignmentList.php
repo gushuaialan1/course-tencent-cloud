@@ -57,13 +57,20 @@ class AssignmentList extends LogicService
         foreach ($pager->items as $submission) {
             $assignment = $assignmentRepo->findById($submission->assignment_id);
 
-            if (!$assignment || $assignment->deleted == 1) {
+            if (!$assignment || $assignment->delete_time > 0) {
                 continue;
             }
 
-            $answers = $submission->answers ? json_decode($submission->answers, true) : [];
+            // 解析content获取题目数量
+            $content = $assignment->content ? json_decode($assignment->content, true) : [];
+            if (is_array($content)) {
+                $questions = isset($content['questions']) ? $content['questions'] : $content;
+            } else {
+                $questions = [];
+            }
+            $questionCount = count($questions);
 
-            $isOverdue = $assignment->deadline > 0 && $assignment->deadline < time();
+            $isOverdue = $assignment->due_date > 0 && $assignment->due_date < time();
 
             $items[] = [
                 'assignment' => [
@@ -71,20 +78,21 @@ class AssignmentList extends LogicService
                     'title' => $assignment->title,
                     'description' => $assignment->description,
                     'course_id' => $assignment->course_id,
-                    'deadline' => $assignment->deadline,
-                    'total_score' => $assignment->total_score,
-                    'question_count' => $assignment->question_count,
+                    'due_date' => $assignment->due_date,
+                    'max_score' => $assignment->max_score,
+                    'question_count' => $questionCount,
                     'status' => $assignment->status,
-                    'allow_resubmit' => $assignment->allow_resubmit,
+                    'allow_late' => $assignment->allow_late,
                     'is_overdue' => $isOverdue,
                 ],
                 'submission' => [
                     'id' => $submission->id,
                     'score' => $submission->score,
                     'status' => $submission->status,
+                    'grade_status' => $submission->grade_status,
                     'is_late' => $submission->is_late,
-                    'submitted_at' => $submission->submitted_at,
-                    'graded_at' => $submission->graded_at,
+                    'submit_time' => $submission->submit_time,
+                    'grade_time' => $submission->grade_time,
                 ],
             ];
         }

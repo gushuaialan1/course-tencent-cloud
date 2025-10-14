@@ -41,7 +41,7 @@ class AssignmentGraded extends LogicService
             'submission' => [
                 'id' => $submission->id,
                 'score' => $submission->score,
-                'total_score' => $assignment->total_score,
+                'max_score' => $assignment->max_score,
             ],
         ];
 

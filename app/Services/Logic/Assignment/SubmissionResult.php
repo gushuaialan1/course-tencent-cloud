@@ -81,6 +81,7 @@ class SubmissionResult extends LogicService
             'id' => $submission->id,
             'score' => $submission->score,
             'status' => $submission->status,
+            'grade_status' => $submission->grade_status,
             'answers' => $answers,
             'feedback' => $submission->feedback,
             'is_late' => $submission->is_late,
@@ -88,6 +89,7 @@ class SubmissionResult extends LogicService
             'graded_at' => $submission->grade_time,
         ];
     }
+
 
     protected function handleQuestionsWithAnswers($assignment, $submission)
     {
