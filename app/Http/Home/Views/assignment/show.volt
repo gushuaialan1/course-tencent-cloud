@@ -36,7 +36,7 @@
                         <i class="layui-icon layui-icon-form"></i> 题目数量：<strong style="color: #333;">{{ assignment.question_count }}</strong> 道
                     </span>
                     <span style="margin-right: 25px;">
-                        <i class="layui-icon layui-icon-praise"></i> 总分：<strong style="color: #333;">{{ assignment.max_score }}</strong> 分
+                        <i class="layui-icon layui-icon-praise"></i> 总分：<strong style="color: #333;">{{ assignment.max_score }}</strong> 分pu
                     </span>
                     {% if assignment.due_date > 0 %}
                         <span style="margin-right: 25px;">
@@ -182,6 +182,23 @@
                         </div>
                     {% endif %}
                 </form>
+            </div>
+
+            {# 底部操作区（兜底）：当右侧边栏未渲染时，仍提供提交与草稿按钮） #}
+            <div class="assignment-actions-bottom wrap" style="margin: 20px 0; padding: 16px; background: #FAFAFA; border-radius: 2px; display: flex; gap: 12px;">
+                <button type="button"
+                        class="layui-btn"
+                        id="save-draft-btn-bottom"
+                        {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
+                    <i class="layui-icon layui-icon-file"></i> 保存草稿
+                </button>
+                <button type="button"
+                        class="layui-btn layui-btn-normal"
+                        id="submit-btn-bottom"
+                        {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
+                    <i class="layui-icon layui-icon-ok"></i> 提交作业
+                </button>
+                <div style="flex:1; text-align:right; color:#999; line-height:38px; font-size:12px;">如右侧工具栏未显示，请使用此处按钮提交</div>
             </div>
 
         </div>
