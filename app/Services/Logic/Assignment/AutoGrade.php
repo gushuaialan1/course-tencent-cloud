@@ -98,7 +98,6 @@ class AutoGrade extends LogicService
         $submission->score = $earnedScore;
         $submission->status = 'graded';
         $submission->grade_time = time();
-        $submission->grader_id = 0; // 系统自动评分
         $submission->update_time = time();
         
         if (!$submission->update()) {
