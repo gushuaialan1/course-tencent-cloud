@@ -50,27 +50,44 @@ class AssignmentController extends Controller
      */
     public function resultAction($id)
     {
-        $service = new SubmissionResultService();
+        error_log("AssignmentController: resultAction called for assignment ID {$id}");
+        
+        try {
+            $service = new SubmissionResultService();
+            $result = $service->handle($id);
+            
+            error_log("AssignmentController: Service returned result, submission exists: " . (isset($result['submission']) && $result['submission'] ? 'true' : 'false'));
 
-        $result = $service->handle($id);
+            if (!$result['submission']) {
+                error_log("AssignmentController: No submission found, redirecting");
+                $this->flashSession->error('您还未提交此作业');
+                $location = $this->url->get(['for' => 'home.assignment.show', 'id' => $id]);
+                return $this->response->redirect($location);
+            }
 
-        if (!$result['submission']) {
-            $this->flashSession->error('您还未提交此作业');
-            $location = $this->url->get(['for' => 'home.assignment.show', 'id' => $id]);
-            return $this->response->redirect($location);
+            error_log("AssignmentController: Submission status: " . $result['submission']['status']);
+            
+            if ($result['submission']['status'] != 'graded') {
+                error_log("AssignmentController: Submission not graded, redirecting");
+                $this->flashSession->info('作业批改中，请耐心等待');
+                $location = $this->url->get(['for' => 'home.assignment.show', 'id' => $id]);
+                return $this->response->redirect($location);
+            }
+
+            error_log("AssignmentController: Setting view vars...");
+            $this->seo->prependTitle(['作业成绩', $result['assignment']['title']]);
+
+            $this->view->setVar('assignment', $result['assignment']);
+            $this->view->setVar('submission', $result['submission']);
+            $this->view->setVar('questions', $result['questions']);
+            
+            error_log("AssignmentController: resultAction completed successfully");
+            
+        } catch (\Exception $e) {
+            error_log("AssignmentController: ERROR in resultAction - " . $e->getMessage());
+            error_log("AssignmentController: ERROR trace - " . $e->getTraceAsString());
+            throw $e;
         }
-
-        if ($result['submission']['status'] != 'graded') {
-            $this->flashSession->info('作业批改中，请耐心等待');
-            $location = $this->url->get(['for' => 'home.assignment.show', 'id' => $id]);
-            return $this->response->redirect($location);
-        }
-
-        $this->seo->prependTitle(['作业成绩', $result['assignment']['title']]);
-
-        $this->view->setVar('assignment', $result['assignment']);
-        $this->view->setVar('submission', $result['submission']);
-        $this->view->setVar('questions', $result['questions']);
     }
 
     /**

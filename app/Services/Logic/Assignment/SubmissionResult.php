@@ -39,7 +39,11 @@ class SubmissionResult extends LogicService
 
             if (!$submission) {
                 error_log("SubmissionResult: No submission found for user {$user->id} assignment {$id}");
-                throw new \Exception('您还未提交此作业');  
+                return [
+                    'assignment' => $this->handleAssignment($assignment),
+                    'submission' => null,
+                    'questions' => [],
+                ];
             }
             error_log("SubmissionResult: Found submission ID {$submission->id} status {$submission->status}");
 
