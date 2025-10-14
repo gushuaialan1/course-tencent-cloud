@@ -102,16 +102,13 @@ class AssignmentInfo extends LogicService
         // 添加调试信息（临时）
         if (empty($questions)) {
             error_log("AssignmentInfo: No questions found for assignment ID " . $assignment->id);
-            error_log("Content data: " . json_encode($content));
         } else {
             error_log("AssignmentInfo: Found " . count($questions) . " questions for assignment ID " . $assignment->id);
-            error_log("AssignmentInfo: Questions structure: " . json_encode(array_slice($questions, 0, 2))); // 只记录前2题
-            error_log("AssignmentInfo: Questions keys: " . implode(', ', array_keys($questions)));
         }
 
         // 标准化题目数据，确保options格式正确
         if (is_array($questions)) {
-            foreach ($questions as &$question) {
+            foreach ($questions as $index => $question) {
                 if (isset($question['options']) && is_array($question['options'])) {
                     $normalizedOptions = [];
                     foreach ($question['options'] as $key => $option) {
@@ -124,7 +121,7 @@ class AssignmentInfo extends LogicService
                             $normalizedOptions[$key] = (string)$option;
                         }
                     }
-                    $question['options'] = $normalizedOptions;
+                    $questions[$index]['options'] = $normalizedOptions;
                 }
             }
         }
