@@ -64,9 +64,9 @@
                                     <p><strong>{{ assignment.title }}</strong></p>
                                     <p class="meta" style="color: #999; font-size: 12px; margin-top: 5px;">
                                         题目：{{ assignment.question_count }} 道 
-                                        &nbsp;|&nbsp; 总分：{{ assignment.total_score }} 分
-                                        {% if assignment.deadline > 0 %}
-                                            &nbsp;|&nbsp; 截止：{{ date('m-d H:i', assignment.deadline) }}
+                                        &nbsp;|&nbsp; 总分：{{ assignment.max_score }} 分
+                                        {% if assignment.due_date > 0 %}
+                                            &nbsp;|&nbsp; 截止：{{ date('m-d H:i', assignment.due_date) }}
                                         {% endif %}
                                         {% if assignment.is_overdue %}
                                             <span class="layui-badge layui-bg-gray" style="margin-left: 5px;">已截止</span>
@@ -93,7 +93,7 @@
                                             {{ submission.score }}
                                         </div>
                                         <div style="font-size: 12px; color: #999;">
-                                            / {{ assignment.total_score }} 分
+                                            / {{ assignment.max_score }} 分
                                         </div>
                                     {% else %}
                                         <span style="color: #999;">-</span>
@@ -104,7 +104,7 @@
                                         <a href="{{ result_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
                                             <i class="layui-icon layui-icon-read"></i> 查看成绩
                                         </a>
-                                        {% if assignment.allow_resubmit and not assignment.is_overdue %}
+                                        {% if assignment.allow_late and not assignment.is_overdue %}
                                             <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-primary" target="_blank" style="margin-top: 5px;">
                                                 <i class="layui-icon layui-icon-edit"></i> 重新提交
                                             </a>
@@ -118,7 +118,7 @@
                                             <i class="layui-icon layui-icon-edit"></i> 继续答题
                                         </a>
                                     {% else %}
-                                        {% if assignment.is_overdue and not assignment.allow_resubmit %}
+                                        {% if assignment.is_overdue and not assignment.allow_late %}
                                             <button class="layui-btn layui-btn-sm layui-btn-disabled" disabled>
                                                 <i class="layui-icon layui-icon-close"></i> 已截止
                                             </button>

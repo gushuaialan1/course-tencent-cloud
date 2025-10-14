@@ -38,10 +38,10 @@
                 <div class="score-display" style="margin: 30px 0;">
                     <div class="score-number" style="font-size: 72px; font-weight: bold; color: #16BAAA; line-height: 1;">
                         {{ submission.score }}
-                        <span style="font-size: 36px; color: #999;">/ {{ assignment.total_score }}</span>
+                        <span style="font-size: 36px; color: #999;">/ {{ assignment.max_score }}</span>
                     </div>
                     <div class="score-percentage" style="margin-top: 15px; font-size: 24px; color: #666;">
-                        得分率：{{ ((submission.score / assignment.total_score) * 100)|round(1) }}%
+                        得分率：{{ ((submission.score / assignment.max_score) * 100)|round(1) }}%
                     </div>
                 </div>
                 
@@ -192,7 +192,7 @@
                 <a href="{{ course_url }}" class="layui-btn layui-btn-primary">
                     <i class="layui-icon layui-icon-return"></i> 返回课程
                 </a>
-                {% if assignment.allow_resubmit and not assignment.is_overdue %}
+                {% if assignment.allow_late and not assignment.is_overdue %}
                     <a href="{{ assignment_url }}" class="layui-btn layui-btn-normal">
                         <i class="layui-icon layui-icon-edit"></i> 重新提交
                     </a>
@@ -220,7 +220,7 @@
                     </div>
                     <div class="stat-item" style="padding: 15px 0; border-bottom: 1px solid #E6E6E6; text-align: center;">
                         <div style="font-size: 32px; font-weight: bold; color: #666;">
-                            {{ assignment.total_score }}
+                            {{ assignment.max_score }}
                         </div>
                         <div style="color: #999; font-size: 13px; margin-top: 5px;">
                             总分
@@ -228,7 +228,7 @@
                     </div>
                     <div class="stat-item" style="padding: 15px 0; text-align: center;">
                         <div style="font-size: 32px; font-weight: bold; color: #FFB800;">
-                            {{ ((submission.score / assignment.total_score) * 100)|round(1) }}%
+                            {{ ((submission.score / assignment.max_score) * 100)|round(1) }}%
                         </div>
                         <div style="color: #999; font-size: 13px; margin-top: 5px;">
                             得分率

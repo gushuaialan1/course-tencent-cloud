@@ -207,7 +207,7 @@
                         </div>
                     </div>
                     
-                    {% if assignment.deadline > 0 and not assignment.is_overdue %}
+                    {% if assignment.due_date > 0 and not assignment.is_overdue %}
                         <div class="time-info" style="padding: 15px; background: #FFF7E6; border-radius: 2px; margin-top: 15px;">
                             <div style="color: #FFB800; text-align: center;">
                                 <i class="layui-icon layui-icon-time"></i> 距离截止还有
@@ -222,14 +222,14 @@
                         <button type="button" 
                                 class="layui-btn layui-btn-fluid" 
                                 id="save-draft-btn"
-                                {% if assignment.is_overdue and not assignment.allow_resubmit %}disabled{% endif %}>
+                                {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
                             <i class="layui-icon layui-icon-file"></i> 保存草稿
                         </button>
                         <button type="button" 
                                 class="layui-btn layui-btn-normal layui-btn-fluid" 
                                 id="submit-btn"
                                 style="margin-top: 10px;"
-                                {% if assignment.is_overdue and not assignment.allow_resubmit %}disabled{% endif %}>
+                                {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
                             <i class="layui-icon layui-icon-ok"></i> 提交作业
                         </button>
                     </div>
@@ -246,7 +246,7 @@
                         <li><i class="layui-icon layui-icon-right" style="color: #16BAAA;"></i> 答题过程中会自动保存草稿</li>
                         <li><i class="layui-icon layui-icon-right" style="color: #16BAAA;"></i> 提交前请仔细检查答案</li>
                         <li><i class="layui-icon layui-icon-right" style="color: #16BAAA;"></i> 带 <span style="color: #FF5722;">*</span> 号为必答题</li>
-                        {% if assignment.allow_resubmit %}
+                        {% if assignment.allow_late %}
                             <li><i class="layui-icon layui-icon-right" style="color: #16BAAA;"></i> 本作业允许重新提交</li>
                         {% else %}
                             <li><i class="layui-icon layui-icon-right" style="color: #FF5722;"></i> 本作业提交后不可修改</li>
@@ -259,7 +259,7 @@
     </div>
 
     <input type="hidden" id="assignment-id" value="{{ assignment.id }}">
-    <input type="hidden" id="assignment-deadline" value="{{ assignment.deadline }}">
+    <input type="hidden" id="assignment-deadline" value="{{ assignment.due_date }}">
     <input type="hidden" id="assignment-question-count" value="{{ assignment.question_count }}">
     <input type="hidden" id="submit-url" value="{{ submit_url }}">
     <input type="hidden" id="draft-url" value="{{ draft_url }}">
