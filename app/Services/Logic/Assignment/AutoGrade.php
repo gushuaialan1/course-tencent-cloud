@@ -30,9 +30,9 @@ class AutoGrade extends LogicService
             throw new \Exception('作业不存在');
         }
 
-        // 只有自动评分模式才执行
-        if ($assignment->grade_mode !== AssignmentModel::GRADE_MODE_AUTO) {
-            return ['success' => false, 'reason' => '非自动评分模式'];
+        // 只有自动评分或混合评分模式才执行
+        if ($assignment->grade_mode === AssignmentModel::GRADE_MODE_MANUAL) {
+            return ['success' => false, 'reason' => '手动评分模式，不进行自动评分'];
         }
 
         // 解析题目和用户答案
@@ -98,7 +98,16 @@ class AutoGrade extends LogicService
         $submission->score = $earnedScore;
         $submission->status = 'graded';
         $submission->grade_time = time();
-        $submission->grader_id = null; // 自动批改，无批改人
+        
+        // 根据批改模式设置批改人
+        if ($assignment->grade_mode === AssignmentModel::GRADE_MODE_AUTO) {
+            // 纯自动批改：无批改人
+            $submission->grader_id = null;
+        } else {
+            // 手动或混合模式：需要老师最终审核，设置为作业创建者
+            $submission->grader_id = $assignment->owner_id;
+        }
+        
         $submission->update_time = time();
         
         if (!$submission->update()) {
