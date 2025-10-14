@@ -70,7 +70,7 @@ class AssignmentSubmit extends LogicService
             }
 
             $submission->content = json_encode($answers);
-            $submission->status = 'pending';
+            $submission->status = 'submitted'; // 已提交状态
             $submission->is_late = $isLate ? 1 : 0;
             $submission->submit_time = time();
             $submission->update_time = time();
