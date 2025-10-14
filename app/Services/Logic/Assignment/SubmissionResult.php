@@ -18,7 +18,8 @@ class SubmissionResult extends LogicService
 
     public function handle($id)
     {
-        $user = $this->getCurrentUser(true);
+        // 查看成绩需要用户登录
+        $user = $this->getLoginUser(true);
 
         $assignmentRepo = new AssignmentRepo();
 

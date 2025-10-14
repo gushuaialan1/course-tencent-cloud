@@ -20,7 +20,8 @@ class AssignmentInfo extends LogicService
 
     public function handle($id)
     {
-        $user = $this->getCurrentUser();
+        // 作业功能需要用户登录，使用getLoginUser确保用户已登录
+        $user = $this->getLoginUser(true);
 
         $assignmentRepo = new AssignmentRepo();
 
@@ -29,6 +30,9 @@ class AssignmentInfo extends LogicService
         if (!$assignment) {
             throw new \Exception('作业不存在');
         }
+
+        // 验证用户是否有访问该课程的权限
+        $this->validateUserAccess($assignment, $user);
 
         $result = $this->handleAssignment($assignment, $user);
 
@@ -49,8 +53,12 @@ class AssignmentInfo extends LogicService
             'title' => $assignment->title,
             'description' => $assignment->description,
             'course_id' => $assignment->course_id,
+            // 标准字段名
             'due_date' => $assignment->due_date,
             'max_score' => $assignment->max_score,
+            // 兼容旧前端代码的字段名
+            'deadline' => $assignment->due_date,
+            'total_score' => $assignment->max_score,
             'question_count' => count($questions),
             'status' => $assignment->status,
             'allow_late' => $assignment->allow_late,
@@ -151,6 +159,26 @@ class AssignmentInfo extends LogicService
 
         // 确保返回的是连续索引的数组，Volt循环需要
         return is_array($questions) ? array_values($questions) : [];
+    }
+
+    /**
+     * 验证用户是否有访问该作业的权限
+     *
+     * @param AssignmentModel $assignment
+     * @param UserModel $user
+     * @throws \Exception
+     */
+    protected function validateUserAccess(AssignmentModel $assignment, UserModel $user)
+    {
+        // 检查用户是否有访问该课程的权限
+        // 这里可以根据实际业务逻辑进行扩展，比如检查用户是否购买了课程等
+        
+        if ($assignment->status !== AssignmentModel::STATUS_PUBLISHED) {
+            throw new \Exception('作业尚未发布');
+        }
+        
+        // 记录用户访问日志
+        error_log("User {$user->id} accessing assignment {$assignment->id}");
     }
 
     protected function handleSubmission($assignmentId, $userId)

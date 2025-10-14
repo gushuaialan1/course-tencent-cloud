@@ -17,7 +17,8 @@ class SubmissionDraft extends LogicService
 
     public function handle($id)
     {
-        $user = $this->getCurrentUser(true);
+        // 保存草稿需要用户登录
+        $user = $this->getLoginUser(true);
 
         $assignmentRepo = new AssignmentRepo();
 

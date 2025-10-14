@@ -18,7 +18,8 @@ class AssignmentSubmit extends LogicService
 
     public function handle($id)
     {
-        $user = $this->getCurrentUser(true);
+        // 提交作业需要用户登录
+        $user = $this->getLoginUser(true);
 
         $assignmentRepo = new AssignmentRepo();
 
