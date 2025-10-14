@@ -41,18 +41,18 @@
                         <span style="font-size: 36px; color: #999;">/ {{ assignment.max_score }}</span>
                     </div>
                     <div class="score-percentage" style="margin-top: 15px; font-size: 24px; color: #666;">
-                        得分率：{{ ((submission.score / assignment.max_score) * 100)|round(1) }}%
+                        得分率：{{ assignment.max_score > 0 ? (((submission.score / assignment.max_score) * 100)|round(1)) : 0 }}%
                     </div>
                 </div>
                 
                 <div class="score-meta" style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #E6E6E6; color: #999; font-size: 14px;">
                     <span style="margin: 0 20px;">
                         <i class="layui-icon layui-icon-time"></i> 
-                        提交时间：{{ date('Y-m-d H:i:s', submission.submit_time) }}
+                        提交时间：{{ submission.submit_time > 0 ? date('Y-m-d H:i:s', submission.submit_time) : '未知' }}
                     </span>
                     <span style="margin: 0 20px;">
                         <i class="layui-icon layui-icon-ok-circle"></i> 
-                        批改时间：{{ date('Y-m-d H:i:s', submission.grade_time) }}
+                        批改时间：{{ submission.grade_time > 0 ? date('Y-m-d H:i:s', submission.grade_time) : '未知' }}
                     </span>
                     {% if submission.is_late %}
                         <span class="layui-badge layui-bg-orange">逾期提交</span>
@@ -228,7 +228,7 @@
                     </div>
                     <div class="stat-item" style="padding: 15px 0; text-align: center;">
                         <div style="font-size: 32px; font-weight: bold; color: #FFB800;">
-                            {{ ((submission.score / assignment.max_score) * 100)|round(1) }}%
+                            {{ assignment.max_score > 0 ? (((submission.score / assignment.max_score) * 100)|round(1)) : 0 }}%
                         </div>
                         <div style="color: #999; font-size: 13px; margin-top: 5px;">
                             得分率

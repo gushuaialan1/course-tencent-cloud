@@ -111,14 +111,14 @@ class SubmissionResult extends LogicService
 
         return [
             'id' => $submission->id,
-            'score' => $submission->score,
+            'score' => $submission->score ?: 0,
             'status' => $submission->status,
             'grade_status' => $submission->grade_status,
             'content' => $answers,
-            'feedback' => $submission->feedback,
+            'feedback' => $submission->feedback ?: '',
             'is_late' => $submission->is_late,
-            'submit_time' => $submission->submit_time,
-            'grade_time' => $submission->grade_time,
+            'submit_time' => $submission->submit_time ?: 0,
+            'grade_time' => $submission->grade_time ?: 0,
         ];
     }
 
