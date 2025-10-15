@@ -198,6 +198,68 @@ class AssignmentService extends Service
     }
 
     /**
+     * 获取作业列表
+     * 
+     * @param array $params 查询参数
+     * @return array
+     */
+    public function getList(array $params = []): array
+    {
+        $repo = new \App\Repos\Assignment();
+        
+        // 构建查询条件
+        $conditions = ['delete_time = 0'];
+        $bind = [];
+        
+        // 课程筛选
+        if (!empty($params['course_id'])) {
+            $conditions[] = 'course_id = :course_id:';
+            $bind['course_id'] = $params['course_id'];
+        }
+        
+        // 状态筛选
+        if (!empty($params['status'])) {
+            $conditions[] = 'status = :status:';
+            $bind['status'] = $params['status'];
+        }
+        
+        // 标题搜索
+        if (!empty($params['title'])) {
+            $conditions[] = 'title LIKE :title:';
+            $bind['title'] = '%' . $params['title'] . '%';
+        }
+        
+        // 章节筛选
+        if (!empty($params['chapter_id'])) {
+            $conditions[] = 'chapter_id = :chapter_id:';
+            $bind['chapter_id'] = $params['chapter_id'];
+        }
+        
+        // 分页参数
+        $page = $params['page'] ?? 1;
+        $limit = $params['limit'] ?? 15;
+        $sort = $params['sort'] ?? 'id DESC';
+        
+        // 执行查询
+        $pager = $repo->paginate([
+            'conditions' => implode(' AND ', $conditions),
+            'bind' => $bind
+        ], $sort, $page, $limit);
+        
+        $assignments = [];
+        if ($pager->total_items > 0) {
+            foreach ($pager->items as $item) {
+                $assignments[] = $item->toArray();
+            }
+        }
+        
+        return [
+            'assignments' => $assignments,
+            'pager' => $pager
+        ];
+    }
+
+    /**
      * 获取作业详情
      * 
      * @param int $id
