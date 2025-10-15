@@ -84,9 +84,9 @@ class AssignmentController extends Controller
     }
 
     /**
-     * @Get("/detail/{id:[0-9]+}", name="home.assignment.detail")
+     * @Get("/show/{id:[0-9]+}", name="home.assignment.show")
      */
-    public function detailAction($id)
+    public function showAction($id)
     {
         try {
             // 获取作业详情
