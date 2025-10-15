@@ -147,6 +147,7 @@ class AssignmentController extends Controller
 
     /**
      * @Post("/save-draft/{id:[0-9]+}", name="home.assignment.save_draft")
+     * @Post("/draft/{id:[0-9]+}", name="home.assignment.draft")
      */
     public function saveDraftAction($id)
     {
