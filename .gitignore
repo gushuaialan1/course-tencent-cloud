@@ -18,3 +18,21 @@
 # 开发环境配置文件和测试脚本
 /test-env.php
 /配置说明-开发环境.md
+
+# Cursor IDE 配置文件
+/.cursor/
+
+# OpenSpec 规范文档（项目文档，不需要提交到代码仓库）
+/openspec/
+/AGENTS.md
+
+# 测试和调试SQL脚本
+/清空测试数据.sql
+/检查作业数据格式.sql
+/删除指定提交.sql
+/重新评分作业.sql
+/修复grader_id为0的记录.sql
+
+# 临时文档和规范对照表
+/作业模块前后台数据规范对照表.md
+/功能验证报告*.md
