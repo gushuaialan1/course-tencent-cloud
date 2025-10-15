@@ -203,8 +203,22 @@ class AssignmentController extends Controller
 
             // 处理JSON字段
             if (!empty($postData['content'])) {
-                $data['content'] = is_string($postData['content']) ? 
+                $content = is_string($postData['content']) ? 
                     json_decode($postData['content'], true) : $postData['content'];
+                
+                // 兼容处理：如果content是数组（旧格式），包裹成 {questions: [...]}
+                if (is_array($content)) {
+                    // 检查是否已经是新格式 {questions: [...]}
+                    if (!isset($content['questions'])) {
+                        // 旧格式：直接是题目数组，需要包裹
+                        $data['content'] = ['questions' => $content];
+                    } else {
+                        // 已经是新格式
+                        $data['content'] = $content;
+                    }
+                } else {
+                    $data['content'] = ['questions' => []];
+                }
             } else {
                 $data['content'] = ['questions' => []];
             }

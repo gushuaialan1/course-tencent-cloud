@@ -493,16 +493,19 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
             var $question = $(this);
             var questionType = $question.data('question-type');
             var questionData = {
-                id: index + 1,
+                id: 'q' + (index + 1),  // 使用 q1, q2 格式
                 type: questionType,
                 title: $question.find('textarea[name*="[title]"]').val(),
-                score: parseFloat($question.find('input[name*="[score]"]').val()) || 0
+                score: parseFloat($question.find('input[name*="[score]"]').val()) || 0,
+                required: true  // 默认必答
             };
 
             // 根据题目类型收集不同的数据
             switch (questionType) {
                 case 'choice':
-                    questionData.multiple = $question.find('input[name*="[multiple]"]:checked').val() === '1';
+                    var isMultiple = $question.find('input[name*="[multiple]"]:checked').val() === '1';
+                    // 使用新格式：single_choice 或 multiple_choice
+                    questionData.type = isMultiple ? 'multiple_choice' : 'single_choice';
                     questionData.options = {};
                     questionData.correct_answer = [];
                     
@@ -519,15 +522,22 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                             }
                         }
                     });
+                    
+                    // 如果是单选题，correct_answer应该是字符串而不是数组
+                    if (!isMultiple && questionData.correct_answer.length > 0) {
+                        questionData.correct_answer = questionData.correct_answer[0];
+                    }
                     break;
 
                 case 'essay':
+                    questionData.type = 'essay';  // 确保类型正确
                     questionData.min_length = parseInt($question.find('input[name*="[min_length]"]').val()) || 0;
                     questionData.max_length = parseInt($question.find('input[name*="[max_length]"]').val()) || 0;
                     questionData.reference_answer = $question.find('textarea[name*="[reference_answer]"]').val();
                     break;
 
                 case 'upload':
+                    questionData.type = 'file_upload';  // 使用新格式：file_upload
                     questionData.allowed_types = [];
                     $question.find('input[name*="[allowed_types]"]:checked').each(function () {
                         questionData.allowed_types.push($(this).val());
@@ -624,14 +634,26 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         // 题目内容
         if (data.content) {
             var questions = [];
-            if (typeof data.content === 'string') {
+            var contentData = data.content;
+            
+            // 解析content
+            if (typeof contentData === 'string') {
                 try {
-                    questions = JSON.parse(data.content);
+                    contentData = JSON.parse(contentData);
                 } catch (e) {
-                    questions = [];
+                    contentData = null;
                 }
-            } else if (Array.isArray(data.content)) {
-                questions = data.content;
+            }
+            
+            // 兼容新旧格式
+            if (contentData) {
+                if (Array.isArray(contentData)) {
+                    // 旧格式：直接是数组
+                    questions = contentData;
+                } else if (contentData.questions && Array.isArray(contentData.questions)) {
+                    // 新格式：{questions: [...]}
+                    questions = contentData.questions;
+                }
             }
 
             // 添加题目
@@ -650,7 +672,16 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
     function addQuestionFromData(questionData, index) {
         questionCount = index;
         var type = questionData.type || 'choice';
-        var questionHtml = createQuestionHtml(questionCount, type);
+        
+        // 将新格式题型转换为UI使用的类型
+        var uiType = type;
+        if (type === 'single_choice' || type === 'multiple_choice') {
+            uiType = 'choice';
+        } else if (type === 'file_upload') {
+            uiType = 'upload';
+        }
+        
+        var questionHtml = createQuestionHtml(questionCount, uiType);
         $('#questions-container').append(questionHtml);
 
         var $question = $('.kg-question-item[data-question-id="' + questionCount + '"]');
@@ -659,10 +690,20 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         $question.find('textarea[name*="[title]"]').val(questionData.title || '');
         $question.find('input[name*="[score]"]').val(questionData.score || 10);
 
-        switch (type) {
+        switch (uiType) {
             case 'choice':
-                // 单选/多选
-                if (questionData.multiple) {
+                // 单选/多选（兼容新旧格式）
+                var isMultiple = false;
+                if (questionData.type === 'multiple_choice') {
+                    isMultiple = true;
+                } else if (questionData.type === 'single_choice') {
+                    isMultiple = false;
+                } else if (questionData.multiple !== undefined) {
+                    // 兼容旧格式
+                    isMultiple = questionData.multiple;
+                }
+                
+                if (isMultiple) {
                     $question.find('input[name*="[multiple]"][value="1"]').prop('checked', true);
                 } else {
                     $question.find('input[name*="[multiple]"][value="0"]').prop('checked', true);
