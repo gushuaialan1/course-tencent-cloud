@@ -1,166 +1,359 @@
 <?php
 /**
- * @copyright Copyright (c) 2021 深圳市酷瓜软件有限公司
- * @license https://opensource.org/licenses/GPL-2.0
- * @link https://www.koogua.com
+ * 作业前台控制器 - 完全重写版本
+ * 
+ * @copyright 2024 酷瓜云课堂扩展
+ * @author 开发团队
  */
 
 namespace App\Http\Home\Controllers;
 
-use App\Services\Logic\Assignment\AssignmentInfo as AssignmentInfoService;
-use App\Services\Logic\Assignment\AssignmentSubmit as AssignmentSubmitService;
-use App\Services\Logic\Assignment\SubmissionDraft as SubmissionDraftService;
-use App\Services\Logic\Assignment\SubmissionResult as SubmissionResultService;
-use Phalcon\Mvc\View;
+use App\Models\Assignment as AssignmentModel;
+use App\Services\Assignment\AssignmentService;
+use App\Services\Assignment\SubmissionService;
+use App\Services\Assignment\StatisticsService;
 
 /**
- * @RoutePrefix("/assignment")
+ * @RoutePrefix("/home/assignment")
  */
 class AssignmentController extends Controller
 {
+    protected $assignmentService;
+    protected $submissionService;
+    protected $statisticsService;
 
-    /**
-     * @Get("/{id:[0-9]+}", name="home.assignment.show")
-     */
-    public function showAction($id)
+    public function initialize()
     {
-        $service = new AssignmentInfoService();
-
-        $assignment = $service->handle($id);
-
-        if ($assignment['delete_time'] > 0) {
-            $this->notFound();
-        }
-
-        // 检查是否有提交记录（已批改的）
-        if ($assignment['submission'] && $assignment['submission']['status'] == 'graded') {
-            // 跳转到成绩查看页
-            $location = $this->url->get(['for' => 'home.assignment.result', 'id' => $id]);
-            return $this->response->redirect($location);
-        }
-
-        $this->seo->prependTitle(['作业', $assignment['title']]);
-        $this->seo->setDescription($assignment['description']);
-
-        $this->view->setVar('assignment', $assignment);
+        parent::initialize();
+        
+        $this->assignmentService = new AssignmentService();
+        $this->submissionService = new SubmissionService();
+        $this->statisticsService = new StatisticsService();
     }
 
     /**
-     * @Get("/{id:[0-9]+}/result", name="home.assignment.result")
+     * @Get("/list", name="home.assignment.list")
      */
-    public function resultAction($id)
+    public function listAction()
     {
-        error_log("AssignmentController: resultAction called for assignment ID {$id}");
-        
         try {
-            $service = new SubmissionResultService();
-            $result = $service->handle($id);
-            
-            error_log("AssignmentController: Service returned result, submission exists: " . (isset($result['submission']) && $result['submission'] ? 'true' : 'false'));
+            $page = max(1, $this->request->getQuery('page', 'int', 1));
+            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
+            $courseId = $this->request->getQuery('course_id', 'int');
 
-            if (!$result['submission']) {
-                error_log("AssignmentController: No submission found, redirecting");
-                $this->flashSession->error('您还未提交此作业');
-                $location = $this->url->get(['for' => 'home.assignment.show', 'id' => $id]);
-                return $this->response->redirect($location);
+            $params = [];
+            if ($courseId) {
+                $params['course_id'] = $courseId;
             }
 
-            error_log("AssignmentController: Submission status: " . $result['submission']['status']);
-            
-            if ($result['submission']['status'] != 'graded') {
-                error_log("AssignmentController: Submission not graded, redirecting");
-                $this->flashSession->info('作业批改中，请耐心等待');
-                $location = $this->url->get(['for' => 'home.assignment.show', 'id' => $id]);
-                return $this->response->redirect($location);
+            // 获取作业列表
+            $result = $this->assignmentService->getList(array_merge($params, [
+                'status' => 'published',  // 只显示已发布的
+                'page' => $page,
+                'limit' => $limit
+            ]));
+
+            // 为每个作业添加用户的提交状态
+            $userId = $this->authUser->id ?? 0;
+            if ($userId) {
+                foreach ($result['assignments'] as &$assignment) {
+                    $submission = $this->submissionService->getSubmission($assignment['id'], $userId);
+                    $assignment['user_submission'] = $submission;
+                }
             }
 
-            error_log("AssignmentController: Setting view vars...");
-            $this->seo->prependTitle(['作业成绩', $result['assignment']['title']]);
+            if ($this->request->isAjax()) {
+                return $this->jsonSuccess($result);
+            }
 
-            $this->view->setVar('assignment', $result['assignment']);
-            $this->view->setVar('submission', $result['submission']);
-            $this->view->setVar('questions', $result['questions']);
+            $this->view->setVars([
+                'assignments' => $result['assignments'],
+                'pager' => $result['pager']
+            ]);
             
-            error_log("AssignmentController: resultAction completed successfully");
+            return $this->view->pick('assignment/list');
             
         } catch (\Exception $e) {
-            error_log("AssignmentController: ERROR in resultAction - " . $e->getMessage());
-            error_log("AssignmentController: ERROR trace - " . $e->getTraceAsString());
-            throw $e;
+            if ($this->request->isAjax()) {
+                return $this->jsonError(['msg' => '获取作业列表失败: ' . $e->getMessage()]);
+            }
+            
+            $this->flashSession->error('获取作业列表失败: ' . $e->getMessage());
+            return $this->response->redirect('/home/index/index');
         }
     }
 
     /**
-     * @Post("/{id:[0-9]+}/submit", name="home.assignment.submit")
+     * @Get("/detail/{id:[0-9]+}", name="home.assignment.detail")
+     */
+    public function detailAction($id)
+    {
+        try {
+            // 获取作业详情
+            $assignment = $this->assignmentService->getDetail($id);
+            
+            if (!$assignment) {
+                if ($this->request->isAjax()) {
+                    return $this->jsonError(['msg' => '作业不存在']);
+                }
+                $this->flashSession->error('作业不存在');
+                return $this->response->redirect('/home/course/index');
+            }
+
+            // 检查作业是否已发布
+            if ($assignment['status'] !== 'published') {
+                if ($this->request->isAjax()) {
+                    return $this->jsonError(['msg' => '作业未发布']);
+                }
+                $this->flashSession->error('作业未发布');
+                return $this->response->redirect('/home/course/index');
+            }
+
+            // 获取用户的提交记录
+            $userId = $this->authUser->id ?? 0;
+            $submission = null;
+            $canSubmit = ['allowed' => false, 'reason' => ''];
+            
+            if ($userId) {
+                $submission = $this->submissionService->getSubmission($id, $userId);
+                $canSubmit = $this->submissionService->canSubmit($id, $userId);
+            }
+
+            if ($this->request->isAjax()) {
+                return $this->jsonSuccess([
+                    'assignment' => $assignment,
+                    'submission' => $submission,
+                    'can_submit' => $canSubmit
+                ]);
+            }
+
+            $this->view->setVars([
+                'assignment' => $assignment,
+                'submission' => $submission,
+                'can_submit' => $canSubmit
+            ]);
+            
+            return $this->view->pick('assignment/detail');
+            
+        } catch (\Exception $e) {
+            if ($this->request->isAjax()) {
+                return $this->jsonError(['msg' => '获取作业详情失败: ' . $e->getMessage()]);
+            }
+            
+            $this->flashSession->error('获取作业详情失败: ' . $e->getMessage());
+            return $this->response->redirect('/home/course/index');
+        }
+    }
+
+    /**
+     * @Post("/save-draft/{id:[0-9]+}", name="home.assignment.save_draft")
+     */
+    public function saveDraftAction($id)
+    {
+        try {
+            $userId = $this->authUser->id ?? 0;
+            
+            if (!$userId) {
+                return $this->jsonError(['msg' => '请先登录']);
+            }
+
+            // 获取答案数据
+            $answers = $this->request->getPost('answers');
+            
+            // 如果是JSON字符串，解析它
+            if (is_string($answers)) {
+                $answers = json_decode($answers, true);
+            }
+
+            // 保存草稿
+            $submission = $this->submissionService->saveAsDraft($id, $userId, $answers, [
+                'ip' => $this->request->getClientAddress(),
+                'user_agent' => $this->request->getUserAgent()
+            ]);
+
+            return $this->jsonSuccess([
+                'submission' => $submission->toArray(),
+                'msg' => '草稿保存成功'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['msg' => '保存草稿失败: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * @Post("/submit/{id:[0-9]+}", name="home.assignment.submit")
      */
     public function submitAction($id)
     {
         try {
-            $user = $this->auth->getUser();
-            if (!$user) {
+            $userId = $this->authUser->id ?? 0;
+            
+            if (!$userId) {
                 return $this->jsonError(['msg' => '请先登录']);
             }
 
-            // 获取提交的答案数据
-            $answers = $this->request->getJsonRawBody(true)['answers'] ?? [];
+            // 获取答案数据
+            $answers = $this->request->getPost('answers');
             
-            // 使用新的SubmissionService
-            $submissionService = new \App\Services\Assignment\SubmissionService();
-            
-            $result = $submissionService->submit(
-                $id,
-                $user->id,
-                $answers,
-                [
-                    'submit_ip' => $this->request->getClientAddress(),
-                    'user_agent' => $this->request->getUserAgent()
-                ]
-            );
+            // 如果是JSON字符串，解析它
+            if (is_string($answers)) {
+                $answers = json_decode($answers, true);
+            }
 
-            $submission = $result['submission'];
-            $location = $this->url->get(['for' => 'home.assignment.result', 'id' => $id]);
+            // 提交作业
+            $result = $this->submissionService->submit($id, $userId, $answers, [
+                'ip' => $this->request->getClientAddress(),
+                'user_agent' => $this->request->getUserAgent()
+            ]);
 
-            // 根据是否自动评分给出不同提示
-            $msg = $result['auto_graded'] ? '提交成功，已完成自动评分' : '提交成功，请等待老师批改';
+            $message = '作业提交成功';
+            if ($result['auto_graded']) {
+                if ($result['all_graded']) {
+                    $message = '作业提交成功，自动评分已完成';
+                } else {
+                    $message = '作业提交成功，部分题目已自动评分，其余等待教师批改';
+                }
+            } else {
+                $message = '作业提交成功，等待教师批改';
+            }
 
             return $this->jsonSuccess([
-                'location' => $location,
-                'msg' => $msg,
-                'submission_id' => $submission->id,
-                'status' => $submission->status
+                'submission' => $result['submission']->toArray(),
+                'auto_graded' => $result['auto_graded'],
+                'all_graded' => $result['all_graded'],
+                'score' => $result['submission']->score,
+                'msg' => $message
             ]);
+            
         } catch (\Exception $e) {
-            return $this->jsonError(['msg' => '提交失败：' . $e->getMessage()]);
+            return $this->jsonError(['msg' => '提交失败: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * @Post("/{id:[0-9]+}/draft", name="home.assignment.draft")
+     * @Get("/result/{id:[0-9]+}", name="home.assignment.result")
      */
-    public function draftAction($id)
+    public function resultAction($id)
     {
         try {
-            $user = $this->auth->getUser();
-            if (!$user) {
-                return $this->jsonError(['msg' => '请先登录']);
+            $userId = $this->authUser->id ?? 0;
+            
+            if (!$userId) {
+                if ($this->request->isAjax()) {
+                    return $this->jsonError(['msg' => '请先登录']);
+                }
+                $this->flashSession->error('请先登录');
+                return $this->response->redirect('/home/auth/login');
             }
 
-            // 获取草稿答案数据
-            $answers = $this->request->getJsonRawBody(true)['answers'] ?? [];
+            // 获取提交记录
+            $submission = $this->submissionService->getSubmission($id, $userId);
             
-            // 使用新的SubmissionService
-            $submissionService = new \App\Services\Assignment\SubmissionService();
-            
-            $submission = $submissionService->saveAsDraft($id, $user->id, $answers);
+            if (!$submission) {
+                if ($this->request->isAjax()) {
+                    return $this->jsonError(['msg' => '未找到提交记录']);
+                }
+                $this->flashSession->error('未找到提交记录');
+                return $this->response->redirect('/home/assignment/detail/' . $id);
+            }
 
-            return $this->jsonSuccess([
-                'msg' => '草稿保存成功',
-                'submission_id' => $submission->id
+            // 获取作业信息
+            $assignment = $this->assignmentService->getDetail($submission['assignment_id']);
+
+            if ($this->request->isAjax()) {
+                return $this->jsonSuccess([
+                    'assignment' => $assignment,
+                    'submission' => $submission
+                ]);
+            }
+
+            $this->view->setVars([
+                'assignment' => $assignment,
+                'submission' => $submission
             ]);
+            
+            return $this->view->pick('assignment/result');
+            
         } catch (\Exception $e) {
-            return $this->jsonError(['msg' => '保存失败：' . $e->getMessage()]);
+            if ($this->request->isAjax()) {
+                return $this->jsonError(['msg' => '获取结果失败: ' . $e->getMessage()]);
+            }
+            
+            $this->flashSession->error('获取结果失败: ' . $e->getMessage());
+            return $this->response->redirect('/home/course/index');
         }
     }
 
-}
+    /**
+     * @Get("/my-submissions", name="home.assignment.my_submissions")
+     */
+    public function mySubmissionsAction()
+    {
+        try {
+            $userId = $this->authUser->id ?? 0;
+            
+            if (!$userId) {
+                if ($this->request->isAjax()) {
+                    return $this->jsonError(['msg' => '请先登录']);
+                }
+                $this->flashSession->error('请先登录');
+                return $this->response->redirect('/home/auth/login');
+            }
 
+            $page = max(1, $this->request->getQuery('page', 'int', 1));
+            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
+            $courseId = $this->request->getQuery('course_id', 'int');
+
+            $submissionRepo = new \App\Repos\AssignmentSubmission();
+            
+            $options = [
+                'user_id' => $userId,
+                'limit' => $limit,
+                'offset' => ($page - 1) * $limit
+            ];
+
+            if ($courseId) {
+                $options['course_id'] = $courseId;
+            }
+
+            $submissions = $submissionRepo->findAll($options);
+            $total = $submissionRepo->countAll(array_diff_key($options, ['limit' => '', 'offset' => '']));
+
+            // 为每个提交添加作业信息
+            foreach ($submissions as &$submission) {
+                $assignment = $this->assignmentService->getDetail($submission['assignment_id']);
+                $submission['assignment'] = $assignment;
+            }
+
+            $pager = [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => ceil($total / $limit)
+            ];
+
+            if ($this->request->isAjax()) {
+                return $this->jsonSuccess([
+                    'submissions' => $submissions,
+                    'pager' => $pager
+                ]);
+            }
+
+            $this->view->setVars([
+                'submissions' => $submissions,
+                'pager' => $pager
+            ]);
+            
+            return $this->view->pick('assignment/my_submissions');
+            
+        } catch (\Exception $e) {
+            if ($this->request->isAjax()) {
+                return $this->jsonError(['msg' => '获取我的提交失败: ' . $e->getMessage()]);
+            }
+            
+            $this->flashSession->error('获取我的提交失败: ' . $e->getMessage());
+            return $this->response->redirect('/home/index/index');
+        }
+    }
+}
