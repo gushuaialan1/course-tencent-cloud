@@ -93,9 +93,9 @@ class AssignmentSubmission extends Model
     /**
      * 批改老师ID
      *
-     * @var int
+     * @var int|null
      */
-    public $grader_id = 0;
+    public $grader_id;
 
     /**
      * 提交状态
