@@ -13,19 +13,21 @@ use Phalcon\Mvc\Model\Behavior\SoftDelete;
 class AssignmentSubmission extends Model
 {
     /**
-     * 提交状态常量
+     * 提交状态常量（简化后的单一状态）
      */
-    const STATUS_DRAFT = 'draft';           // 草稿
-    const STATUS_SUBMITTED = 'submitted';   // 已提交
-    const STATUS_GRADED = 'graded';         // 已批改
-    const STATUS_RETURNED = 'returned';     // 已退回
-
+    const STATUS_DRAFT = 'draft';               // 草稿
+    const STATUS_SUBMITTED = 'submitted';       // 已提交，待批改
+    const STATUS_AUTO_GRADED = 'auto_graded';   // 自动批改完成
+    const STATUS_GRADING = 'grading';           // 人工批改中
+    const STATUS_GRADED = 'graded';             // 批改完成
+    const STATUS_RETURNED = 'returned';         // 已退回
+    
     /**
-     * 评分状态常量
+     * @deprecated 保留用于数据迁移，新代码不使用
      */
-    const GRADE_STATUS_PENDING = 'pending';     // 待批改
-    const GRADE_STATUS_GRADING = 'grading';     // 批改中
-    const GRADE_STATUS_COMPLETED = 'completed'; // 批改完成
+    const GRADE_STATUS_PENDING = 'pending';
+    const GRADE_STATUS_GRADING = 'grading';
+    const GRADE_STATUS_COMPLETED = 'completed';
 
     /**
      * 主键编号
@@ -105,11 +107,12 @@ class AssignmentSubmission extends Model
     public $status = self::STATUS_DRAFT;
 
     /**
-     * 评分状态
+     * 评分状态（已废弃，仅用于数据迁移兼容）
      *
      * @var string
+     * @deprecated
      */
-    public $grade_status = self::GRADE_STATUS_PENDING;
+    public $grade_status = null;
 
     /**
      * 提交时间
@@ -240,15 +243,18 @@ class AssignmentSubmission extends Model
         return [
             self::STATUS_DRAFT => '草稿',
             self::STATUS_SUBMITTED => '已提交',
+            self::STATUS_AUTO_GRADED => '自动批改完成',
+            self::STATUS_GRADING => '批改中',
             self::STATUS_GRADED => '已批改',
             self::STATUS_RETURNED => '已退回',
         ];
     }
-
+    
     /**
      * 获取评分状态列表
      *
      * @return array
+     * @deprecated 保留用于兼容，新代码使用getStatuses()
      */
     public static function getGradeStatuses()
     {
@@ -266,7 +272,19 @@ class AssignmentSubmission extends Model
      */
     public function getContentData()
     {
-        return $this->content ? json_decode($this->content, true) : [];
+        if (empty($this->content)) {
+            return ['answers' => []];
+        }
+        
+        $data = json_decode($this->content, true);
+        
+        // 确保返回的数据包含answers键
+        if (!isset($data['answers'])) {
+            // 兼容旧格式：如果是直接的答案对象，包裹到answers中
+            $data = ['answers' => is_array($data) ? $data : []];
+        }
+        
+        return $data;
     }
 
     /**
@@ -276,7 +294,35 @@ class AssignmentSubmission extends Model
      */
     public function setContentData($content)
     {
+        // 确保content包含answers键
+        if (!isset($content['answers'])) {
+            $content = ['answers' => $content];
+        }
+        
         $this->content = json_encode($content, JSON_UNESCAPED_UNICODE);
+    }
+    
+    /**
+     * 获取答案数据
+     *
+     * @return array
+     */
+    public function getAnswers()
+    {
+        $contentData = $this->getContentData();
+        return $contentData['answers'] ?? [];
+    }
+    
+    /**
+     * 获取指定题目的答案
+     *
+     * @param string $questionId
+     * @return mixed
+     */
+    public function getAnswer($questionId)
+    {
+        $answers = $this->getAnswers();
+        return $answers[$questionId] ?? null;
     }
 
     /**
@@ -306,7 +352,27 @@ class AssignmentSubmission extends Model
      */
     public function getGradeDetailsData()
     {
-        return $this->grade_details ? json_decode($this->grade_details, true) : [];
+        if (empty($this->grade_details)) {
+            return ['grading' => [], 'summary' => []];
+        }
+        
+        $data = json_decode($this->grade_details, true);
+        
+        // 确保返回的数据包含grading和summary键
+        if (!isset($data['grading'])) {
+            $data['grading'] = [];
+        }
+        if (!isset($data['summary'])) {
+            $data['summary'] = [
+                'total_earned' => 0,
+                'total_max' => 0,
+                'auto_graded_score' => 0,
+                'manual_graded_score' => 0,
+                'percentage' => 0
+            ];
+        }
+        
+        return $data;
     }
 
     /**
@@ -316,7 +382,45 @@ class AssignmentSubmission extends Model
      */
     public function setGradeDetailsData($details)
     {
+        // 确保包含必要的键
+        if (!isset($details['grading'])) {
+            $details['grading'] = [];
+        }
+        if (!isset($details['summary'])) {
+            $details['summary'] = [
+                'total_earned' => 0,
+                'total_max' => 0,
+                'auto_graded_score' => 0,
+                'manual_graded_score' => 0,
+                'percentage' => 0
+            ];
+        }
+        
         $this->grade_details = json_encode($details, JSON_UNESCAPED_UNICODE);
+    }
+    
+    /**
+     * 获取指定题目的批改结果
+     *
+     * @param string $questionId
+     * @return array|null
+     */
+    public function getGradeForQuestion($questionId)
+    {
+        $detailsData = $this->getGradeDetailsData();
+        $grading = $detailsData['grading'] ?? [];
+        return $grading[$questionId] ?? null;
+    }
+    
+    /**
+     * 获取批改汇总信息
+     *
+     * @return array
+     */
+    public function getGradeSummary()
+    {
+        $detailsData = $this->getGradeDetailsData();
+        return $detailsData['summary'] ?? [];
     }
 
     /**
@@ -355,8 +459,11 @@ class AssignmentSubmission extends Model
      */
     public function canGrade()
     {
-        return $this->status === self::STATUS_SUBMITTED && 
-               $this->grade_status === self::GRADE_STATUS_PENDING;
+        return in_array($this->status, [
+            self::STATUS_SUBMITTED,
+            self::STATUS_AUTO_GRADED,
+            self::STATUS_GRADING
+        ]);
     }
 
     /**
@@ -408,7 +515,7 @@ class AssignmentSubmission extends Model
         }
 
         $this->grader_id = $graderId;
-        $this->grade_status = self::GRADE_STATUS_GRADING;
+        $this->status = self::STATUS_GRADING;
 
         return $this->save();
     }
@@ -423,7 +530,7 @@ class AssignmentSubmission extends Model
      */
     public function completeGrading($score, $feedback = '', $gradeDetails = [])
     {
-        if ($this->grade_status !== self::GRADE_STATUS_GRADING) {
+        if (!in_array($this->status, [self::STATUS_AUTO_GRADED, self::STATUS_GRADING])) {
             return false;
         }
 
@@ -433,7 +540,6 @@ class AssignmentSubmission extends Model
             $this->setGradeDetailsData($gradeDetails);
         }
         $this->status = self::STATUS_GRADED;
-        $this->grade_status = self::GRADE_STATUS_COMPLETED;
         $this->grade_time = time();
 
         return $this->save();

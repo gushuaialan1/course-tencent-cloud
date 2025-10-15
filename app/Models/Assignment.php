@@ -355,7 +355,18 @@ class Assignment extends Model
      */
     public function getContentData()
     {
-        return $this->content ? json_decode($this->content, true) : [];
+        if (empty($this->content)) {
+            return ['questions' => []];
+        }
+        
+        $data = json_decode($this->content, true);
+        
+        // 确保返回的数据包含questions键
+        if (!isset($data['questions'])) {
+            $data = ['questions' => []];
+        }
+        
+        return $data;
     }
 
     /**
@@ -365,7 +376,61 @@ class Assignment extends Model
      */
     public function setContentData($content)
     {
+        // 确保content包含questions键
+        if (!isset($content['questions'])) {
+            $content = ['questions' => isset($content[0]) ? $content : []];
+        }
+        
         $this->content = json_encode($content, JSON_UNESCAPED_UNICODE);
+    }
+    
+    /**
+     * 获取题目列表
+     *
+     * @return array
+     */
+    public function getQuestions()
+    {
+        $contentData = $this->getContentData();
+        return $contentData['questions'] ?? [];
+    }
+    
+    /**
+     * 根据ID获取题目
+     *
+     * @param string $questionId
+     * @return array|null
+     */
+    public function getQuestionById($questionId)
+    {
+        $questions = $this->getQuestions();
+        
+        foreach ($questions as $question) {
+            if (isset($question['id']) && $question['id'] === $questionId) {
+                return $question;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 计算作业总分
+     *
+     * @return float
+     */
+    public function getTotalScore()
+    {
+        $questions = $this->getQuestions();
+        $total = 0;
+        
+        foreach ($questions as $question) {
+            if (isset($question['score'])) {
+                $total += $question['score'];
+            }
+        }
+        
+        return $total;
     }
 
     /**

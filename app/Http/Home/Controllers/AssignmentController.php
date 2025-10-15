@@ -95,18 +95,43 @@ class AssignmentController extends Controller
      */
     public function submitAction($id)
     {
-        $service = new AssignmentSubmitService();
+        try {
+            $user = $this->auth->getUser();
+            if (!$user) {
+                return $this->jsonError(['msg' => '请先登录']);
+            }
 
-        $submission = $service->handle($id);
+            // 获取提交的答案数据
+            $answers = $this->request->getJsonRawBody(true)['answers'] ?? [];
+            
+            // 使用新的SubmissionService
+            $submissionService = new \App\Services\Assignment\SubmissionService();
+            
+            $result = $submissionService->submit(
+                $id,
+                $user->id,
+                $answers,
+                [
+                    'submit_ip' => $this->request->getClientAddress(),
+                    'user_agent' => $this->request->getUserAgent()
+                ]
+            );
 
-        $location = $this->url->get(['for' => 'home.assignment.result', 'id' => $id]);
+            $submission = $result['submission'];
+            $location = $this->url->get(['for' => 'home.assignment.result', 'id' => $id]);
 
-        $content = [
-            'location' => $location,
-            'msg' => '提交作业成功，请等待老师批改',
-        ];
+            // 根据是否自动评分给出不同提示
+            $msg = $result['auto_graded'] ? '提交成功，已完成自动评分' : '提交成功，请等待老师批改';
 
-        return $this->jsonSuccess($content);
+            return $this->jsonSuccess([
+                'location' => $location,
+                'msg' => $msg,
+                'submission_id' => $submission->id,
+                'status' => $submission->status
+            ]);
+        } catch (\Exception $e) {
+            return $this->jsonError(['msg' => '提交失败：' . $e->getMessage()]);
+        }
     }
 
     /**
@@ -114,11 +139,27 @@ class AssignmentController extends Controller
      */
     public function draftAction($id)
     {
-        $service = new SubmissionDraftService();
+        try {
+            $user = $this->auth->getUser();
+            if (!$user) {
+                return $this->jsonError(['msg' => '请先登录']);
+            }
 
-        $service->handle($id);
+            // 获取草稿答案数据
+            $answers = $this->request->getJsonRawBody(true)['answers'] ?? [];
+            
+            // 使用新的SubmissionService
+            $submissionService = new \App\Services\Assignment\SubmissionService();
+            
+            $submission = $submissionService->saveAsDraft($id, $user->id, $answers);
 
-        return $this->jsonSuccess(['msg' => '草稿保存成功']);
+            return $this->jsonSuccess([
+                'msg' => '草稿保存成功',
+                'submission_id' => $submission->id
+            ]);
+        } catch (\Exception $e) {
+            return $this->jsonError(['msg' => '保存失败：' . $e->getMessage()]);
+        }
     }
 
 }

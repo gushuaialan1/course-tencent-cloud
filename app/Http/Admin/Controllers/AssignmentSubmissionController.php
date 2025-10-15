@@ -163,6 +163,38 @@ class AssignmentSubmissionController extends Controller
      */
     public function completeGradingAction()
     {
+        try {
+            $id = $this->request->getPost('id', 'int');
+            $grading = $this->request->getPost('grading', null); // 题目评分数据
+            $feedback = $this->request->getPost('feedback', 'string', '');
+            
+            // 如果grading是JSON字符串，解析它
+            if (is_string($grading)) {
+                $grading = json_decode($grading, true);
+            }
+            if (!is_array($grading)) {
+                $grading = [];
+            }
+
+            // 使用新的GradingService
+            $gradingService = new \App\Services\Assignment\GradingService();
+            $submission = $gradingService->manualGrade($id, $grading, $feedback);
+
+            return $this->jsonSuccess([
+                'submission' => $submission->toArray(),
+                'message' => '批改完成'
+            ]);
+        } catch (\Exception $e) {
+            return $this->jsonError(['message' => '批改失败: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * @Post("/complete_grading_old", name="admin.assignment.submission.complete_grading_old")
+     * @deprecated 保留用于兼容
+     */
+    public function completeGradingOldAction()
+    {
         $id = $this->request->getPost('id', 'int');
         $score = $this->request->getPost('score', 'float');
         $feedback = $this->request->getPost('feedback', 'string', '');
@@ -177,21 +209,6 @@ class AssignmentSubmissionController extends Controller
 
         if ($submission->grader_id !== $this->authUser->id) {
             return $this->jsonError(['message' => '无权限操作']);
-        }
-
-        // 验证批改数据
-        $validator = new AssignmentSubmissionValidator();
-        $gradeData = [
-            'score' => $score,
-            'feedback' => $feedback
-        ];
-
-        if ($gradeDetails) {
-            $gradeData['grade_details'] = json_decode($gradeDetails, true);
-        }
-
-        if (!$validator->validateGrading($gradeData)) {
-            return $this->jsonError(['message' => $validator->getFirstError()]);
         }
 
         // 验证分数范围
