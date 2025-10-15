@@ -33,15 +33,13 @@ class Assignment extends Listener
      */
     public function afterSubmit(PhEvent $event, $source, SubmissionModel $submission)
     {
-        // 自动评分
+        // 自动评分 - 使用新的 GradingService
         try {
-            $autoGrade = new \App\Services\Logic\Assignment\AutoGrade();
-            $result = $autoGrade->handle($submission);
+            $gradingService = new \App\Services\Assignment\GradingService();
+            $gradingService->autoGrade($submission->id);
             
-            if ($result['success']) {
-                // 触发评分后事件
-                $this->eventsManager->fire('Assignment:afterGrade', $source, $submission);
-            }
+            // 触发评分后事件
+            $this->eventsManager->fire('Assignment:afterGrade', $source, $submission);
         } catch (\Exception $e) {
             // 自动评分失败不影响提交流程，记录日志即可
             error_log('自动评分失败: ' . $e->getMessage());
