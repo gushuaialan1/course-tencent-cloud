@@ -218,19 +218,23 @@ class SubmissionResult extends LogicService
             }
             
             if ($isChoiceQuestion) {
-                $correctAnswer = $question['correct_answer'] ?? [];
+                $correctAnswer = $question['correct_answer'] ?? null;
                 $isCorrect = false;
                 
                 if ($isMultipleChoice) {
-                    // 多选题
+                    // 多选题：学生答案和正确答案都必须是数组
                     if (is_array($userAnswer) && is_array($correctAnswer)) {
                         sort($correctAnswer);
                         sort($userAnswer);
                         $isCorrect = ($correctAnswer === $userAnswer);
                     }
                 } else {
-                    // 单选题
-                    if (is_array($correctAnswer) && count($correctAnswer) > 0) {
+                    // 单选题：字符串严格相等比较
+                    // 学生答案必须是字符串（如 "A"），正确答案必须是字符串（如 "A"）
+                    if (is_string($userAnswer) && is_string($correctAnswer)) {
+                        $isCorrect = ($userAnswer === $correctAnswer);
+                    } elseif (is_array($correctAnswer) && count($correctAnswer) > 0) {
+                        // 兼容旧数据：如果correct_answer是数组，取第一个元素
                         $isCorrect = ($correctAnswer[0] === $userAnswer);
                     }
                 }
