@@ -222,7 +222,7 @@ class SubmissionService extends Service
      */
     public function getSubmission(int $assignmentId, int $userId): ?SubmissionModel
     {
-        return SubmissionModel::findFirst([
+        $submission = SubmissionModel::findFirst([
             'conditions' => 'assignment_id = :assignment_id: AND user_id = :user_id: AND delete_time = 0',
             'bind' => [
                 'assignment_id' => $assignmentId,
@@ -230,6 +230,9 @@ class SubmissionService extends Service
             ],
             'order' => 'id DESC'
         ]);
+        
+        // Phalcon 的 findFirst 返回 false 而不是 null，需要转换
+        return $submission ?: null;
     }
 }
 
