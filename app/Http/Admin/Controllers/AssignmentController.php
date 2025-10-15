@@ -181,68 +181,53 @@ class AssignmentController extends Controller
      */
     public function doCreateAction()
     {
-        $postData = $this->request->getPost();
-        
-        $validator = new AssignmentValidator();
-        $validator->validate($postData);
-        
-        if ($validator->hasError()) {
-            return $this->jsonError(['message' => $validator->getFirstError()]);
-        }
-
-        $assignmentRepo = new AssignmentRepo();
-        
-        $data = [
-            'title' => $postData['title'],
-            'description' => $postData['description'] ?? '',
-            'course_id' => $postData['course_id'],
-            'chapter_id' => $postData['chapter_id'] ?? 0,
-            'assignment_type' => $postData['assignment_type'] ?? AssignmentModel::TYPE_MIXED,
-            'max_score' => $postData['max_score'] ?? 100.00,
-            'due_date' => $postData['due_date'] ?? 0,
-            'allow_late' => $postData['allow_late'] ?? 0,
-            'late_penalty' => $postData['late_penalty'] ?? 0.00,
-            'grade_mode' => $postData['grade_mode'] ?? AssignmentModel::GRADE_MODE_MANUAL,
-            'instructions' => $postData['instructions'] ?? '',
-            'max_attempts' => $postData['max_attempts'] ?? 1,
-            'time_limit' => $postData['time_limit'] ?? 0,
-            'status' => $postData['status'] ?? AssignmentModel::STATUS_DRAFT,
-            'owner_id' => $this->authUser->id
-        ];
-
-        // 处理JSON字段 - 确保JSON字段有默认值，避免数据库报错
-        if (!empty($postData['attachments'])) {
-            $data['attachments'] = json_decode($postData['attachments'], true);
-        } else {
-            $data['attachments'] = [];
-        }
-        
-        if (!empty($postData['rubric'])) {
-            $data['rubric'] = json_decode($postData['rubric'], true);
-        } else {
-            $data['rubric'] = [];  // 评分标准为空时设置为空数组
-        }
-        
-        if (!empty($postData['content'])) {
-            $data['content'] = json_decode($postData['content'], true);
-        } else {
-            $data['content'] = [];  // 题目内容为空时设置为空数组
-        }
-        
-        if (!empty($postData['reference_answer'])) {
-            $data['reference_answer'] = json_decode($postData['reference_answer'], true);
-        } else {
-            $data['reference_answer'] = [];
-        }
-        
-        if (!empty($postData['visibility'])) {
-            $data['visibility'] = json_decode($postData['visibility'], true);
-        } else {
-            $data['visibility'] = [];
-        }
-
         try {
-            $assignment = $assignmentRepo->create($data);
+            $postData = $this->request->getPost();
+            
+            // 准备数据
+            $data = [
+                'title' => $postData['title'] ?? '',
+                'description' => $postData['description'] ?? '',
+                'course_id' => $postData['course_id'] ?? 0,
+                'chapter_id' => $postData['chapter_id'] ?? 0,
+                'due_date' => $postData['due_date'] ?? 0,
+                'allow_late' => $postData['allow_late'] ?? 0,
+                'late_penalty' => $postData['late_penalty'] ?? 0.00,
+                'grade_mode' => $postData['grade_mode'] ?? AssignmentModel::GRADE_MODE_MANUAL,
+                'instructions' => $postData['instructions'] ?? '',
+                'max_attempts' => $postData['max_attempts'] ?? 1,
+                'time_limit' => $postData['time_limit'] ?? 0,
+                'status' => $postData['status'] ?? AssignmentModel::STATUS_DRAFT,
+                'owner_id' => $this->authUser->id
+            ];
+
+            // 处理JSON字段
+            if (!empty($postData['content'])) {
+                $data['content'] = is_string($postData['content']) ? 
+                    json_decode($postData['content'], true) : $postData['content'];
+            } else {
+                $data['content'] = ['questions' => []];
+            }
+            
+            if (!empty($postData['attachments'])) {
+                $data['attachments'] = is_string($postData['attachments']) ?
+                    json_decode($postData['attachments'], true) : $postData['attachments'];
+            }
+
+            // 使用新的验证器
+            $validator = new \App\Validators\Assignment\AssignmentValidator();
+            $validation = $validator->validateCreate($data);
+            
+            if (!$validation['valid']) {
+                return $this->jsonError([
+                    'msg' => '数据验证失败',
+                    'errors' => $validation['errors']
+                ]);
+            }
+
+            // 使用新的AssignmentService
+            $assignmentService = new \App\Services\Assignment\AssignmentService();
+            $assignment = $assignmentService->create($data);
             
             return $this->jsonSuccess([
                 'assignment' => $assignment->toArray(),
