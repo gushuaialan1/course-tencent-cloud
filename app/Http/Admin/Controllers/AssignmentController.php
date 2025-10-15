@@ -765,7 +765,7 @@ class AssignmentController extends Controller
                 
                 // 如果是自动评分模式，使用计算得分
                 if ($assignment->grade_mode === \App\Models\Assignment::GRADE_MODE_AUTO) {
-                    $score = $autoScore['total_score'];
+                    $score = $autoScore['earned_score'];
                     $gradeDetails = $autoScore['details'];
                 } else {
                     // 混合模式：自动评分 + 手动评分
@@ -864,7 +864,8 @@ class AssignmentController extends Controller
 
         if (empty($content) || empty($referenceAnswer) || empty($submittedContent)) {
             return [
-                'total_score' => 0,
+                'max_score' => 0,
+                'earned_score' => 0,
                 'auto_score' => 0,
                 'details' => []
             ];
@@ -917,8 +918,9 @@ class AssignmentController extends Controller
         }
 
         return [
-            'total_score' => $autoScore, // 全自动评分模式使用
-            'auto_score' => $autoScore,  // 混合评分模式使用
+            'max_score' => $totalScore,  // 题目总分
+            'earned_score' => $autoScore, // 全自动评分模式使用（实际得分）
+            'auto_score' => $autoScore,  // 混合评分模式使用（自动评分部分）
             'details' => $details
         ];
     }
@@ -960,7 +962,7 @@ class AssignmentController extends Controller
                 // 完成批改
                 $submissionRepo->completeGrading(
                     $submission, 
-                    $autoScore['total_score'], 
+                    $autoScore['earned_score'], 
                     '自动评分', 
                     $autoScore['details']
                 );

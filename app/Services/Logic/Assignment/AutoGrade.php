@@ -97,7 +97,7 @@ class AutoGrade extends LogicService
 
             // 只对选择题自动评分
             if ($questionType === 'choice') {
-                $correctAnswer = $question['correct_answer'] ?? [];
+                $correctAnswer = $question['correct_answer'] ?? null;
                 $userAnswer = $userAnswers[$questionId] ?? null;
                 
                 $isCorrect = false;
@@ -105,14 +105,19 @@ class AutoGrade extends LogicService
                 // 判断单选/多选
                 if ($question['multiple'] ?? false) {
                     // 多选题：完全匹配（排序后比较）
+                    // 学生答案必须是数组，正确答案必须是数组
                     if (is_array($userAnswer) && is_array($correctAnswer)) {
                         sort($correctAnswer);
                         sort($userAnswer);
                         $isCorrect = ($correctAnswer === $userAnswer);
                     }
                 } else {
-                    // 单选题：直接比较
-                    if (is_array($correctAnswer) && count($correctAnswer) > 0) {
+                    // 单选题：字符串严格相等比较
+                    // 学生答案必须是字符串（如 "A"），正确答案必须是字符串（如 "A"）
+                    if (is_string($userAnswer) && is_string($correctAnswer)) {
+                        $isCorrect = ($userAnswer === $correctAnswer);
+                    } elseif (is_array($correctAnswer) && count($correctAnswer) > 0) {
+                        // 兼容旧数据：如果correct_answer是数组，取第一个元素
                         $isCorrect = ($correctAnswer[0] === $userAnswer);
                     }
                 }
