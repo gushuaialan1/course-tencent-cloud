@@ -38,14 +38,14 @@ echo ""
 echo "【作业表 - kg_assignment】"
 echo "----------------------------------------"
 
-TOTAL_ASSIGNMENTS=$(run_query "SELECT COUNT(*) FROM kg_assignment WHERE deleted = 0")
+TOTAL_ASSIGNMENTS=$(run_query "SELECT COUNT(*) FROM kg_assignment WHERE delete_time = 0")
 echo "总作业数: ${TOTAL_ASSIGNMENTS}"
 
 if [ "$TOTAL_ASSIGNMENTS" -gt 0 ]; then
     # 检查新格式
     NEW_FORMAT=$(run_query "
         SELECT COUNT(*) FROM kg_assignment 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         AND JSON_VALID(content) = 1 
         AND JSON_CONTAINS_PATH(content, 'one', '\$.questions')
     ")
@@ -53,7 +53,7 @@ if [ "$TOTAL_ASSIGNMENTS" -gt 0 ]; then
     # 检查旧格式
     OLD_FORMAT=$(run_query "
         SELECT COUNT(*) FROM kg_assignment 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         AND JSON_VALID(content) = 1 
         AND NOT JSON_CONTAINS_PATH(content, 'one', '\$.questions')
     ")
@@ -74,7 +74,7 @@ if [ "$TOTAL_ASSIGNMENTS" -gt 0 ]; then
         SELECT id, title, 
                LEFT(content, 100) as content_preview 
         FROM kg_assignment 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         LIMIT 1
     " | head -3
 fi
@@ -83,14 +83,14 @@ echo ""
 echo "【提交表 - kg_assignment_submission】"
 echo "----------------------------------------"
 
-TOTAL_SUBMISSIONS=$(run_query "SELECT COUNT(*) FROM kg_assignment_submission WHERE deleted = 0")
+TOTAL_SUBMISSIONS=$(run_query "SELECT COUNT(*) FROM kg_assignment_submission WHERE delete_time = 0")
 echo "总提交数: ${TOTAL_SUBMISSIONS}"
 
 if [ "$TOTAL_SUBMISSIONS" -gt 0 ]; then
     # 检查答案新格式
     NEW_ANSWER_FORMAT=$(run_query "
         SELECT COUNT(*) FROM kg_assignment_submission 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         AND JSON_VALID(content) = 1 
         AND JSON_CONTAINS_PATH(content, 'one', '\$.answers')
     ")
@@ -116,7 +116,7 @@ if [ "$TOTAL_SUBMISSIONS" -gt 0 ]; then
             COUNT(*) as count,
             ROUND(COUNT(*) * 100.0 / ${TOTAL_SUBMISSIONS}, 2) as percentage
         FROM kg_assignment_submission 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         GROUP BY status
         ORDER BY count DESC
     " | awk '{printf "  %-20s %5s (%s%%)\n", $1, $2, $3}'
@@ -126,7 +126,7 @@ if [ "$TOTAL_SUBMISSIONS" -gt 0 ]; then
     # 检查是否还在使用 grade_status
     USING_GRADE_STATUS=$(run_query "
         SELECT COUNT(*) FROM kg_assignment_submission 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         AND grade_status IS NOT NULL 
         AND grade_status != ''
     ")
@@ -145,7 +145,7 @@ echo "----------------------------------------"
 if [ "$TOTAL_SUBMISSIONS" -gt 0 ]; then
     VALID_GRADE_DETAILS=$(run_query "
         SELECT COUNT(*) FROM kg_assignment_submission 
-        WHERE deleted = 0 
+        WHERE delete_time = 0 
         AND grade_details IS NOT NULL
         AND JSON_VALID(grade_details) = 1
         AND JSON_CONTAINS_PATH(grade_details, 'one', '\$.grading')

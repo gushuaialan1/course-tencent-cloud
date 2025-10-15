@@ -64,8 +64,8 @@ function run_mysql() {
 # 第二步：检查当前数据
 echo -e "${YELLOW}步骤 2/5: 检查当前数据${NC}"
 
-ASSIGNMENT_COUNT=$(run_mysql -sN -e "SELECT COUNT(*) FROM kg_assignment WHERE deleted = 0")
-SUBMISSION_COUNT=$(run_mysql -sN -e "SELECT COUNT(*) FROM kg_assignment_submission WHERE deleted = 0")
+ASSIGNMENT_COUNT=$(run_mysql -sN -e "SELECT COUNT(*) FROM kg_assignment WHERE delete_time = 0")
+SUBMISSION_COUNT=$(run_mysql -sN -e "SELECT COUNT(*) FROM kg_assignment_submission WHERE delete_time = 0")
 
 echo "发现作业数量: ${ASSIGNMENT_COUNT}"
 echo "发现提交记录: ${SUBMISSION_COUNT}"
@@ -143,14 +143,14 @@ echo ""
 
 MIGRATED_ASSIGNMENTS=$(run_mysql -sN -e "
     SELECT COUNT(*) FROM kg_assignment 
-    WHERE deleted = 0 
+    WHERE delete_time = 0 
     AND JSON_VALID(content) = 1 
     AND JSON_CONTAINS_PATH(content, 'one', '$.questions')
 ")
 
 MIGRATED_SUBMISSIONS=$(run_mysql -sN -e "
     SELECT COUNT(*) FROM kg_assignment_submission 
-    WHERE deleted = 0 
+    WHERE delete_time = 0 
     AND JSON_VALID(content) = 1 
     AND JSON_CONTAINS_PATH(content, 'one', '$.answers')
 ")

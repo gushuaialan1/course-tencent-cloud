@@ -1,122 +1,134 @@
+#!/usr/bin/env php
 <?php
 /**
- * 作业提交状态迁移 - 简化状态管理
+ * 提交状态数据迁移 - 简化状态管理
  * 
- * 将双状态字段（status + grade_status）合并为单一status字段
+ * 将 status + grade_status 双字段模式简化为单个 status 字段
+ * 
+ * 状态映射规则：
+ * - 草稿 (status=1, any grade_status) -> draft
+ * - 已提交未评分 (status=2, grade_status=0) -> submitted
+ * - 已提交评分中 (status=2, grade_status=1) -> grading
+ * - 已提交已评分 (status=2, grade_status=2) -> graded
  * 
  * @copyright 2024 酷瓜云课堂扩展
  * @author 开发团队
  */
 
-use Phinx\Migration\AbstractMigration;
+// 数据库配置
+$configFile = __DIR__ . '/../../config/config.php';
+if (!file_exists($configFile)) {
+    die("错误：找不到配置文件 config.php\n");
+}
 
-class MigrateSubmissionStatusToSimplified extends AbstractMigration
-{
-    /**
-     * 迁移
-     */
-    public function up()
-    {
-        $this->output->writeln('开始迁移提交状态数据...');
+$config = require $configFile;
 
-        $pdo = $this->getAdapter()->getConnection();
+// 连接数据库
+try {
+    $dsn = sprintf(
+        'mysql:host=%s;port=%d;dbname=%s;charset=%s',
+        $config['db']['host'],
+        $config['db']['port'],
+        $config['db']['dbname'],
+        $config['db']['charset']
+    );
+    
+    $pdo = new PDO($dsn, $config['db']['username'], $config['db']['password']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    echo "数据库连接成功\n";
+} catch (PDOException $e) {
+    die("数据库连接失败: " . $e->getMessage() . "\n");
+}
 
-        // 查询所有提交记录
-        $stmt = $pdo->query("SELECT id, status, grade_status, grader_id FROM kg_assignment_submission WHERE delete_time = 0");
-        $submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// 开始迁移
+echo "\n====================================\n";
+echo "开始迁移提交状态...\n";
+echo "====================================\n\n";
 
-        $migratedCount = 0;
-        $statusMapping = [];
+// 查询所有提交记录
+$stmt = $pdo->query("
+    SELECT id, status, grade_status, score, grader_id 
+    FROM kg_assignment_submission 
+    WHERE delete_time = 0
+");
+$submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        foreach ($submissions as $submission) {
-            $id = $submission['id'];
-            $oldStatus = $submission['status'];
-            $gradeStatus = $submission['grade_status'];
-            $graderId = $submission['grader_id'];
+$totalCount = count($submissions);
+$migratedCount = 0;
+$skippedCount = 0;
 
-            // 根据旧状态组合确定新状态
-            $newStatus = $this->mapStatus($oldStatus, $gradeStatus, $graderId);
+echo "发现提交记录数量: {$totalCount}\n\n";
 
-            // 更新状态
-            $updateStmt = $pdo->prepare("UPDATE kg_assignment_submission SET status = ?, grade_status = NULL WHERE id = ?");
-            $updateStmt->execute([$newStatus, $id]);
+foreach ($submissions as $submission) {
+    $id = $submission['id'];
+    $oldStatus = $submission['status'];
+    $gradeStatus = $submission['grade_status'];
+    $score = $submission['score'];
+    $graderId = $submission['grader_id'];
 
-            // 统计
-            $key = "{$oldStatus}+{$gradeStatus}";
-            if (!isset($statusMapping[$key])) {
-                $statusMapping[$key] = ['count' => 0, 'new_status' => $newStatus];
-            }
-            $statusMapping[$key]['count']++;
+    echo "处理提交 #{$id} (status={$oldStatus}, grade_status={$gradeStatus})\n";
 
-            $migratedCount++;
-        }
-
-        $this->output->writeln('');
-        $this->output->writeln("迁移完成！总数: {$migratedCount}");
-        $this->output->writeln('');
-        $this->output->writeln("状态映射统计:");
-        foreach ($statusMapping as $oldCombination => $info) {
-            $this->output->writeln("  {$oldCombination} -> {$info['new_status']}: {$info['count']}条");
-        }
+    // 检查是否已经是新格式（字符串状态）
+    if (!is_numeric($oldStatus)) {
+        echo "  ✓ 已经是新格式，跳过\n";
+        $skippedCount++;
+        continue;
     }
 
-    /**
-     * 映射旧状态到新状态
-     *
-     * @param string $status
-     * @param string|null $gradeStatus
-     * @param int|null $graderId
-     * @return string
-     */
-    private function mapStatus($status, $gradeStatus, $graderId): string
-    {
-        // 草稿状态
-        if ($status === 'draft') {
-            return 'draft';
-        }
+    // 转换为新状态
+    $newStatus = convertStatus($oldStatus, $gradeStatus, $score, $graderId);
 
-        // 已退回
-        if ($status === 'returned') {
-            return 'returned';
-        }
+    try {
+        // 更新状态，同时将 grade_status 设置为 NULL
+        $updateStmt = $pdo->prepare("
+            UPDATE kg_assignment_submission 
+            SET status = ?, grade_status = NULL 
+            WHERE id = ?
+        ");
+        $updateStmt->execute([$newStatus, $id]);
 
-        // 已提交
-        if ($status === 'submitted') {
-            if ($gradeStatus === 'pending' || $gradeStatus === null) {
-                return 'submitted';
-            }
-            if ($gradeStatus === 'grading') {
-                return 'grading';
-            }
-            if ($gradeStatus === 'completed') {
-                return 'graded';
-            }
-        }
-
-        // 已批改
-        if ($status === 'graded') {
-            // 如果没有grader_id，说明是自动批改
-            if ($graderId === null || $graderId === 0) {
-                return 'auto_graded';
-            }
-            // 如果有grader_id但grade_status不是completed，说明正在批改
-            if ($gradeStatus === 'grading') {
-                return 'grading';
-            }
-            // 否则是批改完成
-            return 'graded';
-        }
-
-        // 默认返回submitted
-        return 'submitted';
-    }
-
-    /**
-     * 回滚（不支持）
-     */
-    public function down()
-    {
-        $this->output->writeln('数据迁移不支持回滚，请从备份恢复数据库');
+        $migratedCount++;
+        echo "  ✅ 迁移成功: {$newStatus}\n";
+    } catch (Exception $e) {
+        echo "  ❌ 迁移失败: {$e->getMessage()}\n";
     }
 }
 
+echo "\n====================================\n";
+echo "迁移完成！\n";
+echo "====================================\n";
+echo "总计: {$totalCount}\n";
+echo "成功: {$migratedCount}\n";
+echo "跳过: {$skippedCount}\n";
+echo "====================================\n\n";
+
+/**
+ * 转换旧状态为新状态
+ */
+function convertStatus($status, $gradeStatus, $score, $graderId): string
+{
+    // 草稿
+    if ($status == 1) {
+        return 'draft';
+    }
+
+    // 已提交
+    if ($status == 2) {
+        // 根据评分状态细分
+        if ($gradeStatus == 0) {
+            // 未评分 -> 检查是否有自动评分
+            if ($score !== null && $score > 0) {
+                return 'auto_graded';  // 自动评分完成
+            }
+            return 'submitted';  // 待评分
+        } elseif ($gradeStatus == 1) {
+            return 'grading';  // 评分中
+        } elseif ($gradeStatus == 2) {
+            return 'graded';  // 已评分
+        }
+    }
+
+    // 默认：已提交
+    return 'submitted';
+}
