@@ -46,7 +46,7 @@ class AssignmentController extends Controller
     {
         try {
             $page = max(1, $this->request->getQuery('page', 'int', 1));
-            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15));
+            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
             
             // 筛选条件
             $params = [
