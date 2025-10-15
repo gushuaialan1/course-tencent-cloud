@@ -117,6 +117,7 @@ class AssignmentSubmissionController extends Controller
 
     /**
      * @Get("/grading-queue", name="admin.assignment.submission.grading_queue")
+     * @Get("/grading-list", name="admin.assignment.grading.list")
      */
     public function gradingQueueAction()
     {

@@ -41,6 +41,8 @@ class AssignmentController extends Controller
 
     /**
      * @Get("/list", name="admin.assignment.list")
+     * @Get("/search", name="admin.assignment.search")
+     * @Get("/stats", name="admin.assignment.stats")
      */
     public function listAction()
     {
@@ -301,6 +303,7 @@ class AssignmentController extends Controller
 
     /**
      * @Get("/detail/{id:[0-9]+}", name="admin.assignment.detail")
+     * @Get("/show/{id:[0-9]+}", name="admin.assignment.show")
      */
     public function detailAction($id)
     {
