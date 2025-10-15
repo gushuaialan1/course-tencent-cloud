@@ -133,7 +133,7 @@ class AssignmentController extends Controller
                 'can_submit' => $canSubmit
             ]);
             
-            return $this->view->pick('assignment/detail');
+            return $this->view->pick('assignment/show');
             
         } catch (\Exception $e) {
             if ($this->request->isAjax()) {
