@@ -84,6 +84,16 @@
                             {# 题目答案区 #}
                             <div class="question-answer" style="margin-top: 15px; padding-left: 40px;">
                                 
+                                {# 预处理当前题目的已有答案，确保 in 右操作数始终为数组 #}
+                                {% set rawAnswer =
+                                    assignment.submission and assignment.submission.content is defined
+                                    and assignment.submission.content[question.id] is defined
+                                        ? assignment.submission.content[question.id]
+                                        : null
+                                %}
+                                {% set selectedList = (rawAnswer is iterable) ? rawAnswer : [] %}
+                                {% set selectedValue = (rawAnswer is iterable) ? '' : (rawAnswer ?: '') %}
+
                                 {% if question.type == 'choice' %}
                                     {# 选择题（根据multiple判断单选/多选）#}
                                     {% if question.multiple %}
@@ -95,7 +105,8 @@
                                                        name="answer_{{ question.id }}[]" 
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
-                                                       lay-filter="question-{{ question.id }}">
+                                                       lay-filter="question-{{ question.id }}"
+                                                       {% if key in selectedList %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
                                         {% endif %}
@@ -109,7 +120,7 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if assignment.submission and assignment.submission.content[question.id] == key %}checked{% endif %}>
+                                                       {% if selectedValue == key %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
                                         {% endif %}
@@ -246,6 +257,5 @@
 {% block include_js %}
 
     {{ js_include('home/js/assignment.show.js') }}
-
 {% endblock %}
 
