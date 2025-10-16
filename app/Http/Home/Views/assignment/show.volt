@@ -96,7 +96,7 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if assignment.submission and assignment.submission.content[question.id] is defined and key in assignment.submission.content[question.id] %}checked{% endif %}>
+                                                       {% if assignment.submission and assignment.submission.content is defined and assignment.submission.content[question.id] is defined and assignment.submission.content[question.id] is iterable and key in assignment.submission.content[question.id] %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
                                         {% endif %}
