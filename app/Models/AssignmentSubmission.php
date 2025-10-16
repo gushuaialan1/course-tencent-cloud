@@ -22,12 +22,6 @@ class AssignmentSubmission extends Model
     const STATUS_GRADED = 'graded';             // 批改完成
     const STATUS_RETURNED = 'returned';         // 已退回
     
-    /**
-     * @deprecated 保留用于数据迁移，新代码不使用
-     */
-    const GRADE_STATUS_PENDING = 'pending';
-    const GRADE_STATUS_GRADING = 'grading';
-    const GRADE_STATUS_COMPLETED = 'completed';
 
     /**
      * 主键编号
@@ -106,13 +100,6 @@ class AssignmentSubmission extends Model
      */
     public $status = self::STATUS_DRAFT;
 
-    /**
-     * 评分状态（已废弃，仅用于数据迁移兼容）
-     *
-     * @var string
-     * @deprecated
-     */
-    public $grade_status = null;
 
     /**
      * 提交时间
@@ -250,20 +237,6 @@ class AssignmentSubmission extends Model
         ];
     }
     
-    /**
-     * 获取评分状态列表
-     *
-     * @return array
-     * @deprecated 保留用于兼容，新代码使用getStatuses()
-     */
-    public static function getGradeStatuses()
-    {
-        return [
-            self::GRADE_STATUS_PENDING => '待批改',
-            self::GRADE_STATUS_GRADING => '批改中',
-            self::GRADE_STATUS_COMPLETED => '批改完成',
-        ];
-    }
 
     /**
      * 解析提交内容数据

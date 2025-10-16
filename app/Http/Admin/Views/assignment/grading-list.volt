@@ -83,13 +83,15 @@
                     </div>
                 </div>
                 <div class="layui-inline">
-                    <label class="layui-form-label">批改状态</label>
+                    <label class="layui-form-label">提交状态</label>
                     <div class="layui-input-inline">
-                        <select name="grade_status">
+                        <select name="status">
                             <option value="">全部状态</option>
-                            {% for key, value in grade_statuses %}
-                            <option value="{{ key }}" {% if key == grade_status %}selected{% endif %}>{{ value }}</option>
-                            {% endfor %}
+                            <option value="submitted" {% if status == 'submitted' %}selected{% endif %}>已提交</option>
+                            <option value="auto_graded" {% if status == 'auto_graded' %}selected{% endif %}>自动批改完成</option>
+                            <option value="grading" {% if status == 'grading' %}selected{% endif %}>批改中</option>
+                            <option value="graded" {% if status == 'graded' %}selected{% endif %}>已批改</option>
+                            <option value="returned" {% if status == 'returned' %}selected{% endif %}>已退回</option>
                         </select>
                     </div>
                 </div>
@@ -169,12 +171,14 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if submission.grade_status == 'pending' %}
+                            {% if submission.status == 'submitted' or submission.status == 'auto_graded' %}
                                 <span class="grading-badge badge-pending">待批改</span>
-                            {% elseif submission.grade_status == 'grading' %}
+                            {% elseif submission.status == 'grading' %}
                                 <span class="grading-badge badge-grading">批改中</span>
-                            {% else %}
+                            {% elseif submission.status == 'graded' %}
                                 <span class="grading-badge badge-completed">已完成</span>
+                            {% elseif submission.status == 'returned' %}
+                                <span class="grading-badge badge-returned">已退回</span>
                             {% endif %}
                         </td>
                         <td>{{ date('Y-m-d H:i', submission.submit_time) }}</td>
@@ -197,7 +201,7 @@
                             <a class="layui-btn layui-btn-xs layui-btn-normal" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}">
                                 <i class="layui-icon layui-icon-form"></i>批改
                             </a>
-                            {% if submission.grade_status == 'completed' %}
+                            {% if submission.status == 'graded' %}
                             <button class="layui-btn layui-btn-xs layui-btn-warm btn-regrade" data-id="{{ submission.id }}">
                                 <i class="layui-icon layui-icon-edit"></i>重新批改
                             </button>

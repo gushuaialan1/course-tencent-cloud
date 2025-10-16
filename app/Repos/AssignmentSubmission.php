@@ -106,12 +106,6 @@ class AssignmentSubmission extends Repository
             $bind['status'] = $options['status'];
         }
 
-        // 评分状态过滤
-        if (!empty($options['grade_status'])) {
-            $conditions[] = 'grade_status = :grade_status:';
-            $bind['grade_status'] = $options['grade_status'];
-        }
-
         // 批改老师过滤
         if (!empty($options['grader_id'])) {
             $conditions[] = 'grader_id = :grader_id:';
@@ -233,9 +227,6 @@ class AssignmentSubmission extends Repository
         if (isset($data['status'])) {
             $submission->status = $data['status'];
         }
-        if (isset($data['grade_status'])) {
-            $submission->grade_status = $data['grade_status'];
-        }
         if (isset($data['attempt_count'])) {
             $submission->attempt_count = $data['attempt_count'];
         }
@@ -348,10 +339,6 @@ class AssignmentSubmission extends Repository
             $builder->andWhere('s.status = :status:', ['status' => $options['status']]);
         }
 
-        // 评分状态过滤
-        if (!empty($options['grade_status'])) {
-            $builder->andWhere('s.grade_status = :grade_status:', ['grade_status' => $options['grade_status']]);
-        }
 
         // 作业ID过滤
         if (!empty($options['assignment_id'])) {
@@ -398,10 +385,6 @@ class AssignmentSubmission extends Repository
             $builder->andWhere('s.status = :status:', ['status' => $options['status']]);
         }
 
-        // 评分状态过滤
-        if (!empty($options['grade_status'])) {
-            $builder->andWhere('s.grade_status = :grade_status:', ['grade_status' => $options['grade_status']]);
-        }
 
         // 作业ID过滤
         if (!empty($options['assignment_id'])) {
@@ -431,13 +414,14 @@ class AssignmentSubmission extends Repository
     public function getPendingGrading(array $options = []): array
     {
         $conditions = [
-            'status = :status:',
-            'grade_status = :grade_status:',
+            'status IN (:statuses:)',
             'delete_time = 0'
         ];
         $bind = [
-            'status' => AssignmentSubmissionModel::STATUS_SUBMITTED,
-            'grade_status' => AssignmentSubmissionModel::GRADE_STATUS_PENDING
+            'statuses' => [
+                AssignmentSubmissionModel::STATUS_SUBMITTED,
+                AssignmentSubmissionModel::STATUS_AUTO_GRADED
+            ]
         ];
 
         // 按课程过滤
@@ -516,15 +500,6 @@ class AssignmentSubmission extends Repository
             $statusStats[$status] = $statusCount;
         }
 
-        // 按评分状态统计
-        $gradeStatusStats = [];
-        foreach (AssignmentSubmissionModel::getGradeStatuses() as $status => $name) {
-            $gradeStatusBuilder = clone $builder;
-            $gradeStatusCount = $gradeStatusBuilder->andWhere('grade_status = :grade_status:', ['grade_status' => $status])
-                                                  ->getQuery()->execute()->count();
-            $gradeStatusStats[$status] = $gradeStatusCount;
-        }
-
         // 迟交统计
         $lateBuilder = clone $builder;
         $lateCount = $lateBuilder->andWhere('is_late = 1')->getQuery()->execute()->count();
@@ -543,7 +518,6 @@ class AssignmentSubmission extends Repository
         return [
             'total' => $total,
             'by_status' => $statusStats,
-            'by_grade_status' => $gradeStatusStats,
             'late_count' => $lateCount,
             'average_score' => $averageScore
         ];
@@ -563,12 +537,11 @@ class AssignmentSubmission extends Repository
         }
 
         $placeholders = implode(',', array_fill(0, count($submissionIds), '?'));
-        $params = array_merge($submissionIds, [$graderId, AssignmentSubmissionModel::GRADE_STATUS_GRADING, time()]);
+        $params = array_merge($submissionIds, [$graderId, AssignmentSubmissionModel::STATUS_GRADING, time()]);
 
-        $phql = "UPDATE App\Models\AssignmentSubmission SET grader_id = ?{$count}, grade_status = ?{$count2}, update_time = ?{$count3} 
+        $phql = "UPDATE App\Models\AssignmentSubmission SET grader_id = ?{$count}, status = ?{$count2}, update_time = ?{$count3} 
                  WHERE id IN ({$placeholders}) 
-                 AND status = ?{$count4} 
-                 AND grade_status = ?{$count5} 
+                 AND status IN (?{$count4}, ?{$count5})
                  AND delete_time = 0";
         
         $count = count($submissionIds) + 1;
@@ -578,7 +551,7 @@ class AssignmentSubmission extends Repository
         $count5 = $count4 + 1;
 
         $params[] = AssignmentSubmissionModel::STATUS_SUBMITTED;
-        $params[] = AssignmentSubmissionModel::GRADE_STATUS_PENDING;
+        $params[] = AssignmentSubmissionModel::STATUS_AUTO_GRADED;
 
         $query = $this->modelsManager->createQuery(
             str_replace(['{$count}', '{$count2}', '{$count3}', '{$count4}', '{$count5}'], 
