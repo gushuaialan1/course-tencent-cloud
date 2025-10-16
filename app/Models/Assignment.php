@@ -178,9 +178,9 @@ class Assignment extends Model
     /**
      * 可见性设置(JSON)
      *
-     * @var string
+     * @var string|null
      */
-    public $visibility = '';
+    public $visibility = null;
 
     /**
      * 创建者ID
@@ -271,6 +271,9 @@ class Assignment extends Model
         if ($this->reference_answer === '') {
             $this->reference_answer = null;
         }
+        if ($this->visibility === '') {
+            $this->visibility = null;
+        }
     }
 
     public function beforeUpdate()
@@ -289,6 +292,9 @@ class Assignment extends Model
         }
         if ($this->reference_answer === '') {
             $this->reference_answer = null;
+        }
+        if ($this->visibility === '') {
+            $this->visibility = null;
         }
     }
 
