@@ -283,6 +283,11 @@ class AssignmentService extends Service
         $data['questions'] = $questions;
         $data['question_count'] = count($questions);
         
+        // 调试日志
+        error_log('[Assignment Detail] ID: ' . $id . ', Questions Count: ' . count($questions));
+        error_log('[Assignment Detail] Content Raw: ' . $assignment->content);
+        error_log('[Assignment Detail] Questions: ' . json_encode($questions, JSON_UNESCAPED_UNICODE));
+        
         // 判断是否超期
         $data['is_overdue'] = ($assignment->due_date > 0 && time() > $assignment->due_date);
         
