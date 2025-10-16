@@ -88,6 +88,7 @@
                                     {# 选择题（根据multiple判断单选/多选）#}
                                     {% if question.multiple %}
                                         {# 多选题 #}
+                                        {% if question.options is iterable %}
                                         {% for key, option in question.options %}
                                             <div style="margin: 10px 0;">
                                                 <input type="checkbox" 
@@ -95,11 +96,13 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if assignment.submission and assignment.submission.content[question.id] and key in assignment.submission.content[question.id] %}checked{% endif %}>
+                                                       {% if assignment.submission and assignment.submission.content[question.id] is iterable and key in assignment.submission.content[question.id] %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
+                                        {% endif %}
                                     {% else %}
                                         {# 单选题 #}
+                                        {% if question.options is iterable %}
                                         {% for key, option in question.options %}
                                             <div style="margin: 10px 0;">
                                                 <input type="radio" 
@@ -110,6 +113,7 @@
                                                        {% if assignment.submission and assignment.submission.content[question.id] == key %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
+                                        {% endif %}
                                     {% endif %}
                                     
                                 {% elseif question.type == 'text' or question.type == 'essay' %}
