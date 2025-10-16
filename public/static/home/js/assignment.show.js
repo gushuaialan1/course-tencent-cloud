@@ -6,7 +6,7 @@ layui.use(['jquery', 'layer', 'form', 'element'], function () {
     var element = layui.element;
 
     var assignmentId = $('#assignment-id').val();
-    var deadline = parseInt($('#assignment-deadline').val());
+    var deadline = parseInt($('#assignment-due-date').val());
     var questionCount = parseInt($('#assignment-question-count').val());
     var submitUrl = $('#submit-url').val();
     var draftUrl = $('#draft-url').val();

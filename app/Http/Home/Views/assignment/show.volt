@@ -71,6 +71,9 @@
                                         <span style="color: #FF5722; margin-left: 5px;">*</span>
                                     {% endif %}
                                     <span class="question-score" style="color: #999; font-size: 14px; font-weight: normal; margin-left: 10px;">({{ question.score }} 分)</span>
+                                    <span style="color: #16BAAA; font-size: 12px; margin-left: 8px;">
+                                        {% if question.type == 'choice' and question.multiple %}多选{% elseif question.type == 'choice' %}单选{% elseif question.type == 'essay' or question.type == 'text' %}文本{% elseif question.type == 'file' %}文件{% endif %}
+                                    </span>
                                 </h4>
                             </div>
                             

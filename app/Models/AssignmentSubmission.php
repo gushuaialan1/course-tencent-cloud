@@ -49,14 +49,14 @@ class AssignmentSubmission extends Model
      *
      * @var string
      */
-    public $content = '';
+    public $content = null;
 
     /**
      * 提交附件(JSON)
      *
      * @var string
      */
-    public $attachments = '';
+    public $attachments = null;
 
     /**
      * 得分
@@ -213,11 +213,31 @@ class AssignmentSubmission extends Model
     {
         $this->create_time = time();
         $this->update_time = time();
+        // 确保JSON列不写入空字符串
+        if ($this->content === '') {
+            $this->content = null;
+        }
+        if ($this->attachments === '') {
+            $this->attachments = null;
+        }
+        if ($this->grade_details === '') {
+            $this->grade_details = null;
+        }
     }
 
     public function beforeUpdate()
     {
         $this->update_time = time();
+        // 确保JSON列不写入空字符串
+        if ($this->content === '') {
+            $this->content = null;
+        }
+        if ($this->attachments === '') {
+            $this->attachments = null;
+        }
+        if ($this->grade_details === '') {
+            $this->grade_details = null;
+        }
     }
 
     /**
