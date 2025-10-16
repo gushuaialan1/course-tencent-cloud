@@ -172,7 +172,7 @@
                                     <div class="answer-label">学生答案：</div>
                                     <div class="user-answer">
                                         {% if userContent[index] is defined %}
-                                            {% if question.type == 'choice' or question.type == 'multiple_choice' %}
+                                            {% if question.type == 'choice' %}
                                                 {% if userContent[index] is iterable and not (userContent[index] is string) %}
                                                     {{ userContent[index]|join(', ') }}
                                                 {% else %}
@@ -190,7 +190,7 @@
                                     <div style="margin-top: 10px;">
                                         <div class="answer-label">参考答案：</div>
                                         <div class="correct-answer">
-                                            {% if question.type == 'choice' or question.type == 'multiple_choice' %}
+                                            {% if question.type == 'choice' %}
                                                 {% if referenceAnswer[index] is iterable and not (referenceAnswer[index] is string) %}
                                                     {{ referenceAnswer[index]|join(', ') }}
                                                 {% else %}

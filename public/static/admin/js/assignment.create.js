@@ -538,7 +538,7 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                     break;
 
                 case 'upload':
-                    questionData.type = 'file_upload';  // 使用新格式：file_upload
+                    questionData.type = 'file';  // 标准格式：file
                     questionData.allowed_types = [];
                     $question.find('input[name*="[allowed_types]"]:checked').each(function () {
                         questionData.allowed_types.push($(this).val());
