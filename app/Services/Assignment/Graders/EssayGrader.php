@@ -20,7 +20,7 @@ class EssayGrader implements QuestionGraderInterface
      */
     public function supports(string $questionType): bool
     {
-        return $questionType === 'essay';
+        return in_array($questionType, ['text', 'essay']);
     }
 
     /**

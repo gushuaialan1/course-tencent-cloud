@@ -361,12 +361,14 @@ class Assignment extends Model
         
         $data = json_decode($this->content, true);
         
-        // 确保返回的数据包含questions键
-        if (!isset($data['questions'])) {
-            $data = ['questions' => []];
+        if (!is_array($data)) {
+            return ['questions' => []];
         }
         
-        return $data;
+        // 标准格式：必须有 questions 键
+        return [
+            'questions' => $data['questions'] ?? []
+        ];
     }
 
     /**

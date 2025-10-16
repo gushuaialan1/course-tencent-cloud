@@ -504,8 +504,9 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
             switch (questionType) {
                 case 'choice':
                     var isMultiple = $question.find('input[name*="[multiple]"]:checked').val() === '1';
-                    // 使用新格式：single_choice 或 multiple_choice
-                    questionData.type = isMultiple ? 'multiple_choice' : 'single_choice';
+                    // 标准格式：type 为 choice，通过 multiple 字段区分单选/多选
+                    questionData.type = 'choice';
+                    questionData.multiple = isMultiple;
                     questionData.options = {};
                     questionData.correct_answer = [];
                     
@@ -549,7 +550,10 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
             questions.push(questionData);
         });
 
-        formData.content = JSON.stringify(questions);
+        // 标准格式：{questions: [...]}
+        formData.content = JSON.stringify({
+            questions: questions
+        });
         formData.attachments = JSON.stringify(attachments);
 
         return formData;
@@ -645,15 +649,9 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                 }
             }
             
-            // 兼容新旧格式
-            if (contentData) {
-                if (Array.isArray(contentData)) {
-                    // 旧格式：直接是数组
-                    questions = contentData;
-                } else if (contentData.questions && Array.isArray(contentData.questions)) {
-                    // 新格式：{questions: [...]}
-                    questions = contentData.questions;
-                }
+            // 标准格式：{questions: [...]}
+            if (contentData && contentData.questions && Array.isArray(contentData.questions)) {
+                questions = contentData.questions;
             }
 
             // 添加题目
@@ -673,12 +671,14 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         questionCount = index;
         var type = questionData.type || 'choice';
         
-        // 将新格式题型转换为UI使用的类型
+        // 题型映射到UI类型
         var uiType = type;
-        if (type === 'single_choice' || type === 'multiple_choice') {
+        if (type === 'choice') {
             uiType = 'choice';
-        } else if (type === 'file_upload') {
+        } else if (type === 'file' || type === 'upload') {
             uiType = 'upload';
+        } else if (type === 'text' || type === 'essay') {
+            uiType = 'essay';
         }
         
         var questionHtml = createQuestionHtml(questionCount, uiType);
@@ -692,16 +692,8 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
 
         switch (uiType) {
             case 'choice':
-                // 单选/多选（兼容新旧格式）
-                var isMultiple = false;
-                if (questionData.type === 'multiple_choice') {
-                    isMultiple = true;
-                } else if (questionData.type === 'single_choice') {
-                    isMultiple = false;
-                } else if (questionData.multiple !== undefined) {
-                    // 兼容旧格式
-                    isMultiple = questionData.multiple;
-                }
+                // 单选/多选
+                var isMultiple = (questionData.multiple === true);
                 
                 if (isMultiple) {
                     $question.find('input[name*="[multiple]"][value="1"]').prop('checked', true);
@@ -712,47 +704,25 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                 // 清空默认选项
                 $question.find('.kg-choice-options').empty();
 
-                // 添加选项（兼容两种结构：
-                // 1) options 为对象映射 { A: '文本', B: '文本' }
-                // 2) options 为数组 [{label:'A', content:'文本', is_correct:true}, ...]）
+                // 标准格式：options 为对象映射 { A: '文本', B: '文本' }
                 var options = questionData.options || {};
                 var correctAnswer = questionData.correct_answer || [];
 
-                if (Array.isArray(options)) {
-                    // 数组结构
-                    options.forEach(function (opt) {
-                        if (!opt) return;
-                        var label = opt.label || '';
-                        var text = opt.content != null ? String(opt.content) : '';
-                        var isCorrect = (opt.is_correct === true) || (correctAnswer.indexOf(label) !== -1);
-                        if (!label) return;
-                        var optionHtml = `
-                            <div class="kg-choice-option">
-                                <span class="kg-option-label">${label}.</span>
-                                <input type="text" name="questions[${questionCount}][options][${label}]" value="${text.replace(/"/g, '&quot;')}" placeholder="选项${label}" class="layui-input">
-                                <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
-                                <button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>
-                            </div>
-                        `;
-                        $question.find('.kg-choice-options').append(optionHtml);
-                    });
-                } else {
-                    // 对象映射结构
-                    var optionLabels = Object.keys(options);
-                    optionLabels.forEach(function(label) {
-                        var text = options[label] != null ? String(options[label]) : '';
-                        var isCorrect = correctAnswer.indexOf(label) !== -1;
-                        var optionHtml = `
-                            <div class="kg-choice-option">
-                                <span class="kg-option-label">${label}.</span>
-                                <input type="text" name="questions[${questionCount}][options][${label}]" value="${text.replace(/"/g, '&quot;')}" placeholder="选项${label}" class="layui-input">
-                                <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
-                                ${optionLabels.length > 2 ? '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>' : ''}
-                            </div>
-                        `;
-                        $question.find('.kg-choice-options').append(optionHtml);
-                    });
-                }
+                // 对象映射结构：{ A: '文本', B: '文本' }
+                var optionLabels = Object.keys(options);
+                optionLabels.forEach(function(label) {
+                    var text = options[label] != null ? String(options[label]) : '';
+                    var isCorrect = correctAnswer.indexOf(label) !== -1;
+                    var optionHtml = `
+                        <div class="kg-choice-option">
+                            <span class="kg-option-label">${label}.</span>
+                            <input type="text" name="questions[${questionCount}][options][${label}]" value="${text.replace(/"/g, '&quot;')}" placeholder="选项${label}" class="layui-input">
+                            <input type="checkbox" name="questions[${questionCount}][correct][]" value="${label}" ${isCorrect ? 'checked' : ''} title="正确答案">
+                            ${optionLabels.length > 2 ? '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger" onclick="removeChoiceOption(this)"><i class="layui-icon layui-icon-delete"></i></button>' : ''}
+                        </div>
+                    `;
+                    $question.find('.kg-choice-options').append(optionHtml);
+                });
                 break;
 
             case 'essay':

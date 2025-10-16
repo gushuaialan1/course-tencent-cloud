@@ -150,14 +150,9 @@ class AssignmentController extends Controller
                 $content = is_string($postData['content']) ? 
                     json_decode($postData['content'], true) : $postData['content'];
                 
-                // 统一格式：确保是 {questions: [...]}
-                if (is_array($content)) {
-                    if (!isset($content['questions'])) {
-                        // 旧格式：直接是数组 → 包裹
-                        $data['content'] = ['questions' => $content];
-                    } else {
-                        $data['content'] = $content;
-                    }
+                // 标准格式：必须是 {questions: [...]}
+                if (is_array($content) && isset($content['questions'])) {
+                    $data['content'] = $content;
                 } else {
                     $data['content'] = ['questions' => []];
                 }
@@ -258,12 +253,9 @@ class AssignmentController extends Controller
                 $content = is_string($postData['content']) ? 
                     json_decode($postData['content'], true) : $postData['content'];
                 
-                if (is_array($content)) {
-                    if (!isset($content['questions'])) {
-                        $data['content'] = ['questions' => $content];
-                    } else {
-                        $data['content'] = $content;
-                    }
+                // 标准格式：必须是 {questions: [...]}
+                if (is_array($content) && isset($content['questions'])) {
+                    $data['content'] = $content;
                 }
             }
             

@@ -25,8 +25,7 @@ class GraderFactory
     public function __construct()
     {
         $this->graders = [
-            new SingleChoiceGrader(),
-            new MultipleChoiceGrader(),
+            new ChoiceGrader(),
             new EssayGrader(),
             new CodeGrader(),
             new FileUploadGrader(),
@@ -79,11 +78,11 @@ class GraderFactory
         foreach ($this->graders as $grader) {
             // 通过检查supports方法获取支持的类型
             $supportedTypes = [
-                'single_choice',
-                'multiple_choice',
+                'choice',
+                'text',
                 'essay',
                 'code',
-                'file_upload'
+                'file'
             ];
             
             foreach ($supportedTypes as $type) {

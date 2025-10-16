@@ -112,32 +112,6 @@
                                         {% endfor %}
                                     {% endif %}
                                     
-                                {% elseif question.type == 'choice_single' %}
-                                    {# 兼容旧数据：单选题 #}
-                                    {% for key, option in question.options %}
-                                        <div style="margin: 10px 0;">
-                                            <input type="radio" 
-                                                   name="answer_{{ question.id }}" 
-                                                   value="{{ key }}" 
-                                                   title="{{ option }}" 
-                                                   lay-filter="question-{{ question.id }}"
-                                                   {% if assignment.submission and assignment.submission.content[question.id] == key %}checked{% endif %}>
-                                        </div>
-                                    {% endfor %}
-                                    
-                                {% elseif question.type == 'choice_multiple' %}
-                                    {# 多选题 #}
-                                    {% for key, option in question.options %}
-                                        <div style="margin: 10px 0;">
-                                            <input type="checkbox" 
-                                                   name="answer_{{ question.id }}[]" 
-                                                   value="{{ key }}" 
-                                                   title="{{ option }}" 
-                                                   lay-filter="question-{{ question.id }}"
-                                                   {% if assignment.submission and assignment.submission.content[question.id] and key in assignment.submission.content[question.id] %}checked{% endif %}>
-                                        </div>
-                                    {% endfor %}
-                                    
                                 {% elseif question.type == 'text' or question.type == 'essay' %}
                                     {# 简答题/论述题 #}
                                     <textarea 

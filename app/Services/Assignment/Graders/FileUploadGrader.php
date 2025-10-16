@@ -20,7 +20,7 @@ class FileUploadGrader implements QuestionGraderInterface
      */
     public function supports(string $questionType): bool
     {
-        return $questionType === 'file_upload';
+        return $questionType === 'file';
     }
 
     /**

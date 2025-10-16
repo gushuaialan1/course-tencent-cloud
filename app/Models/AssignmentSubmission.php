@@ -278,13 +278,14 @@ class AssignmentSubmission extends Model
         
         $data = json_decode($this->content, true);
         
-        // 确保返回的数据包含answers键
-        if (!isset($data['answers'])) {
-            // 兼容旧格式：如果是直接的答案对象，包裹到answers中
-            $data = ['answers' => is_array($data) ? $data : []];
+        if (!is_array($data)) {
+            return ['answers' => []];
         }
         
-        return $data;
+        // 标准格式：必须有 answers 键
+        return [
+            'answers' => $data['answers'] ?? []
+        ];
     }
 
     /**
@@ -294,9 +295,9 @@ class AssignmentSubmission extends Model
      */
     public function setContentData($content)
     {
-        // 确保content包含answers键
+        // 标准格式：必须包含 answers 键
         if (!isset($content['answers'])) {
-            $content = ['answers' => $content];
+            throw new \Exception('提交数据格式错误：缺少 answers 键');
         }
         
         $this->content = json_encode($content, JSON_UNESCAPED_UNICODE);
