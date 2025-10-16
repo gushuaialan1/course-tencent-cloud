@@ -110,6 +110,9 @@ class AssignmentService extends Service
         if (isset($data['description'])) {
             $assignment->description = $data['description'];
         }
+        if (isset($data['assignment_type'])) {
+            $assignment->assignment_type = $data['assignment_type'];
+        }
         if (isset($data['chapter_id'])) {
             $assignment->chapter_id = $data['chapter_id'];
         }
