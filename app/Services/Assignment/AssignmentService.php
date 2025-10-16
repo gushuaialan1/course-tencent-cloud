@@ -275,6 +275,25 @@ class AssignmentService extends Service
 
         $data = $assignment->toArray();
         
+        // 解析题目数据
+        $questions = $assignment->getQuestions();
+        $data['questions'] = $questions;
+        $data['question_count'] = count($questions);
+        
+        // 判断是否超期
+        $data['is_overdue'] = ($assignment->due_date > 0 && time() > $assignment->due_date);
+        
+        // 加载课程信息
+        if ($assignment->course_id) {
+            $course = \App\Models\Course::findFirst($assignment->course_id);
+            if ($course) {
+                $data['course'] = [
+                    'id' => $course->id,
+                    'title' => $course->title
+                ];
+            }
+        }
+        
         // 附加统计信息
         $data['submission_stats'] = $assignment->getSubmissionStats();
         

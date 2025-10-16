@@ -111,25 +111,30 @@ class AssignmentController extends Controller
 
             // 获取用户的提交记录
             $userId = $this->authUser->id ?? 0;
-            $submission = null;
+            $submissionData = null;
             $canSubmit = ['allowed' => false, 'reason' => ''];
             
             if ($userId) {
                 $submission = $this->submissionService->getSubmission($id, $userId);
+                if ($submission) {
+                    $submissionData = $submission->toArray();
+                }
                 $canSubmit = $this->submissionService->canSubmit($id, $userId);
             }
+            
+            // 将 submission 数据附加到 assignment 中，方便视图使用
+            $assignment['submission'] = $submissionData;
 
             if ($this->request->isAjax()) {
                 return $this->jsonSuccess([
                     'assignment' => $assignment,
-                    'submission' => $submission,
+                    'submission' => $submissionData,
                     'can_submit' => $canSubmit
                 ]);
             }
 
             $this->view->setVars([
                 'assignment' => $assignment,
-                'submission' => $submission,
                 'can_submit' => $canSubmit
             ]);
             
