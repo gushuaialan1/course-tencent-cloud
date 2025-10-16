@@ -246,6 +246,47 @@
 {% block include_js %}
 
     {{ js_include('home/js/assignment.show.js') }}
+    
+    <script>
+    // 恢复草稿数据 - 避免 Volt in 操作符问题
+    layui.use(['form'], function() {
+        var form = layui.form;
+        
+        {% if assignment.submission and assignment.submission.content %}
+        var submissionContent = {{ assignment.submission.content|json_encode|raw }};
+        
+        // 恢复答案
+        for (var questionId in submissionContent) {
+            var answer = submissionContent[questionId];
+            
+            // 单选题
+            var radioInput = document.querySelector('input[name="answer_' + questionId + '"][value="' + answer + '"]');
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+            
+            // 多选题
+            if (Array.isArray(answer)) {
+                answer.forEach(function(value) {
+                    var checkboxInput = document.querySelector('input[name="answer_' + questionId + '[]"][value="' + value + '"]');
+                    if (checkboxInput) {
+                        checkboxInput.checked = true;
+                    }
+                });
+            }
+            
+            // 文本题
+            var textareaInput = document.querySelector('textarea[name="answer_' + questionId + '"]');
+            if (textareaInput) {
+                textareaInput.value = answer || '';
+            }
+        }
+        
+        form.render('checkbox');
+        form.render('radio');
+        {% endif %}
+    });
+    </script>
 
 {% endblock %}
 
