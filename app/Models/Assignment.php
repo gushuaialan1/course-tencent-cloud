@@ -115,9 +115,9 @@ class Assignment extends Model
     /**
      * 评分标准(JSON)
      *
-     * @var string
+     * @var string|null
      */
-    public $rubric = '';
+    public $rubric = null;
 
     /**
      * 作业说明
@@ -129,23 +129,23 @@ class Assignment extends Model
     /**
      * 附件列表(JSON)
      *
-     * @var string
+     * @var string|null
      */
-    public $attachments = '';
+    public $attachments = null;
 
     /**
      * 作业内容(JSON) - 题目详情
      *
-     * @var string
+     * @var string|null
      */
-    public $content = '';
+    public $content = null;
 
     /**
      * 参考答案(JSON)
      *
-     * @var string
+     * @var string|null
      */
-    public $reference_answer = '';
+    public $reference_answer = null;
 
     /**
      * 最大提交次数
@@ -257,11 +257,39 @@ class Assignment extends Model
     {
         $this->create_time = time();
         $this->update_time = time();
+        
+        // 确保 JSON 字段不为空字符串
+        if ($this->content === '') {
+            $this->content = null;
+        }
+        if ($this->rubric === '') {
+            $this->rubric = null;
+        }
+        if ($this->attachments === '') {
+            $this->attachments = null;
+        }
+        if ($this->reference_answer === '') {
+            $this->reference_answer = null;
+        }
     }
 
     public function beforeUpdate()
     {
         $this->update_time = time();
+        
+        // 确保 JSON 字段不为空字符串
+        if ($this->content === '') {
+            $this->content = null;
+        }
+        if ($this->rubric === '') {
+            $this->rubric = null;
+        }
+        if ($this->attachments === '') {
+            $this->attachments = null;
+        }
+        if ($this->reference_answer === '') {
+            $this->reference_answer = null;
+        }
     }
 
     /**
