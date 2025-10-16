@@ -88,7 +88,7 @@
                                     {# 选择题（根据multiple判断单选/多选）#}
                                     {% if question.multiple %}
                                         {# 多选题 #}
-                                        {% if question.options is iterable %}
+                                        {% if question.options is defined and question.options %}
                                         {% for key, option in question.options %}
                                             <div style="margin: 10px 0;">
                                                 <input type="checkbox" 
@@ -96,13 +96,13 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if assignment.submission and assignment.submission.content[question.id] is iterable and key in assignment.submission.content[question.id] %}checked{% endif %}>
+                                                       {% if assignment.submission and assignment.submission.content[question.id] is defined and key in assignment.submission.content[question.id] %}checked{% endif %}>
                                             </div>
                                         {% endfor %}
                                         {% endif %}
                                     {% else %}
                                         {# 单选题 #}
-                                        {% if question.options is iterable %}
+                                        {% if question.options is defined and question.options %}
                                         {% for key, option in question.options %}
                                             <div style="margin: 10px 0;">
                                                 <input type="radio" 
