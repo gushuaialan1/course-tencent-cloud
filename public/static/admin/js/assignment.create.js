@@ -437,6 +437,38 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         var formData = collectFormData();
         formData.status = status;
 
+        // 前端验证
+        if (!formData.title || formData.title.trim() === '') {
+            layer.msg('请填写作业标题', { icon: 5 });
+            return;
+        }
+        
+        if (!formData.course_id) {
+            layer.msg('请选择课程', { icon: 5 });
+            return;
+        }
+        
+        // 验证题目
+        try {
+            var content = JSON.parse(formData.content);
+            if (!content.questions || content.questions.length === 0) {
+                layer.msg('请至少添加一个题目', { icon: 5 });
+                return;
+            }
+            
+            // 检查每个题目是否有标题
+            for (var i = 0; i < content.questions.length; i++) {
+                var q = content.questions[i];
+                if (!q.title || q.title.trim() === '') {
+                    layer.msg('题目' + (i + 1) + '的标题不能为空', { icon: 5 });
+                    return;
+                }
+            }
+        } catch (e) {
+            layer.msg('题目数据格式错误', { icon: 2 });
+            return;
+        }
+
         var loading = layer.load(1, { shade: [0.5, '#000'] });
         var url = isEditMode ? '/admin/assignment/update' : '/admin/assignment/create';
 
@@ -449,18 +481,45 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                     location.href = '/admin/assignment/list';
                 });
             } else {
-                layer.msg(res.msg || res.message || '操作失败', { icon: 2 });
+                // 显示详细的验证错误
+                if (res.errors && typeof res.errors === 'object') {
+                    var errorHtml = '<div style="text-align:left; padding: 10px;">';
+                    errorHtml += '<p style="font-weight:bold; margin-bottom:10px;">数据验证失败：</p>';
+                    errorHtml += '<ul style="margin:0; padding-left:20px;">';
+                    for (var key in res.errors) {
+                        errorHtml += '<li>' + res.errors[key] + '</li>';
+                    }
+                    errorHtml += '</ul></div>';
+                    layer.alert(errorHtml, { icon: 5, title: '验证错误' });
+                } else {
+                    layer.msg(res.msg || res.message || '操作失败', { icon: 2 });
+                }
             }
         }).fail(function (xhr) {
             layer.close(loading);
             var errorMsg = '保存失败，请重试';
+            var errorDetails = null;
             try {
                 var response = JSON.parse(xhr.responseText);
                 errorMsg = response.msg || response.message || errorMsg;
+                errorDetails = response.errors;
             } catch (e) {
                 // 解析失败使用默认消息
             }
-            layer.msg(errorMsg, { icon: 2 });
+            
+            // 如果有详细错误，显示详细信息
+            if (errorDetails && typeof errorDetails === 'object') {
+                var errorHtml = '<div style="text-align:left; padding: 10px;">';
+                errorHtml += '<p style="font-weight:bold; margin-bottom:10px;">' + errorMsg + '</p>';
+                errorHtml += '<ul style="margin:0; padding-left:20px;">';
+                for (var key in errorDetails) {
+                    errorHtml += '<li>' + errorDetails[key] + '</li>';
+                }
+                errorHtml += '</ul></div>';
+                layer.alert(errorHtml, { icon: 5, title: '保存失败' });
+            } else {
+                layer.msg(errorMsg, { icon: 2 });
+            }
         });
     }
 
