@@ -31,6 +31,43 @@
                     </div>
                 {% endif %}
                 
+                {# 提交状态信息 #}
+                {% if assignment.submission %}
+                    <div class="submission-status" style="margin: 15px 0; padding: 12px 15px; background: {% if assignment.submission.status == 'graded' %}#E8F5E9{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}#FFF3E0{% else %}#F5F5F5{% endif %}; border-left: 3px solid {% if assignment.submission.status == 'graded' %}#4CAF50{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}#FF9800{% else %}#9E9E9E{% endif %}; border-radius: 2px;">
+                        <span style="font-weight: bold; color: #333;">
+                            <i class="layui-icon {% if assignment.submission.status == 'graded' %}layui-icon-ok-circle{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}layui-icon-time{% else %}layui-icon-edit{% endif %}"></i>
+                            {% if assignment.submission.status == 'draft' %}
+                                草稿状态
+                            {% elseif assignment.submission.status == 'submitted' %}
+                                已提交，等待批改
+                            {% elseif assignment.submission.status == 'auto_graded' %}
+                                已自动评分
+                            {% elseif assignment.submission.status == 'grading' %}
+                                批改中
+                            {% elseif assignment.submission.status == 'graded' %}
+                                已批改完成
+                            {% elseif assignment.submission.status == 'returned' %}
+                                已退回
+                            {% endif %}
+                        </span>
+                        <span style="margin-left: 20px; color: #666;">
+                            提交次数：<strong style="color: #333;">{{ assignment.submission.attempt_count }}</strong>
+                            {% if assignment.max_attempts > 0 %} / {{ assignment.max_attempts }}{% endif %}
+                        </span>
+                        {% if assignment.submission.status == 'graded' or assignment.submission.status == 'auto_graded' %}
+                            <span style="margin-left: 20px; color: #666;">
+                                得分：<strong style="color: #4CAF50; font-size: 16px;">{{ assignment.submission.score }}</strong> / {{ assignment.submission.max_score }}
+                                ({{ assignment.submission.score_percentage }}%)
+                            </span>
+                        {% endif %}
+                        {% if assignment.submission.submit_time > 0 %}
+                            <span style="margin-left: 20px; color: #666;">
+                                提交时间：{{ date('Y-m-d H:i:s', assignment.submission.submit_time) }}
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
                 <div class="assignment-meta" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E6E6E6; color: #999; font-size: 13px;">
                     <span style="margin-right: 25px;">
                         <i class="layui-icon layui-icon-form"></i> 题目数量：<strong style="color: #333;">{{ assignment.question_count }}</strong> 道
@@ -90,8 +127,9 @@
                                 {# 预处理当前题目的已有答案，确保 in 右操作数始终为数组 #}
                                 {% set rawAnswer =
                                     assignment.submission and assignment.submission.content is defined
-                                    and assignment.submission.content[question.id] is defined
-                                        ? assignment.submission.content[question.id]
+                                    and assignment.submission.content.answers is defined
+                                    and assignment.submission.content.answers[question.id] is defined
+                                        ? assignment.submission.content.answers[question.id]
                                         : null
                                 %}
                                 {% set selectedList = (rawAnswer is iterable) ? rawAnswer : [] %}
@@ -137,7 +175,7 @@
                                         placeholder="请输入您的答案..." 
                                         class="layui-textarea" 
                                         style="min-height: {% if question.type == 'essay' %}200px{% else %}100px{% endif %}; resize: vertical;"
-                                        lay-filter="question-{{ question.id }}">{% if assignment.submission and assignment.submission.content[question.id] %}{{ assignment.submission.content[question.id] }}{% endif %}</textarea>
+                                        lay-filter="question-{{ question.id }}">{% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}{{ assignment.submission.content.answers[question.id] }}{% endif %}</textarea>
                                     
                                 {% elseif question.type == 'file' %}
                                     {# 文件题 #}
@@ -149,13 +187,13 @@
                                         </button>
                                         <input type="hidden" 
                                                name="answer_{{ question.id }}" 
-                                               value="{% if assignment.submission and assignment.submission.content[question.id] %}{{ assignment.submission.content[question.id] }}{% endif %}" 
+                                               value="{% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}{{ assignment.submission.content.answers[question.id] }}{% endif %}" 
                                                lay-filter="question-{{ question.id }}">
                                         <div class="file-preview" id="file-preview-{{ question.id }}" style="margin-top: 10px;">
-                                            {% if assignment.submission and assignment.submission.content[question.id] %}
+                                            {% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}
                                                 <div class="file-item" style="padding: 8px 12px; background: #fff; border: 1px solid #E6E6E6; border-radius: 2px; display: inline-block;">
                                                     <i class="layui-icon layui-icon-file"></i>
-                                                    <span>{{ assignment.submission.content[question.id] }}</span>
+                                                    <span>{{ assignment.submission.content.answers[question.id] }}</span>
                                                     <a href="javascript:;" class="remove-file" style="color: #FF5722; margin-left: 10px;">删除</a>
                                                 </div>
                                             {% endif %}

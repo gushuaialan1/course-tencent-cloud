@@ -47,12 +47,10 @@ class GradingService extends Service
         // 初始化评分工厂
         $graderFactory = new GraderFactory();
 
-        // 初始化批改详情
-        $grading = [];
+        // 初始化批改详情（按照标准格式：直接是题目ID到批改结果的映射）
+        $gradeDetails = [];
         $totalEarned = 0;
         $totalMax = 0;
-        $autoGradedScore = 0;
-        $manualGradedScore = 0;
         $hasManualQuestion = false;
 
         // 遍历每个题目进行评分
@@ -68,8 +66,14 @@ class GradingService extends Service
                 // 执行评分
                 $result = $grader->grade($question, $studentAnswer);
 
-                // 记录评分结果
-                $grading[$questionId] = $result;
+                // 记录评分结果（标准格式）
+                $gradeDetails[$questionId] = [
+                    'earned_score' => $result['earned_score'] ?? 0,
+                    'max_score' => $result['max_score'] ?? 0,
+                    'is_correct' => $result['is_correct'] ?? false,
+                    'auto_graded' => $result['auto_graded'] ?? false,
+                    'feedback' => $result['feedback'] ?? ''
+                ];
 
                 // 累计分数
                 $maxScore = $result['max_score'] ?? 0;
@@ -79,50 +83,33 @@ class GradingService extends Service
                 $totalMax += $maxScore;
                 $totalEarned += $earnedScore;
 
-                if ($autoGraded) {
-                    $autoGradedScore += $earnedScore;
-                } else {
+                if (!$autoGraded) {
                     $hasManualQuestion = true;
                 }
             } catch (\Exception $e) {
                 // 不支持的题型，标记为需要人工批改
-                $grading[$questionId] = [
+                $gradeDetails[$questionId] = [
                     'earned_score' => 0,
                     'max_score' => $question['score'] ?? 0,
                     'is_correct' => false,
                     'auto_graded' => false,
-                    'error' => $e->getMessage()
+                    'feedback' => '不支持的题型: ' . $e->getMessage()
                 ];
                 $totalMax += $question['score'] ?? 0;
                 $hasManualQuestion = true;
             }
         }
 
-        // 计算百分比
-        $percentage = $totalMax > 0 ? round(($totalEarned / $totalMax) * 100, 2) : 0;
-
-        // 构建批改详情
-        $gradeDetails = [
-            'grading' => $grading,
-            'summary' => [
-                'total_earned' => $totalEarned,
-                'total_max' => $totalMax,
-                'auto_graded_score' => $autoGradedScore,
-                'manual_graded_score' => $manualGradedScore,
-                'percentage' => $percentage
-            ]
-        ];
-
-        // 保存批改详情
-        $submission->setGradeDetailsData($gradeDetails);
+        // 保存批改详情（标准格式：直接保存题目ID到批改结果的映射）
+        $submission->grade_details = json_encode($gradeDetails, JSON_UNESCAPED_UNICODE);
         $submission->score = $totalEarned;
         $submission->max_score = $totalMax;
 
         // 根据是否有主观题，决定状态
         if ($hasManualQuestion) {
-            // 有主观题，需要教师批改
-            $submission->status = SubmissionModel::STATUS_GRADING;
-            $submission->grader_id = $assignment->owner_id;
+            // 有主观题，需要教师批改，保持submitted状态
+            $submission->status = SubmissionModel::STATUS_SUBMITTED;
+            // 不设置grader_id，等待教师主动接取批改任务
         } else {
             // 纯客观题，自动评分完成
             $submission->status = SubmissionModel::STATUS_AUTO_GRADED;
@@ -137,7 +124,6 @@ class GradingService extends Service
 
         return [
             'submission' => $submission,
-            'grade_details' => $gradeDetails,
             'has_manual_question' => $hasManualQuestion
         ];
     }
@@ -166,62 +152,37 @@ class GradingService extends Service
             throw new \Exception('当前状态不允许批改');
         }
 
-        // 获取现有批改详情
-        $gradeDetails = $submission->getGradeDetailsData();
-        $existingGrading = $gradeDetails['grading'] ?? [];
+        // 获取现有批改详情（标准格式）
+        $gradeDetails = json_decode($submission->grade_details, true) ?: [];
 
         // 合并新的批改数据
         foreach ($grading as $questionId => $gradeData) {
-            if (isset($existingGrading[$questionId])) {
+            if (isset($gradeDetails[$questionId])) {
                 // 更新已有题目的批改
-                $existingGrading[$questionId]['earned_score'] = $gradeData['earned_score'] ?? 0;
-                $existingGrading[$questionId]['is_correct'] = ($gradeData['earned_score'] ?? 0) >= ($existingGrading[$questionId]['max_score'] ?? 0);
-                if (isset($gradeData['grader_comment'])) {
-                    $existingGrading[$questionId]['grader_comment'] = $gradeData['grader_comment'];
+                $gradeDetails[$questionId]['earned_score'] = $gradeData['earned_score'] ?? 0;
+                $gradeDetails[$questionId]['is_correct'] = ($gradeData['earned_score'] ?? 0) >= ($gradeDetails[$questionId]['max_score'] ?? 0);
+                if (isset($gradeData['feedback'])) {
+                    $gradeDetails[$questionId]['feedback'] = $gradeData['feedback'];
                 }
                 // 标记为手动批改
-                if (!($existingGrading[$questionId]['auto_graded'] ?? false)) {
-                    $existingGrading[$questionId]['auto_graded'] = false;
-                }
+                $gradeDetails[$questionId]['auto_graded'] = false;
             }
         }
 
         // 重新计算总分
         $totalEarned = 0;
         $totalMax = 0;
-        $autoGradedScore = 0;
-        $manualGradedScore = 0;
 
-        foreach ($existingGrading as $result) {
+        foreach ($gradeDetails as $result) {
             $maxScore = $result['max_score'] ?? 0;
             $earnedScore = $result['earned_score'] ?? 0;
-            $autoGraded = $result['auto_graded'] ?? false;
 
             $totalMax += $maxScore;
             $totalEarned += $earnedScore;
-
-            if ($autoGraded) {
-                $autoGradedScore += $earnedScore;
-            } else {
-                $manualGradedScore += $earnedScore;
-            }
         }
 
-        // 计算百分比
-        $percentage = $totalMax > 0 ? round(($totalEarned / $totalMax) * 100, 2) : 0;
-
-        // 更新批改详情
-        $gradeDetails['grading'] = $existingGrading;
-        $gradeDetails['summary'] = [
-            'total_earned' => $totalEarned,
-            'total_max' => $totalMax,
-            'auto_graded_score' => $autoGradedScore,
-            'manual_graded_score' => $manualGradedScore,
-            'percentage' => $percentage
-        ];
-
-        // 保存批改结果
-        $submission->setGradeDetailsData($gradeDetails);
+        // 保存批改结果（标准格式：直接保存题目ID到批改结果的映射）
+        $submission->grade_details = json_encode($gradeDetails, JSON_UNESCAPED_UNICODE);
         $submission->score = $totalEarned;
         $submission->feedback = $feedback;
         $submission->status = SubmissionModel::STATUS_GRADED;

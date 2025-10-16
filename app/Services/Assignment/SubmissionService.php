@@ -147,7 +147,9 @@ class SubmissionService extends Service
         }
 
         // 根据作业的评分模式决定是否自动评分
-        $autoGradeResult = null;
+        $autoGraded = false;
+        $allGraded = false;
+        
         if (in_array($assignment->grade_mode, [AssignmentModel::GRADE_MODE_AUTO, AssignmentModel::GRADE_MODE_MIXED])) {
             // 调用自动评分服务
             $gradingService = new GradingService();
@@ -155,12 +157,15 @@ class SubmissionService extends Service
             
             // 重新加载submission以获取最新状态
             $submission = SubmissionModel::findFirst($submission->id);
+            
+            $autoGraded = true;
+            $allGraded = !($autoGradeResult['has_manual_question'] ?? true);
         }
 
         return [
             'submission' => $submission,
-            'auto_graded' => $autoGradeResult !== null,
-            'auto_grade_result' => $autoGradeResult
+            'auto_graded' => $autoGraded,
+            'all_graded' => $allGraded
         ];
     }
 

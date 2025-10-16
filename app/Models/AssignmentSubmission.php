@@ -340,54 +340,34 @@ class AssignmentSubmission extends Model
     }
 
     /**
-     * 解析批改详情数据
+     * 解析批改详情数据（标准格式：题目ID到批改结果的映射）
      *
      * @return array
      */
     public function getGradeDetailsData()
     {
         if (empty($this->grade_details)) {
-            return ['grading' => [], 'summary' => []];
+            return [];
         }
         
         $data = json_decode($this->grade_details, true);
         
-        // 确保返回的数据包含grading和summary键
-        if (!isset($data['grading'])) {
-            $data['grading'] = [];
-        }
-        if (!isset($data['summary'])) {
-            $data['summary'] = [
-                'total_earned' => 0,
-                'total_max' => 0,
-                'auto_graded_score' => 0,
-                'manual_graded_score' => 0,
-                'percentage' => 0
-            ];
+        if (!is_array($data)) {
+            return [];
         }
         
         return $data;
     }
 
     /**
-     * 设置批改详情数据
+     * 设置批改详情数据（标准格式：题目ID到批改结果的映射）
      *
      * @param array $details
      */
     public function setGradeDetailsData($details)
     {
-        // 确保包含必要的键
-        if (!isset($details['grading'])) {
-            $details['grading'] = [];
-        }
-        if (!isset($details['summary'])) {
-            $details['summary'] = [
-                'total_earned' => 0,
-                'total_max' => 0,
-                'auto_graded_score' => 0,
-                'manual_graded_score' => 0,
-                'percentage' => 0
-            ];
+        if (!is_array($details)) {
+            throw new \Exception('批改详情必须是数组');
         }
         
         $this->grade_details = json_encode($details, JSON_UNESCAPED_UNICODE);
@@ -401,20 +381,48 @@ class AssignmentSubmission extends Model
      */
     public function getGradeForQuestion($questionId)
     {
-        $detailsData = $this->getGradeDetailsData();
-        $grading = $detailsData['grading'] ?? [];
-        return $grading[$questionId] ?? null;
+        $gradeDetails = $this->getGradeDetailsData();
+        return $gradeDetails[$questionId] ?? null;
     }
     
     /**
-     * 获取批改汇总信息
+     * 获取批改汇总信息（计算得出）
      *
      * @return array
      */
     public function getGradeSummary()
     {
-        $detailsData = $this->getGradeDetailsData();
-        return $detailsData['summary'] ?? [];
+        $gradeDetails = $this->getGradeDetailsData();
+        
+        $totalEarned = 0;
+        $totalMax = 0;
+        $autoGradedScore = 0;
+        $manualGradedScore = 0;
+        
+        foreach ($gradeDetails as $result) {
+            $earnedScore = $result['earned_score'] ?? 0;
+            $maxScore = $result['max_score'] ?? 0;
+            $autoGraded = $result['auto_graded'] ?? false;
+            
+            $totalEarned += $earnedScore;
+            $totalMax += $maxScore;
+            
+            if ($autoGraded) {
+                $autoGradedScore += $earnedScore;
+            } else {
+                $manualGradedScore += $earnedScore;
+            }
+        }
+        
+        $percentage = $totalMax > 0 ? round(($totalEarned / $totalMax) * 100, 2) : 0;
+        
+        return [
+            'total_earned' => $totalEarned,
+            'total_max' => $totalMax,
+            'auto_graded_score' => $autoGradedScore,
+            'manual_graded_score' => $manualGradedScore,
+            'percentage' => $percentage
+        ];
     }
 
     /**
