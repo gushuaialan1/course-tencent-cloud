@@ -36,3 +36,12 @@
 # 临时文档和规范对照表
 /作业模块前后台数据规范对照表.md
 /功能验证报告*.md
+/作业模块*.md
+/*.md
+!README.md
+!CHANGELOG.md
+!LICENSE.md
+!SECURITY.md
+!DEPLOYMENT_GUIDE_BAOTA.md
+!CONFIG_MANAGEMENT.md
+!GIT_COMMIT_GUIDE.md
