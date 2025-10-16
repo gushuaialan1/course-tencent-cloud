@@ -472,6 +472,11 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
         $('#assignment-form').serializeArray().forEach(function (item) {
             formData[item.name] = item.value;
         });
+        
+        // 编辑模式：确保 id 字段存在
+        if (isEditMode && assignmentData && assignmentData.id) {
+            formData.id = assignmentData.id;
+        }
 
         // 富文本内容
         formData.instructions = $('#instructions-editor').val();
