@@ -92,7 +92,8 @@
                                         : null
                                 %}
                                 {% set selectedList = (rawAnswer is iterable) ? rawAnswer : [] %}
-                                {% set selectedValue = (rawAnswer is iterable) ? '' : (rawAnswer ?: '') %}
+                                {# Volt 不支持 PHP 的 ?:，用显式判断替代 #}
+                                {% set selectedValue = (rawAnswer is iterable) ? '' : (rawAnswer ? rawAnswer : '') %}
 
                                 {% if question.type == 'choice' %}
                                     {# 选择题（根据multiple判断单选/多选）#}
