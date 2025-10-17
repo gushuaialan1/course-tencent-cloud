@@ -92,11 +92,6 @@ class AssignmentController extends Controller
             // 获取作业详情
             $assignment = $this->assignmentService->getDetail($id);
             
-            // 强制深度转换为纯数组（解决Phalcon对象嵌套问题）
-            $assignment = json_decode(json_encode($assignment), true);
-            
-            error_log('[Assignment] ID:' . $id . ' Status:' . ($assignment['submission']['status'] ?? 'none'));
-            
             if (!$assignment) {
                 if ($this->request->isAjax()) {
                     return $this->jsonError(['msg' => '作业不存在']);
@@ -130,6 +125,11 @@ class AssignmentController extends Controller
             
             // 将 submission 数据附加到 assignment 中，方便视图使用
             $assignment['submission'] = $submissionData;
+            
+            // 强制深度转换整个数据为纯数组（必须在所有数据准备完后执行）
+            $assignment = json_decode(json_encode($assignment), true);
+            
+            error_log('[Assignment] ID:' . $id . ' Status:' . ($assignment['submission']['status'] ?? 'none'));
 
             if ($this->request->isAjax()) {
                 return $this->jsonSuccess([
