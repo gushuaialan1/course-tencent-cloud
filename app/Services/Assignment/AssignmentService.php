@@ -278,9 +278,9 @@ class AssignmentService extends Service
 
         $data = $assignment->toArray();
         
-        // 解析题目数据
+        // 解析题目数据 - 确保完全是数组格式
         $questions = $assignment->getQuestions();
-        $data['questions'] = $questions;
+        $data['questions'] = json_decode(json_encode($questions), true);
         $data['question_count'] = count($questions);
         
         // 判断是否超期
