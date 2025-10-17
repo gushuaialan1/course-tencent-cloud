@@ -148,7 +148,8 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if key in selectedList %}checked{% endif %}>
+                                                       {% if key in selectedList %}checked{% endif %}
+                                                       {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>
                                             </div>
                                         {% endfor %}
                                         {% endif %}
@@ -162,7 +163,8 @@
                                                        value="{{ key }}" 
                                                        title="{{ option }}" 
                                                        lay-filter="question-{{ question.id }}"
-                                                       {% if selectedValue == key %}checked{% endif %}>
+                                                       {% if selectedValue == key %}checked{% endif %}
+                                                       {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>
                                             </div>
                                         {% endfor %}
                                         {% endif %}
@@ -175,14 +177,16 @@
                                         placeholder="请输入您的答案..." 
                                         class="layui-textarea" 
                                         style="min-height: {% if question.type == 'essay' %}200px{% else %}100px{% endif %}; resize: vertical;"
-                                        lay-filter="question-{{ question.id }}">{% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}{{ assignment.submission.content.answers[question.id] }}{% endif %}</textarea>
+                                        lay-filter="question-{{ question.id }}"
+                                        {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>{% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}{{ assignment.submission.content.answers[question.id] }}{% endif %}</textarea>
                                     
                                 {% elseif question.type == 'file' %}
                                     {# 文件题 #}
                                     <div class="file-upload-area">
                                         <button type="button" 
                                                 class="layui-btn layui-btn-normal layui-btn-sm" 
-                                                id="upload-btn-{{ question.id }}">
+                                                id="upload-btn-{{ question.id }}"
+                                                {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>
                                             <i class="layui-icon layui-icon-upload"></i> 上传文件
                                         </button>
                                         <input type="hidden" 
@@ -194,7 +198,9 @@
                                                 <div class="file-item" style="padding: 8px 12px; background: #fff; border: 1px solid #E6E6E6; border-radius: 2px; display: inline-block;">
                                                     <i class="layui-icon layui-icon-file"></i>
                                                     <span>{{ assignment.submission.content.answers[question.id] }}</span>
-                                                    <a href="javascript:;" class="remove-file" style="color: #FF5722; margin-left: 10px;">删除</a>
+                                                    {% if not (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}
+                                                        <a href="javascript:;" class="remove-file" style="color: #FF5722; margin-left: 10px;">删除</a>
+                                                    {% endif %}
                                                 </div>
                                             {% endif %}
                                         </div>
@@ -202,6 +208,42 @@
                                 {% endif %}
                                 
                             </div>
+                            
+                            {# 显示批改结果（如果已批改）#}
+                            {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
+                                {% set gradeDetails = assignment.submission.grade_details_data %}
+                                {% if gradeDetails and gradeDetails[question.id] is defined %}
+                                    {% set questionGrade = gradeDetails[question.id] %}
+                                    <div class="question-grade-result" style="margin-top: 15px; padding: 12px 15px; background: {% if questionGrade.is_correct %}#E8F5E9{% else %}#FFEBEE{% endif %}; border-left: 3px solid {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; border-radius: 2px;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <div>
+                                                <i class="layui-icon {% if questionGrade.is_correct %}layui-icon-ok-circle{% else %}layui-icon-close{% endif %}" style="color: {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; font-size: 16px;"></i>
+                                                <span style="font-weight: bold; color: #333; margin-left: 5px;">
+                                                    {% if questionGrade.is_correct %}答对了{% else %}答错了{% endif %}
+                                                </span>
+                                            </div>
+                                            <div style="font-size: 14px; color: #666;">
+                                                得分：<strong style="color: {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; font-size: 16px;">{{ questionGrade.score }}</strong> / {{ question.score }}
+                                            </div>
+                                        </div>
+                                        {% if question.type == 'choice' and question.correct_answer %}
+                                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed {% if questionGrade.is_correct %}#C8E6C9{% else %}#FFCDD2{% endif %}; color: #666; font-size: 13px;">
+                                                <strong>正确答案：</strong>
+                                                {% if question.multiple %}
+                                                    {{ question.correct_answer|join(', ') }}
+                                                {% else %}
+                                                    {{ question.correct_answer }}
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                        {% if questionGrade.feedback %}
+                                            <div style="margin-top: 8px; color: #666; font-size: 13px;">
+                                                <strong>批改意见：</strong>{{ questionGrade.feedback }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     {% endfor %}
                     
@@ -249,19 +291,41 @@
                     {% endif %}
                     
                     <div class="action-buttons" style="margin-top: 20px;">
-                        <button type="button" 
-                                class="layui-btn layui-btn-fluid" 
-                                id="save-draft-btn"
-                                {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
-                            <i class="layui-icon layui-icon-file"></i> 保存草稿
-                        </button>
-                        <button type="button" 
-                                class="layui-btn layui-btn-normal layui-btn-fluid" 
-                                id="submit-btn"
-                                style="margin-top: 10px;"
-                                {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
-                            <i class="layui-icon layui-icon-ok"></i> 提交作业
-                        </button>
+                        {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
+                            {# 已批改完成，显示查看批改结果按钮 #}
+                            <div style="text-align: center; padding: 15px; background: #E8F5E9; border-radius: 2px; color: #4CAF50;">
+                                <i class="layui-icon layui-icon-ok-circle" style="font-size: 24px;"></i>
+                                <div style="margin-top: 10px; font-size: 14px;">作业已批改完成</div>
+                                <div style="margin-top: 5px; font-size: 18px; font-weight: bold;">{{ assignment.submission.score }} / {{ assignment.submission.max_score }}</div>
+                            </div>
+                        {% elseif assignment.submission and (assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}
+                            {# 已提交待批改 #}
+                            <div style="text-align: center; padding: 15px; background: #FFF3E0; border-radius: 2px; color: #FF9800;">
+                                <i class="layui-icon layui-icon-time" style="font-size: 24px;"></i>
+                                <div style="margin-top: 10px; font-size: 14px;">
+                                    {% if assignment.submission.status == 'grading' %}
+                                        正在批改中...
+                                    {% else %}
+                                        等待批改中...
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            {# 草稿状态或未提交，显示提交按钮 #}
+                            <button type="button" 
+                                    class="layui-btn layui-btn-fluid" 
+                                    id="save-draft-btn"
+                                    {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
+                                <i class="layui-icon layui-icon-file"></i> 保存草稿
+                            </button>
+                            <button type="button" 
+                                    class="layui-btn layui-btn-normal layui-btn-fluid" 
+                                    id="submit-btn"
+                                    style="margin-top: 10px;"
+                                    {% if assignment.is_overdue and not assignment.allow_late %}disabled{% endif %}>
+                                <i class="layui-icon layui-icon-ok"></i> 提交作业
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>

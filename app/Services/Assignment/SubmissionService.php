@@ -150,30 +150,20 @@ class SubmissionService extends Service
         $autoGraded = false;
         $allGraded = false;
         
-        error_log("作业评分模式: " . $assignment->grade_mode);
-        error_log("是否需要自动评分: " . (in_array($assignment->grade_mode, [AssignmentModel::GRADE_MODE_AUTO, AssignmentModel::GRADE_MODE_MIXED]) ? 'true' : 'false'));
-        
         if (in_array($assignment->grade_mode, [AssignmentModel::GRADE_MODE_AUTO, AssignmentModel::GRADE_MODE_MIXED])) {
             try {
-                error_log("开始自动评分，submission ID: " . $submission->id);
-                
                 // 调用自动评分服务
                 $gradingService = new GradingService();
                 $autoGradeResult = $gradingService->autoGrade($submission->id);
                 
-                error_log("自动评分完成，结果: " . json_encode($autoGradeResult));
-                
                 // 重新加载submission以获取最新状态
                 $submission = SubmissionModel::findFirst($submission->id);
-                
-                error_log("重新加载后的状态: " . $submission->status . ", 分数: " . $submission->score);
                 
                 $autoGraded = true;
                 $allGraded = !($autoGradeResult['has_manual_question'] ?? true);
             } catch (\Exception $e) {
                 // 自动评分失败，记录错误但不影响提交
-                error_log('自动评分异常: ' . $e->getMessage());
-                error_log('异常堆栈: ' . $e->getTraceAsString());
+                error_log('自动评分失败: ' . $e->getMessage());
                 // 重新加载submission
                 $submission = SubmissionModel::findFirst($submission->id);
             }
