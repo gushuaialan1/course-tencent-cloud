@@ -10,12 +10,10 @@
                     </h3>
                     <div class="assignment-status">
                         {% if item.submission %}
-                            {% if item.submission.status == 'graded' %}
-                                {% if item.submission.grade_status == 'completed' %}
-                                    <span class="layui-badge layui-bg-green">已批改</span>
-                                {% else %}
-                                    <span class="layui-badge layui-bg-blue">批改中</span>
-                                {% endif %}
+                            {% if item.submission.status == 'graded' or item.submission.status == 'auto_graded' %}
+                                <span class="layui-badge layui-bg-green">已批改</span>
+                            {% elseif item.submission.status == 'grading' %}
+                                <span class="layui-badge layui-bg-blue">批改中</span>
                             {% elseif item.submission.status == 'submitted' %}
                                 <span class="layui-badge layui-bg-cyan">已提交</span>
                             {% elseif item.submission.status == 'returned' %}
@@ -48,7 +46,7 @@
                         <i class="layui-icon layui-icon-time"></i> 
                         截止时间: {{ item.due_date_text }}
                     </span>
-                    {% if item.submission and item.submission.status == 'graded' %}
+                    {% if item.submission and (item.submission.status == 'graded' or item.submission.status == 'auto_graded') %}
                         <span style="color: #16BAAA; font-weight: bold;">
                             <i class="layui-icon layui-icon-rate-solid"></i> 
                             得分: {{ item.submission.score }} 分
@@ -58,20 +56,20 @@
                 
                 <div class="assignment-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E6E6E6;">
                     {% if item.submission %}
-                        {% if item.submission.status == 'graded' and item.submission.grade_status == 'completed' %}
+                        {% if item.submission.status == 'graded' or item.submission.status == 'auto_graded' %}
                             {# 批改完成，可以查看成绩 #}
-                            <a href="{{ result_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
-                                <i class="layui-icon layui-icon-read"></i> 查看成绩
+                            <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
+                                <i class="layui-icon layui-icon-read"></i> 查看作业
                             </a>
                             {% if item.allow_late and not item.is_overdue %}
                                 <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-primary" target="_blank">
                                     <i class="layui-icon layui-icon-edit"></i> 重新提交
                                 </a>
                             {% endif %}
-                        {% elseif item.submission.status == 'graded' %}
-                            {# 部分批改（混合模式），显示当前分数但仍在批改中 #}
+                        {% elseif item.submission.status == 'grading' %}
+                            {# 人工批改中 #}
                             <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-warm" target="_blank">
-                                <i class="layui-icon layui-icon-time"></i> 批改中（当前{{ item.submission.score }}分）
+                                <i class="layui-icon layui-icon-time"></i> 批改中
                             </a>
                         {% elseif item.submission.status == 'submitted' %}
                             {# 已提交，等待批改 #}

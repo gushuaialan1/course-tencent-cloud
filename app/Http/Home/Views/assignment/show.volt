@@ -33,14 +33,6 @@
                 
                 {# 提交状态信息 #}
                 {% if assignment.submission %}
-                    {# 调试信息 - 显示实际状态值 #}
-                    <div style="background: #FFF3E0; padding: 10px; margin: 10px 0; border: 1px solid #FFB800; border-radius: 4px; font-family: monospace; font-size: 12px;">
-                        <strong>调试信息：</strong><br>
-                        Status: {{ assignment.submission.status }}<br>
-                        Score: {{ assignment.submission.score }}<br>
-                        grade_details存在: {% if assignment.submission.grade_details is defined %}YES{% else %}NO{% endif %}<br>
-                    </div>
-                    
                     <div class="submission-status" style="margin: 15px 0; padding: 12px 15px; background: {% if assignment.submission.status == 'graded' %}#E8F5E9{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}#FFF3E0{% else %}#F5F5F5{% endif %}; border-left: 3px solid {% if assignment.submission.status == 'graded' %}#4CAF50{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}#FF9800{% else %}#9E9E9E{% endif %}; border-radius: 2px;">
                         <span style="font-weight: bold; color: #333;">
                             <i class="layui-icon {% if assignment.submission.status == 'graded' %}layui-icon-ok-circle{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}layui-icon-time{% else %}layui-icon-edit{% endif %}"></i>
