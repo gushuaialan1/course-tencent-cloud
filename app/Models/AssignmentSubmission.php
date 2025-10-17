@@ -638,15 +638,19 @@ class AssignmentSubmission extends Model
     {
         $data = parent::toArray($columns);
         
-        // 解析JSON字段
+        // 解析JSON字段 - 确保返回数组而不是对象
         if (isset($data['content'])) {
-            $data['content'] = $this->getContentData();
+            $contentData = $this->getContentData();
+            // 强制转换为数组（如果是对象）
+            $data['content'] = json_decode(json_encode($contentData), true);
         }
         if (isset($data['attachments'])) {
-            $data['attachments'] = $this->getAttachmentsData();
+            $attachmentsData = $this->getAttachmentsData();
+            $data['attachments'] = json_decode(json_encode($attachmentsData), true);
         }
         if (isset($data['grade_details'])) {
-            $data['grade_details'] = $this->getGradeDetailsData();
+            $gradeDetailsData = $this->getGradeDetailsData();
+            $data['grade_details'] = json_decode(json_encode($gradeDetailsData), true);
         }
 
         // 添加计算字段
