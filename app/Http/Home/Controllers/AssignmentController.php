@@ -95,6 +95,8 @@ class AssignmentController extends Controller
             // 强制深度转换为纯数组（解决Phalcon对象嵌套问题）
             $assignment = json_decode(json_encode($assignment), true);
             
+            error_log('[Assignment] ID:' . $id . ' Status:' . ($assignment['submission']['status'] ?? 'none'));
+            
             if (!$assignment) {
                 if ($this->request->isAjax()) {
                     return $this->jsonError(['msg' => '作业不存在']);
