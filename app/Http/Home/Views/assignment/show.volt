@@ -33,6 +33,14 @@
                 
                 {# 提交状态信息 #}
                 {% if assignment.submission %}
+                    {# 调试信息 - 显示实际状态值 #}
+                    <div style="background: #FFF3E0; padding: 10px; margin: 10px 0; border: 1px solid #FFB800; border-radius: 4px; font-family: monospace;">
+                        <strong>调试信息：</strong><br>
+                        Status: {{ assignment.submission.status }}<br>
+                        Score: {{ assignment.submission.score }}<br>
+                        Has grade_details: {% if assignment.submission.grade_details %}YES{% else %}NO{% endif %}
+                    </div>
+                    
                     <div class="submission-status" style="margin: 15px 0; padding: 12px 15px; background: {% if assignment.submission.status == 'graded' %}#E8F5E9{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}#FFF3E0{% else %}#F5F5F5{% endif %}; border-left: 3px solid {% if assignment.submission.status == 'graded' %}#4CAF50{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}#FF9800{% else %}#9E9E9E{% endif %}; border-radius: 2px;">
                         <span style="font-weight: bold; color: #333;">
                             <i class="layui-icon {% if assignment.submission.status == 'graded' %}layui-icon-ok-circle{% elseif assignment.submission.status == 'submitted' or assignment.submission.status == 'auto_graded' %}layui-icon-time{% else %}layui-icon-edit{% endif %}"></i>
@@ -211,7 +219,7 @@
                             
                             {# 显示批改结果（如果已批改）#}
                             {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
-                                {% set gradeDetails = assignment.submission.grade_details_data %}
+                                {% set gradeDetails = assignment.submission.grade_details %}
                                 {% if gradeDetails and gradeDetails[question.id] is defined %}
                                     {% set questionGrade = gradeDetails[question.id] %}
                                     <div class="question-grade-result" style="margin-top: 15px; padding: 12px 15px; background: {% if questionGrade.is_correct %}#E8F5E9{% else %}#FFEBEE{% endif %}; border-left: 3px solid {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; border-radius: 2px;">
