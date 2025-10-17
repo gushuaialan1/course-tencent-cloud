@@ -585,21 +585,26 @@ class Assignment extends Model
     {
         $data = parent::toArray($columns);
         
-        // 解析JSON字段
+        // 解析JSON字段 - 确保返回数组而不是对象
         if (isset($data['attachments'])) {
-            $data['attachments'] = $this->getAttachmentsData();
+            $attachmentsData = $this->getAttachmentsData();
+            $data['attachments'] = json_decode(json_encode($attachmentsData), true);
         }
         if (isset($data['rubric'])) {
-            $data['rubric'] = $this->getRubricData();
+            $rubricData = $this->getRubricData();
+            $data['rubric'] = json_decode(json_encode($rubricData), true);
         }
         if (isset($data['content'])) {
-            $data['content'] = $this->getContentData();
+            $contentData = $this->getContentData();
+            $data['content'] = json_decode(json_encode($contentData), true);
         }
         if (isset($data['reference_answer'])) {
-            $data['reference_answer'] = $this->getReferenceAnswerData();
+            $referenceAnswerData = $this->getReferenceAnswerData();
+            $data['reference_answer'] = json_decode(json_encode($referenceAnswerData), true);
         }
         if (isset($data['visibility'])) {
-            $data['visibility'] = $this->getVisibilityData();
+            $visibilityData = $this->getVisibilityData();
+            $data['visibility'] = json_decode(json_encode($visibilityData), true);
         }
 
         return $data;
