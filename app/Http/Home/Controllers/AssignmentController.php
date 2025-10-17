@@ -92,6 +92,12 @@ class AssignmentController extends Controller
             // 获取作业详情
             $assignment = $this->assignmentService->getDetail($id);
             
+            // 临时调试：记录数据类型
+            if (isset($assignment['questions'][0]['options'])) {
+                error_log('DEBUG question options type: ' . gettype($assignment['questions'][0]['options']));
+                error_log('DEBUG question options: ' . json_encode($assignment['questions'][0]['options']));
+            }
+            
             if (!$assignment) {
                 if ($this->request->isAjax()) {
                     return $this->jsonError(['msg' => '作业不存在']);
