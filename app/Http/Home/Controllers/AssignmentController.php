@@ -209,7 +209,7 @@ class AssignmentController extends Controller
 
             // 提交作业
             $result = $this->submissionService->submit($id, $userId, $answers, [
-                'ip' => $this->request->getClientAddress(),
+                'submit_ip' => $this->request->getClientAddress(),
                 'user_agent' => $this->request->getUserAgent()
             ]);
 

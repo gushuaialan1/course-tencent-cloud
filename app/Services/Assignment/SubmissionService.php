@@ -151,15 +151,22 @@ class SubmissionService extends Service
         $allGraded = false;
         
         if (in_array($assignment->grade_mode, [AssignmentModel::GRADE_MODE_AUTO, AssignmentModel::GRADE_MODE_MIXED])) {
-            // 调用自动评分服务
-            $gradingService = new GradingService();
-            $autoGradeResult = $gradingService->autoGrade($submission->id);
-            
-            // 重新加载submission以获取最新状态
-            $submission = SubmissionModel::findFirst($submission->id);
-            
-            $autoGraded = true;
-            $allGraded = !($autoGradeResult['has_manual_question'] ?? true);
+            try {
+                // 调用自动评分服务
+                $gradingService = new GradingService();
+                $autoGradeResult = $gradingService->autoGrade($submission->id);
+                
+                // 重新加载submission以获取最新状态
+                $submission = SubmissionModel::findFirst($submission->id);
+                
+                $autoGraded = true;
+                $allGraded = !($autoGradeResult['has_manual_question'] ?? true);
+            } catch (\Exception $e) {
+                // 自动评分失败，记录错误但不影响提交
+                error_log('自动评分失败: ' . $e->getMessage());
+                // 重新加载submission
+                $submission = SubmissionModel::findFirst($submission->id);
+            }
         }
 
         return [

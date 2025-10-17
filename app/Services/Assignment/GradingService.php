@@ -101,7 +101,7 @@ class GradingService extends Service
         }
 
         // 保存批改详情（标准格式：直接保存题目ID到批改结果的映射）
-        $submission->grade_details = json_encode($gradeDetails, JSON_UNESCAPED_UNICODE);
+        $submission->setGradeDetailsData($gradeDetails);
         $submission->score = $totalEarned;
         $submission->max_score = $totalMax;
 
@@ -182,7 +182,7 @@ class GradingService extends Service
         }
 
         // 保存批改结果（标准格式：直接保存题目ID到批改结果的映射）
-        $submission->grade_details = json_encode($gradeDetails, JSON_UNESCAPED_UNICODE);
+        $submission->setGradeDetailsData($gradeDetails);
         $submission->score = $totalEarned;
         $submission->feedback = $feedback;
         $submission->status = SubmissionModel::STATUS_GRADED;
