@@ -278,10 +278,13 @@ class AssignmentService extends Service
 
         $data = $assignment->toArray();
         
-        // 解析题目数据 - 确保完全是数组格式
-        $questions = $assignment->getQuestions();
-        $data['questions'] = json_decode(json_encode($questions), true);
-        $data['question_count'] = count($questions);
+        // 题目数据已经在 toArray() 中处理过了，直接使用
+        if (isset($data['content']['questions'])) {
+            $data['questions'] = $data['content']['questions'];
+        } else {
+            $data['questions'] = [];
+        }
+        $data['question_count'] = count($data['questions']);
         
         // 判断是否超期
         $data['is_overdue'] = ($assignment->due_date > 0 && time() > $assignment->due_date);
