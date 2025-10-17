@@ -118,6 +118,16 @@ class AssignmentController extends Controller
                 $submission = $this->submissionService->getSubmission($id, $userId);
                 if ($submission) {
                     $submissionData = $submission->toArray();
+                    // 确保所有JSON字段都是数组格式
+                    if (isset($submissionData['content']) && !is_array($submissionData['content'])) {
+                        $submissionData['content'] = json_decode(json_encode($submissionData['content']), true);
+                    }
+                    if (isset($submissionData['grade_details']) && !is_array($submissionData['grade_details'])) {
+                        $submissionData['grade_details'] = json_decode(json_encode($submissionData['grade_details']), true);
+                    }
+                    if (isset($submissionData['attachments']) && !is_array($submissionData['attachments'])) {
+                        $submissionData['attachments'] = json_decode(json_encode($submissionData['attachments']), true);
+                    }
                 }
                 $canSubmit = $this->submissionService->canSubmit($id, $userId);
             }
