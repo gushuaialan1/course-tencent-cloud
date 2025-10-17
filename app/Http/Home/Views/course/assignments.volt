@@ -57,15 +57,10 @@
                 <div class="assignment-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E6E6E6;">
                     {% if item.submission %}
                         {% if item.submission.status == 'graded' or item.submission.status == 'auto_graded' %}
-                            {# 批改完成，可以查看成绩 #}
+                            {# 批改完成，只能查看 #}
                             <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-normal" target="_blank">
                                 <i class="layui-icon layui-icon-read"></i> 查看作业
                             </a>
-                            {% if item.allow_late and not item.is_overdue %}
-                                <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-primary" target="_blank">
-                                    <i class="layui-icon layui-icon-edit"></i> 重新提交
-                                </a>
-                            {% endif %}
                         {% elseif item.submission.status == 'grading' %}
                             {# 人工批改中 #}
                             <a href="{{ assignment_url }}" class="layui-btn layui-btn-sm layui-btn-warm" target="_blank">
