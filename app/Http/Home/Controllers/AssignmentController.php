@@ -30,6 +30,26 @@ class AssignmentController extends Controller
         $this->submissionService = new SubmissionService();
         $this->statisticsService = new StatisticsService();
     }
+    
+    /**
+     * 递归转换所有对象为数组（解决 Phalcon stdClass 问题）
+     */
+    private function toArrayRecursive($data)
+    {
+        // 如果是对象，先转为数组
+        if (is_object($data)) {
+            $data = (array) $data;
+        }
+        
+        // 如果是数组，递归处理每个元素
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                $data[$key] = $this->toArrayRecursive($value);
+            }
+        }
+        
+        return $data;
+    }
 
     /**
      * @Get("/list", name="home.assignment.list")
@@ -126,8 +146,8 @@ class AssignmentController extends Controller
             // 将 submission 数据附加到 assignment 中，方便视图使用
             $assignment['submission'] = $submissionData;
             
-            // 强制深度转换整个数据为纯数组（必须在所有数据准备完后执行）
-            $assignment = json_decode(json_encode($assignment), true);
+            // 递归转换所有对象为数组（Phalcon 专用解决方案）
+            $assignment = $this->toArrayRecursive($assignment);
             
             error_log('[Assignment] ID:' . $id . ' Status:' . ($assignment['submission']['status'] ?? 'none'));
 
