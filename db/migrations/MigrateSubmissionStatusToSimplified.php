@@ -46,12 +46,19 @@ echo "\n====================================\n";
 echo "开始迁移提交状态...\n";
 echo "====================================\n\n";
 
+// 检查 grade_status 字段是否存在
+$columnsStmt = $pdo->query("SHOW COLUMNS FROM kg_assignment_submission LIKE 'grade_status'");
+$hasGradeStatus = $columnsStmt->rowCount() > 0;
+
+echo "grade_status 字段" . ($hasGradeStatus ? "存在" : "不存在") . "\n\n";
+
 // 查询所有提交记录
-$stmt = $pdo->query("
-    SELECT id, status, grade_status, score, grader_id 
+$selectSql = "
+    SELECT id, status" . ($hasGradeStatus ? ", grade_status" : "") . ", score, grader_id 
     FROM kg_assignment_submission 
     WHERE delete_time = 0
-");
+";
+$stmt = $pdo->query($selectSql);
 $submissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $totalCount = count($submissions);
@@ -63,11 +70,12 @@ echo "发现提交记录数量: {$totalCount}\n\n";
 foreach ($submissions as $submission) {
     $id = $submission['id'];
     $oldStatus = $submission['status'];
-    $gradeStatus = $submission['grade_status'];
+    $gradeStatus = $hasGradeStatus ? $submission['grade_status'] : 0;
     $score = $submission['score'];
     $graderId = $submission['grader_id'];
 
-    echo "处理提交 #{$id} (status={$oldStatus}, grade_status={$gradeStatus})\n";
+    $statusInfo = $hasGradeStatus ? "status={$oldStatus}, grade_status={$gradeStatus}" : "status={$oldStatus}";
+    echo "处理提交 #{$id} ({$statusInfo})\n";
 
     // 检查是否已经是新格式（字符串状态）
     if (!is_numeric($oldStatus)) {
@@ -80,12 +88,20 @@ foreach ($submissions as $submission) {
     $newStatus = convertStatus($oldStatus, $gradeStatus, $score, $graderId);
 
     try {
-        // 更新状态，同时将 grade_status 设置为 NULL
-        $updateStmt = $pdo->prepare("
-            UPDATE kg_assignment_submission 
-            SET status = ?, grade_status = NULL 
-            WHERE id = ?
-        ");
+        // 根据 grade_status 字段是否存在，使用不同的 UPDATE 语句
+        if ($hasGradeStatus) {
+            $updateStmt = $pdo->prepare("
+                UPDATE kg_assignment_submission 
+                SET status = ?, grade_status = NULL 
+                WHERE id = ?
+            ");
+        } else {
+            $updateStmt = $pdo->prepare("
+                UPDATE kg_assignment_submission 
+                SET status = ? 
+                WHERE id = ?
+            ");
+        }
         $updateStmt->execute([$newStatus, $id]);
 
         $migratedCount++;

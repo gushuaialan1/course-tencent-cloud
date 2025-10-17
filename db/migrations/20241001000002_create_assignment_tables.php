@@ -217,16 +217,10 @@ class CreateAssignmentTables extends AbstractMigration
             'comment' => '批改老师ID'
         ])
         ->addColumn('status', 'enum', [
-            'values' => ['draft', 'submitted', 'graded', 'returned'],
+            'values' => ['draft', 'submitted', 'auto_graded', 'grading', 'graded', 'returned'],
             'default' => 'draft',
             'null' => false,
             'comment' => '提交状态'
-        ])
-        ->addColumn('grade_status', 'enum', [
-            'values' => ['pending', 'grading', 'completed'],
-            'default' => 'pending',
-            'null' => false,
-            'comment' => '评分状态'
         ])
         ->addColumn('submit_time', 'integer', [
             'default' => 0,
@@ -277,7 +271,6 @@ class CreateAssignmentTables extends AbstractMigration
         ->addIndex(['user_id'], ['name' => 'idx_user_id'])
         ->addIndex(['grader_id'], ['name' => 'idx_grader_id'])
         ->addIndex(['status'], ['name' => 'idx_status'])
-        ->addIndex(['grade_status'], ['name' => 'idx_grade_status'])
         ->addIndex(['submit_time'], ['name' => 'idx_submit_time'])
         ->addIndex(['delete_time'], ['name' => 'idx_delete_time'])
         ->create();
