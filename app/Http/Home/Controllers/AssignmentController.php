@@ -95,7 +95,17 @@ class AssignmentController extends Controller
             // 临时调试：记录数据类型
             if (isset($assignment['questions'][0]['options'])) {
                 error_log('DEBUG question options type: ' . gettype($assignment['questions'][0]['options']));
-                error_log('DEBUG question options: ' . json_encode($assignment['questions'][0]['options']));
+            }
+            if (isset($assignment['submission']['content'])) {
+                error_log('DEBUG submission.content type: ' . gettype($assignment['submission']['content']));
+                if (isset($assignment['submission']['content']['answers'])) {
+                    error_log('DEBUG submission.content.answers type: ' . gettype($assignment['submission']['content']['answers']));
+                    $firstAnswer = reset($assignment['submission']['content']['answers']);
+                    if ($firstAnswer !== false) {
+                        error_log('DEBUG first answer type: ' . gettype($firstAnswer));
+                        error_log('DEBUG first answer value: ' . json_encode($firstAnswer));
+                    }
+                }
             }
             
             if (!$assignment) {
