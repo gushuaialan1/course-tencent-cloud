@@ -122,45 +122,90 @@ class AssignmentSubmissionController extends Controller
     public function gradingQueueAction()
     {
         try {
-            $page = max(1, $this->request->getQuery('page', 'int', 1));
-            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
-            
             // 筛选条件
-            $params = [
-                'course_id' => $this->request->getQuery('course_id', 'int'),
-                'assignment_id' => $this->request->getQuery('assignment_id', 'int'),
-                'status' => $this->request->getQuery('status', 'string'),
-                'is_late' => $this->request->getQuery('is_late', 'int'),
-            ];
+            $assignmentId = $this->request->getQuery('assignment_id', 'int');
+            $courseId = $this->request->getQuery('course_id', 'int');
+            $status = $this->request->getQuery('status', 'string');
+            $isLate = $this->request->getQuery('is_late', 'int');
+            
+            // 构建查询条件
+            $conditions = ['delete_time = 0'];
+            $bind = [];
+            
+            if ($assignmentId) {
+                $conditions[] = 'assignment_id = :assignment_id:';
+                $bind['assignment_id'] = $assignmentId;
+            }
+            
+            if ($status) {
+                $conditions[] = 'status = :status:';
+                $bind['status'] = $status;
+            }
             
             // 获取提交列表
-            $submissionRepo = new \App\Repos\AssignmentSubmission();
-            $result = $submissionRepo->paginate(array_merge($params, [
-                'page' => $page,
-                'limit' => $limit
-            ]));
+            $submissions = \App\Models\AssignmentSubmission::find([
+                'conditions' => implode(' AND ', $conditions),
+                'bind' => $bind,
+                'order' => 'id DESC',
+                'limit' => 100
+            ]);
+            
+            // 转换为数组并附加相关信息
+            $submissionsData = [];
+            foreach ($submissions as $submission) {
+                $data = $submission->toArray();
+                
+                // 获取作业信息
+                $assignment = \App\Models\Assignment::findFirst($submission->assignment_id);
+                if ($assignment) {
+                    $data['assignment_title'] = $assignment->title;
+                    $data['course_id'] = $assignment->course_id;
+                }
+                
+                // 获取用户信息
+                $user = \App\Models\User::findFirst($submission->user_id);
+                if ($user) {
+                    $data['user_name'] = $user->name;
+                }
+                
+                $submissionsData[] = $data;
+            }
+            
+            // 如果指定了课程筛选，过滤结果
+            if ($courseId) {
+                $submissionsData = array_filter($submissionsData, function($item) use ($courseId) {
+                    return isset($item['course_id']) && $item['course_id'] == $courseId;
+                });
+            }
             
             // 获取课程列表用于筛选
-            $courseRepo = new \App\Repos\Course();
-            $courses = $courseRepo->findAll(['published' => 1]);
+            $courses = \App\Models\Course::find([
+                'conditions' => 'deleted = 0 AND published = 1',
+                'order' => 'id DESC'
+            ]);
             
             // 获取作业列表用于筛选
-            $assignmentRepo = new \App\Repos\Assignment();
-            $assignments = $assignmentRepo->findAll();
+            $assignments = \App\Models\Assignment::find([
+                'conditions' => 'delete_time = 0',
+                'order' => 'id DESC',
+                'limit' => 100
+            ]);
 
             if ($this->request->isAjax()) {
-                return $this->jsonSuccess($result);
+                return $this->jsonSuccess([
+                    'submissions' => $submissionsData
+                ]);
             }
 
             $this->view->setVars([
-                'submissions' => $result->items,
-                'pager' => $result,
+                'submissions' => $submissionsData,
+                'pager' => null, // 简化版本不分页
                 'courses' => $courses,
                 'assignments' => $assignments,
-                'course_id' => $params['course_id'],
-                'assignment_id' => $params['assignment_id'],
-                'status' => $params['status'],
-                'is_late' => $params['is_late']
+                'course_id' => $courseId,
+                'assignment_id' => $assignmentId,
+                'status' => $status,
+                'is_late' => $isLate
             ]);
             
             return $this->view->pick('assignment/grading-list');

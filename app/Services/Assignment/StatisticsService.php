@@ -24,88 +24,75 @@ class StatisticsService extends Service
      */
     public function getAssignmentStats(int $assignmentId): array
     {
-        // 查询所有提交记录
+        // 获取作业信息
+        $assignment = AssignmentModel::findFirst($assignmentId);
+        if (!$assignment) {
+            return [
+                'total' => 0,
+                'submitted' => 0,
+                'graded' => 0,
+                'pending' => 0,
+                'avg_score' => 0
+            ];
+        }
+        
+        // 获取选课学生总数
+        $totalStudents = 0;
+        if ($assignment->course_id) {
+            $totalStudents = \App\Models\CourseUser::count([
+                'conditions' => 'course_id = :course_id: AND deleted = 0',
+                'bind' => ['course_id' => $assignment->course_id]
+            ]);
+        }
+        
+        // 查询所有提交记录（不包括草稿）
         $submissions = SubmissionModel::find([
-            'conditions' => 'assignment_id = :id: AND delete_time = 0',
-            'bind' => ['id' => $assignmentId]
+            'conditions' => 'assignment_id = :id: AND status != :draft: AND delete_time = 0',
+            'bind' => [
+                'id' => $assignmentId,
+                'draft' => SubmissionModel::STATUS_DRAFT
+            ]
         ]);
 
-        $stats = [
-            'total_submissions' => 0,
-            'draft_count' => 0,
-            'submitted_count' => 0,
-            'grading_count' => 0,
-            'graded_count' => 0,
-            'returned_count' => 0,
-            'average_score' => 0,
-            'highest_score' => 0,
-            'lowest_score' => null,
-            'on_time_count' => 0,
-            'late_count' => 0,
-            'pass_count' => 0,
-            'pass_rate' => 0
-        ];
-
-        if (!$submissions || count($submissions) === 0) {
-            return $stats;
-        }
-
-        $stats['total_submissions'] = count($submissions);
+        $submittedCount = 0;
+        $gradedCount = 0;
+        $pendingCount = 0;
         $gradedScores = [];
-        $passThreshold = 60; // 及格线
 
         foreach ($submissions as $submission) {
+            // 统计已提交（包括所有非草稿状态）
+            $submittedCount++;
+            
             // 按状态统计
-            switch ($submission->status) {
-                case SubmissionModel::STATUS_DRAFT:
-                    $stats['draft_count']++;
-                    break;
-                case SubmissionModel::STATUS_SUBMITTED:
-                    $stats['submitted_count']++;
-                    break;
-                case SubmissionModel::STATUS_AUTO_GRADED:
-                case SubmissionModel::STATUS_GRADING:
-                    $stats['grading_count']++;
-                    break;
-                case SubmissionModel::STATUS_GRADED:
-                    $stats['graded_count']++;
-                    break;
-                case SubmissionModel::STATUS_RETURNED:
-                    $stats['returned_count']++;
-                    break;
-            }
-
-            // 统计迟交
-            if ($submission->is_late) {
-                $stats['late_count']++;
-            } else if ($submission->status !== SubmissionModel::STATUS_DRAFT) {
-                $stats['on_time_count']++;
-            }
-
-            // 统计分数（只统计已批改的）
             if (in_array($submission->status, [
                 SubmissionModel::STATUS_AUTO_GRADED,
                 SubmissionModel::STATUS_GRADED
-            ]) && $submission->score !== null) {
-                $gradedScores[] = $submission->score;
-                
-                // 统计及格人数
-                $percentage = $submission->getScorePercentage();
-                if ($percentage >= $passThreshold) {
-                    $stats['pass_count']++;
+            ])) {
+                $gradedCount++;
+                if ($submission->score !== null) {
+                    $gradedScores[] = $submission->score;
                 }
+            } elseif (in_array($submission->status, [
+                SubmissionModel::STATUS_SUBMITTED,
+                SubmissionModel::STATUS_GRADING
+            ])) {
+                $pendingCount++;
             }
         }
 
-        // 计算分数统计
+        // 计算平均分
+        $avgScore = 0;
         if (!empty($gradedScores)) {
-            $stats['average_score'] = round(array_sum($gradedScores) / count($gradedScores), 2);
-            $stats['highest_score'] = max($gradedScores);
-            $stats['lowest_score'] = min($gradedScores);
-            $stats['pass_rate'] = round(($stats['pass_count'] / count($gradedScores)) * 100, 2);
+            $avgScore = round(array_sum($gradedScores) / count($gradedScores), 1);
         }
 
-        return $stats;
+        return [
+            'total' => $totalStudents,
+            'submitted' => $submittedCount,
+            'graded' => $gradedCount,
+            'pending' => $pendingCount,
+            'avg_score' => $avgScore
+        ];
     }
 
     /**
