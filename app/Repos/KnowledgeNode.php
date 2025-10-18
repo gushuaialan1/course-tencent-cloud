@@ -216,13 +216,17 @@ class KnowledgeNode extends Repository
             $relationModel = new KnowledgeRelationModel();
             $relationModel->assign($relation);
 
+            // 获取关系类型的中文标签
+            $typeLabel = $this->getRelationTypeLabel($relation['relation_type']);
+
             $elements[] = [
                 'group' => 'edges',
                 'data' => [
                     'id' => $relation['id'],
                     'source' => $relation['from_node_id'],
                     'target' => $relation['to_node_id'],
-                    'type' => $relation['relation_type'],
+                    'type' => $typeLabel,  // 使用中文标签
+                    'relation_type' => $relation['relation_type'],  // 保留原始类型供后端使用
                     'weight' => $relation['weight'],
                     'description' => $relation['description'],
                     'properties' => $relationModel->getPropertiesData()
@@ -515,5 +519,24 @@ class KnowledgeNode extends Repository
         }
 
         return $path;
+    }
+
+    /**
+     * 获取关系类型的中文标签
+     *
+     * @param string $relationType
+     * @return string
+     */
+    private function getRelationTypeLabel(string $relationType): string
+    {
+        $labels = [
+            'prerequisite' => '前置',
+            'contains' => '包含',
+            'related' => '相关',
+            'suggests' => '建议',
+            'extends' => '扩展'
+        ];
+
+        return $labels[$relationType] ?? $relationType;
     }
 }
