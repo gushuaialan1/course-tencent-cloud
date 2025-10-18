@@ -101,21 +101,26 @@
                         <span class="layui-badge layui-bg-orange">{{ stats.pending|default(0) }}</span>
                     </td>
                     <td>
-                        {% if stats.total > 0 %}
-                        <?php $completion = round(($stats['submitted'] / $stats['total']) * 100, 1); ?>
+                        <?php 
+                        $statsTotal = is_array($stats) ? $stats['total'] : $stats->total;
+                        $statsSubmitted = is_array($stats) ? $stats['submitted'] : $stats->submitted;
+                        $statsAvgScore = is_array($stats) ? ($stats['avg_score'] ?? 0) : ($stats->avg_score ?? 0);
+                        ?>
+                        <?php if ($statsTotal > 0): ?>
+                        <?php $completion = round(($statsSubmitted / $statsTotal) * 100, 1); ?>
                         <div class="layui-progress" lay-showPercent="true">
                             <div class="layui-progress-bar" lay-percent="<?= $completion ?>%"></div>
                         </div>
-                        {% else %}
+                        <?php else: ?>
                         <span class="kg-text-muted">0%</span>
-                        {% endif %}
+                        <?php endif; ?>
                     </td>
                     <td>
-                        {% if stats.avg_score %}
-                        <strong style="color: #4CAF50;"><?= number_format($stats['avg_score'], 1) ?></strong>
-                        {% else %}
+                        <?php if ($statsAvgScore > 0): ?>
+                        <strong style="color: #4CAF50;"><?= number_format($statsAvgScore, 1) ?></strong>
+                        <?php else: ?>
                         <span class="kg-text-muted">-</span>
-                        {% endif %}
+                        <?php endif; ?>
                     </td>
                     <td>
                         <a href="{{ url({'for':'admin.assignment.grading.list'}) }}?assignment_id={{ item.id }}" 
