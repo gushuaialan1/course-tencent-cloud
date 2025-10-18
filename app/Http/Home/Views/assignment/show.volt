@@ -124,14 +124,11 @@
                             {# 题目答案区 #}
                             <div class="question-answer" style="margin-top: 15px; padding-left: 40px;">
                                 
-                                {# 预处理当前题目的已有答案，确保 in 右操作数始终为数组 #}
-                                {% set rawAnswer =
-                                    assignment.submission and assignment.submission.content is defined
-                                    and assignment.submission.content.answers is defined
-                                    and assignment.submission.content.answers[question.id] is defined
-                                        ? assignment.submission.content.answers[question.id]
-                                        : null
-                                %}
+                                {# 预处理当前题目的已有答案，使用 attribute() 动态访问对象属性 #}
+                                {% set rawAnswer = null %}
+                                {% if assignment.submission and assignment.submission.content is defined and assignment.submission.content.answers is defined %}
+                                    {% set rawAnswer = attribute(assignment.submission.content.answers, question.id) %}
+                                {% endif %}
                                 {% set selectedList = (rawAnswer is iterable) ? rawAnswer : [] %}
                                 {# Volt 不支持 PHP 的 ?:，用显式判断替代 #}
                                 {% set selectedValue = (rawAnswer is iterable) ? '' : (rawAnswer ? rawAnswer : '') %}
@@ -178,7 +175,7 @@
                                         class="layui-textarea" 
                                         style="min-height: {% if question.type == 'essay' %}200px{% else %}100px{% endif %}; resize: vertical;"
                                         lay-filter="question-{{ question.id }}"
-                                        {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>{% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}{{ assignment.submission.content.answers[question.id] }}{% endif %}</textarea>
+                                        {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>{% if rawAnswer %}{{ rawAnswer }}{% endif %}</textarea>
                                     
                                 {% elseif question.type == 'file' %}
                                     {# 文件题 #}
@@ -191,13 +188,13 @@
                                         </button>
                                         <input type="hidden" 
                                                name="answer_{{ question.id }}" 
-                                               value="{% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}{{ assignment.submission.content.answers[question.id] }}{% endif %}" 
+                                               value="{% if rawAnswer %}{{ rawAnswer }}{% endif %}" 
                                                lay-filter="question-{{ question.id }}">
                                         <div class="file-preview" id="file-preview-{{ question.id }}" style="margin-top: 10px;">
-                                            {% if assignment.submission and assignment.submission.content.answers is defined and assignment.submission.content.answers[question.id] %}
+                                            {% if rawAnswer %}
                                                 <div class="file-item" style="padding: 8px 12px; background: #fff; border: 1px solid #E6E6E6; border-radius: 2px; display: inline-block;">
                                                     <i class="layui-icon layui-icon-file"></i>
-                                                    <span>{{ assignment.submission.content.answers[question.id] }}</span>
+                                                    <span>{{ rawAnswer }}</span>
                                                     {% if not (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}
                                                         <a href="javascript:;" class="remove-file" style="color: #FF5722; margin-left: 10px;">删除</a>
                                                     {% endif %}
@@ -212,8 +209,11 @@
                             {# 显示批改结果（如果已批改）#}
                             {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
                                 {% set gradeDetails = assignment.submission.grade_details %}
-                                {% if gradeDetails and gradeDetails[question.id] is defined %}
-                                    {% set questionGrade = gradeDetails[question.id] %}
+                                {% set questionGrade = null %}
+                                {% if gradeDetails %}
+                                    {% set questionGrade = attribute(gradeDetails, question.id) %}
+                                {% endif %}
+                                {% if questionGrade %}
                                     <div class="question-grade-result" style="margin-top: 15px; padding: 12px 15px; background: {% if questionGrade.is_correct %}#E8F5E9{% else %}#FFEBEE{% endif %}; border-left: 3px solid {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; border-radius: 2px;">
                                         <div style="display: flex; align-items: center; justify-content: space-between;">
                                             <div>
