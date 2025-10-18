@@ -211,9 +211,9 @@
                             
                             {# 显示批改结果（如果已批改）#}
                             {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
-                                {% set gradeDetails = object_array(assignment.submission.grade_details) %}
+                                {% set gradeDetails = assignment.submission.grade_details %}
                                 {% if gradeDetails and gradeDetails[question.id] is defined %}
-                                    {% set questionGrade = object_array(gradeDetails[question.id]) %}
+                                    {% set questionGrade = gradeDetails[question.id] %}
                                     <div class="question-grade-result" style="margin-top: 15px; padding: 12px 15px; background: {% if questionGrade.is_correct %}#E8F5E9{% else %}#FFEBEE{% endif %}; border-left: 3px solid {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; border-radius: 2px;">
                                         <div style="display: flex; align-items: center; justify-content: space-between;">
                                             <div>

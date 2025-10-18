@@ -30,31 +30,6 @@ class AssignmentController extends Controller
         $this->submissionService = new SubmissionService();
         $this->statisticsService = new StatisticsService();
     }
-    
-    /**
-     * 递归转换所有对象为数组（解决 Phalcon stdClass 问题）
-     */
-    private function toArrayRecursive($data)
-    {
-        // 如果是对象，转为数组
-        if (is_object($data)) {
-            // 使用 get_object_vars 比 (array) 更可靠
-            $data = get_object_vars($data);
-        }
-        
-        // 如果是数组，递归处理每个元素
-        if (is_array($data)) {
-            $result = [];
-            foreach ($data as $key => $value) {
-                // 递归处理值
-                $result[$key] = $this->toArrayRecursive($value);
-            }
-            return $result;
-        }
-        
-        // 其他类型直接返回
-        return $data;
-    }
 
     /**
      * @Get("/list", name="home.assignment.list")
@@ -150,11 +125,6 @@ class AssignmentController extends Controller
             
             // 将 submission 数据附加到 assignment 中，方便视图使用
             $assignment['submission'] = $submissionData;
-            
-            // 递归转换所有对象为数组（Phalcon 专用解决方案）
-            $assignment = $this->toArrayRecursive($assignment);
-            
-            error_log('[Assignment] ID:' . $id . ' Status:' . ($assignment['submission']['status'] ?? 'none'));
 
             if ($this->request->isAjax()) {
                 return $this->jsonSuccess([
@@ -164,22 +134,7 @@ class AssignmentController extends Controller
                 ]);
             }
 
-            // 双重保险：JSON 序列化后再反序列化，彻底清除 stdClass
-            $assignment = json_decode(json_encode($assignment), true);
-            $canSubmit = json_decode(json_encode($canSubmit), true);
-            
-            // 调试：检查 grade_details 的类型
-            if (isset($assignment['submission']['grade_details'])) {
-                $gradeDetailsType = gettype($assignment['submission']['grade_details']);
-                error_log('[DEBUG] grade_details type: ' . $gradeDetailsType);
-                if (is_array($assignment['submission']['grade_details'])) {
-                    foreach ($assignment['submission']['grade_details'] as $qid => $grade) {
-                        error_log('[DEBUG] grade_details[' . $qid . '] type: ' . gettype($grade));
-                        break; // 只检查第一个
-                    }
-                }
-            }
-            
+            // 注意：不需要强制转换为纯数组，Volt 模板可以同时处理数组和对象
             $this->view->setVars([
                 'assignment' => $assignment,
                 'can_submit' => $canSubmit
