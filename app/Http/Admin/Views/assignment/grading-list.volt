@@ -200,13 +200,24 @@
                         </td>
                         <td>{{ submission.grader_name|default('-') }}</td>
                         <td>
-                            <a class="layui-btn layui-btn-xs layui-btn-normal" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}">
-                                <i class="layui-icon layui-icon-form"></i>批改
-                            </a>
-                            {% if submission.status == 'graded' %}
-                            <button class="layui-btn layui-btn-xs layui-btn-warm btn-regrade" data-id="{{ submission.id }}">
-                                <i class="layui-icon layui-icon-edit"></i>重新批改
-                            </button>
+                            {% if submission.status == 'auto_graded' %}
+                                <!-- 自动批改完成：只能查看，跟前台一样 -->
+                                <a class="layui-btn layui-btn-xs layui-btn-primary" href="{{ url({'for':'home.assignment.show', 'id': submission.assignment_id}) }}" target="_blank">
+                                    <i class="layui-icon layui-icon-file"></i>查看作业
+                                </a>
+                            {% elseif submission.status == 'submitted' %}
+                                <!-- 待批改：显示批改按钮 -->
+                                <a class="layui-btn layui-btn-xs layui-btn-normal" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}">
+                                    <i class="layui-icon layui-icon-form"></i>批改
+                                </a>
+                            {% elseif submission.status == 'grading' or submission.status == 'graded' %}
+                                <!-- 批改中/已完成：显示查看+重新批改 -->
+                                <a class="layui-btn layui-btn-xs layui-btn-primary" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}">
+                                    <i class="layui-icon layui-icon-file"></i>查看
+                                </a>
+                                <button class="layui-btn layui-btn-xs layui-btn-warm btn-regrade" data-id="{{ submission.id }}">
+                                    <i class="layui-icon layui-icon-edit"></i>重新批改
+                                </button>
                             {% endif %}
                         </td>
                     </tr>
