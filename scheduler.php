@@ -13,7 +13,7 @@ $scheduler = new Scheduler();
 
 $script = __DIR__ . '/console.php';
 
-$bin = '/usr/local/bin/php';
+$bin = '/www/server/php/73/bin/php';
 
 $scheduler->php($script, $bin, ['--task' => 'deliver', '--action' => 'main'])
     ->everyMinute();
