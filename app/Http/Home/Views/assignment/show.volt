@@ -124,10 +124,21 @@
                             {# 题目答案区 #}
                             <div class="question-answer" style="margin-top: 15px; padding-left: 40px;">
                                 
-                                {# 预处理当前题目的已有答案，使用 attribute() 动态访问对象属性 #}
+                                {# 预处理当前题目的已有答案 #}
                                 {% set rawAnswer = null %}
                                 {% if assignment.submission and assignment.submission.content is defined and assignment.submission.content.answers is defined %}
-                                    {% set rawAnswer = attribute(assignment.submission.content.answers, question.id) %}
+                                    <?php 
+                                    $rawAnswer = null;
+                                    if (isset($assignment['submission']['content']['answers'])) {
+                                        $answers = $assignment['submission']['content']['answers'];
+                                        $qid = $question['id'];
+                                        if (is_array($answers) && isset($answers[$qid])) {
+                                            $rawAnswer = $answers[$qid];
+                                        } elseif (is_object($answers) && isset($answers->{$qid})) {
+                                            $rawAnswer = $answers->{$qid};
+                                        }
+                                    }
+                                    ?>
                                 {% endif %}
                                 {% set selectedList = (rawAnswer is iterable) ? rawAnswer : [] %}
                                 {# Volt 不支持 PHP 的 ?:，用显式判断替代 #}
@@ -208,11 +219,18 @@
                             
                             {# 显示批改结果（如果已批改）#}
                             {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
-                                {% set gradeDetails = assignment.submission.grade_details %}
-                                {% set questionGrade = null %}
-                                {% if gradeDetails %}
-                                    {% set questionGrade = attribute(gradeDetails, question.id) %}
-                                {% endif %}
+                                <?php 
+                                $questionGrade = null;
+                                if (isset($assignment['submission']['grade_details'])) {
+                                    $gradeDetails = $assignment['submission']['grade_details'];
+                                    $qid = $question['id'];
+                                    if (is_array($gradeDetails) && isset($gradeDetails[$qid])) {
+                                        $questionGrade = $gradeDetails[$qid];
+                                    } elseif (is_object($gradeDetails) && isset($gradeDetails->{$qid})) {
+                                        $questionGrade = $gradeDetails->{$qid};
+                                    }
+                                }
+                                ?>
                                 {% if questionGrade %}
                                     <div class="question-grade-result" style="margin-top: 15px; padding: 12px 15px; background: {% if questionGrade.is_correct %}#E8F5E9{% else %}#FFEBEE{% endif %}; border-left: 3px solid {% if questionGrade.is_correct %}#4CAF50{% else %}#F44336{% endif %}; border-radius: 2px;">
                                         <div style="display: flex; align-items: center; justify-content: space-between;">
