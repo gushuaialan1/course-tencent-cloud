@@ -125,21 +125,18 @@
                             <div class="question-answer" style="margin-top: 15px; padding-left: 40px;">
                                 
                                 {# 预处理当前题目的已有答案 #}
-                                {% set rawAnswer = null %}
-                                {% if assignment.submission and assignment.submission.content is defined and assignment.submission.content.answers is defined %}
-                                    <?php 
-                                    $rawAnswer = null;
-                                    if (isset($assignment['submission']['content']['answers'])) {
-                                        $answers = $assignment['submission']['content']['answers'];
-                                        $qid = $question['id'];
-                                        if (is_array($answers) && isset($answers[$qid])) {
-                                            $rawAnswer = $answers[$qid];
-                                        } elseif (is_object($answers) && isset($answers->{$qid})) {
-                                            $rawAnswer = $answers->{$qid};
-                                        }
+                                <?php 
+                                $rawAnswer = null;
+                                if (isset($assignment->submission->content->answers)) {
+                                    $answers = $assignment->submission->content->answers;
+                                    $qid = $question->id;
+                                    if (is_array($answers) && isset($answers[$qid])) {
+                                        $rawAnswer = $answers[$qid];
+                                    } elseif (is_object($answers) && isset($answers->{$qid})) {
+                                        $rawAnswer = $answers->{$qid};
                                     }
-                                    ?>
-                                {% endif %}
+                                }
+                                ?>
                                 {% set selectedList = (rawAnswer is iterable) ? rawAnswer : [] %}
                                 {# Volt 不支持 PHP 的 ?:，用显式判断替代 #}
                                 {% set selectedValue = (rawAnswer is iterable) ? '' : (rawAnswer ? rawAnswer : '') %}
@@ -221,9 +218,9 @@
                             {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded') %}
                                 <?php 
                                 $questionGrade = null;
-                                if (isset($assignment['submission']['grade_details'])) {
-                                    $gradeDetails = $assignment['submission']['grade_details'];
-                                    $qid = $question['id'];
+                                if (isset($assignment->submission->grade_details)) {
+                                    $gradeDetails = $assignment->submission->grade_details;
+                                    $qid = $question->id;
                                     if (is_array($gradeDetails) && isset($gradeDetails[$qid])) {
                                         $questionGrade = $gradeDetails[$qid];
                                     } elseif (is_object($gradeDetails) && isset($gradeDetails->{$qid})) {
