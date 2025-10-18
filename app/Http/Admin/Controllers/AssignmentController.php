@@ -41,8 +41,6 @@ class AssignmentController extends Controller
 
     /**
      * @Get("/list", name="admin.assignment.list")
-     * @Get("/search", name="admin.assignment.search")
-     * @Get("/stats", name="admin.assignment.stats")
      */
     public function listAction()
     {
@@ -94,6 +92,75 @@ class AssignmentController extends Controller
             
             $this->flashSession->error('获取作业列表失败: ' . $e->getMessage());
             return $this->response->redirect('/admin/index/index');
+        }
+    }
+
+    /**
+     * @Get("/stats", name="admin.assignment.stats")
+     */
+    public function statsAction()
+    {
+        try {
+            // 获取所有作业
+            $assignments = AssignmentModel::find([
+                'conditions' => 'delete_time = 0',
+                'columns' => 'id,title,course_id,status',
+                'order' => 'id DESC'
+            ]);
+            
+            $statsData = [];
+            $totalStats = [
+                'total_assignments' => count($assignments),
+                'total_submissions' => 0,
+                'total_students' => 0,
+                'avg_completion_rate' => 0,
+                'total_graded' => 0,
+                'total_pending' => 0
+            ];
+            
+            foreach ($assignments as $assignment) {
+                $stats = $this->statisticsService->getAssignmentStats($assignment->id);
+                $statsData[] = [
+                    'id' => $assignment->id,
+                    'title' => $assignment->title,
+                    'stats' => $stats
+                ];
+                
+                $totalStats['total_submissions'] += $stats['submitted'] ?? 0;
+                $totalStats['total_students'] += $stats['total'] ?? 0;
+                $totalStats['total_graded'] += $stats['graded'] ?? 0;
+                $totalStats['total_pending'] += $stats['pending'] ?? 0;
+            }
+            
+            // 计算平均完成率
+            if ($totalStats['total_students'] > 0) {
+                $totalStats['avg_completion_rate'] = round(
+                    ($totalStats['total_submissions'] / $totalStats['total_students']) * 100, 
+                    2
+                );
+            }
+
+            if ($this->request->isAjax()) {
+                return $this->jsonSuccess([
+                    'total_stats' => $totalStats,
+                    'assignments_stats' => $statsData
+                ]);
+            }
+
+            $this->view->setVars([
+                'total_stats' => $totalStats,
+                'assignments_stats' => $statsData
+            ]);
+            
+            return $this->view->pick('assignment/stats');
+            
+        } catch (\Exception $e) {
+            if ($this->request->isAjax()) {
+                return $this->jsonError(['msg' => '获取统计数据失败: ' . $e->getMessage()]);
+            }
+            
+            $this->flashSession->error('获取统计数据失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/assignment/list');
         }
     }
 

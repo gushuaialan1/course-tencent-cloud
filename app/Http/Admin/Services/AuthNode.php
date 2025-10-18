@@ -429,9 +429,9 @@ class AuthNode extends Service
                         ],
                         [
                             'id' => '1-9-4',
-                            'title' => '搜索作业',
+                            'title' => '批改作业',
                             'type' => 'menu',
-                            'route' => 'admin.assignment.search',
+                            'route' => 'admin.assignment.grading.list',
                         ],
                         [
                             'id' => '1-9-5',
