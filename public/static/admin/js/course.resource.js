@@ -12,8 +12,8 @@ layui.use(['jquery', 'element', 'layer'], function () {
 
     var myConfig = {
         bucket: $('input[name=bucket]').val(),
-        region: $('input[name=region]').val(),
-        storageClass: 'STANDARD'
+        region: $('input[name=region]').val()
+        // storageClass: 移除此参数，使用存储桶默认存储类型（兼容MAZ多可用区）
     };
 
     var cos = new COS({
@@ -49,7 +49,7 @@ layui.use(['jquery', 'element', 'layer'], function () {
         var keyName = getKeyName(file.name);
         cos.putObject({
             ContentDisposition: 'attachment',
-            StorageClass: myConfig.storageClass,
+            // StorageClass: 移除，使用存储桶默认存储类型（兼容MAZ多可用区）
             Bucket: myConfig.bucket,
             Region: myConfig.region,
             Key: keyName,
