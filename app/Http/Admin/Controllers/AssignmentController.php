@@ -66,7 +66,7 @@ class AssignmentController extends Controller
             // 为每个作业添加统计信息
             foreach ($result['assignments'] as &$assignment) {
                 $stats = $this->statisticsService->getAssignmentStats($assignment['id']);
-                $assignment['stats'] = $stats;
+                $assignment['submission_stats'] = $stats;
             }
 
             if ($this->request->isAjax()) {
