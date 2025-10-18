@@ -171,8 +171,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if submission.status == 'submitted' or submission.status == 'auto_graded' %}
+                            {% if submission.status == 'submitted' %}
                                 <span class="grading-badge badge-pending">待批改</span>
+                            {% elseif submission.status == 'auto_graded' %}
+                                <span class="grading-badge badge-completed">自动批改完成</span>
                             {% elseif submission.status == 'grading' %}
                                 <span class="grading-badge badge-grading">批改中</span>
                             {% elseif submission.status == 'graded' %}

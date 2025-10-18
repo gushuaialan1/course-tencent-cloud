@@ -160,6 +160,39 @@ class AssignmentSubmissionController extends Controller
                 if ($assignment) {
                     $data['assignment_title'] = $assignment->title;
                     $data['course_id'] = $assignment->course_id;
+                    $data['grade_mode'] = $assignment->grade_mode;
+                    
+                    // 分析题型
+                    $content = $assignment->getContentData();
+                    $questionTypes = [];
+                    if (isset($content['questions']) && is_array($content['questions'])) {
+                        foreach ($content['questions'] as $question) {
+                            $questionTypes[] = $question['type'] ?? 'unknown';
+                        }
+                    }
+                    
+                    // 判断作业类型
+                    $uniqueTypes = array_unique($questionTypes);
+                    if (count($uniqueTypes) === 1) {
+                        $singleType = $uniqueTypes[0];
+                        if ($singleType === 'choice') {
+                            $data['assignment_type'] = 'choice';
+                        } elseif ($singleType === 'essay' || $singleType === 'subjective') {
+                            $data['assignment_type'] = 'essay';
+                        } elseif ($singleType === 'file_upload') {
+                            $data['assignment_type'] = 'upload';
+                        } else {
+                            $data['assignment_type'] = 'mixed';
+                        }
+                    } else {
+                        $data['assignment_type'] = 'mixed';
+                    }
+                    
+                    // 获取课程标题
+                    $course = \App\Models\Course::findFirst($assignment->course_id);
+                    if ($course) {
+                        $data['course_title'] = $course->title;
+                    }
                 }
                 
                 // 获取用户信息
@@ -197,9 +230,16 @@ class AssignmentSubmissionController extends Controller
                 ]);
             }
 
+            // 构建简单的分页对象
+            $pager = [
+                'total' => count($submissionsData),
+                'limit' => 100,
+                'page' => 1
+            ];
+
             $this->view->setVars([
                 'submissions' => $submissionsData,
-                'pager' => null, // 简化版本不分页
+                'pager' => (object)$pager,
                 'courses' => $courses,
                 'assignments' => $assignments,
                 'course_id' => $courseId,
