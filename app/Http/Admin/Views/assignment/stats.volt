@@ -102,9 +102,9 @@
                     </td>
                     <td>
                         {% if stats.total > 0 %}
-                        {% set completion = (stats.submitted / stats.total * 100)|number_format(1) %}
+                        <?php $completion = round(($stats['submitted'] / $stats['total']) * 100, 1); ?>
                         <div class="layui-progress" lay-showPercent="true">
-                            <div class="layui-progress-bar" lay-percent="{{ completion }}%"></div>
+                            <div class="layui-progress-bar" lay-percent="<?= $completion ?>%"></div>
                         </div>
                         {% else %}
                         <span class="kg-text-muted">0%</span>
@@ -112,7 +112,7 @@
                     </td>
                     <td>
                         {% if stats.avg_score %}
-                        <strong style="color: #4CAF50;">{{ stats.avg_score|number_format(1) }}</strong>
+                        <strong style="color: #4CAF50;"><?= number_format($stats['avg_score'], 1) ?></strong>
                         {% else %}
                         <span class="kg-text-muted">-</span>
                         {% endif %}

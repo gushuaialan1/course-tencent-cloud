@@ -122,27 +122,55 @@ class AssignmentSubmissionController extends Controller
     public function gradingQueueAction()
     {
         try {
-            $teacherId = $this->authUser->id;
+            $page = max(1, $this->request->getQuery('page', 'int', 1));
+            $limit = min(100, max(10, $this->request->getQuery('limit', 'int', 15)));
             
-            // 获取待批改队列
-            $queue = $this->gradingService->getGradingQueue($teacherId);
+            // 筛选条件
+            $params = [
+                'course_id' => $this->request->getQuery('course_id', 'int'),
+                'assignment_id' => $this->request->getQuery('assignment_id', 'int'),
+                'status' => $this->request->getQuery('status', 'string'),
+                'is_late' => $this->request->getQuery('is_late', 'int'),
+            ];
+            
+            // 获取提交列表
+            $submissionRepo = new \App\Repos\AssignmentSubmission();
+            $result = $submissionRepo->paginate(array_merge($params, [
+                'page' => $page,
+                'limit' => $limit
+            ]));
+            
+            // 获取课程列表用于筛选
+            $courseRepo = new \App\Repos\Course();
+            $courses = $courseRepo->findAll(['published' => 1]);
+            
+            // 获取作业列表用于筛选
+            $assignmentRepo = new \App\Repos\Assignment();
+            $assignments = $assignmentRepo->findAll();
 
             if ($this->request->isAjax()) {
-                return $this->jsonSuccess(['queue' => $queue]);
+                return $this->jsonSuccess($result);
             }
 
             $this->view->setVars([
-                'queue' => $queue
+                'submissions' => $result->items,
+                'pager' => $result,
+                'courses' => $courses,
+                'assignments' => $assignments,
+                'course_id' => $params['course_id'],
+                'assignment_id' => $params['assignment_id'],
+                'status' => $params['status'],
+                'is_late' => $params['is_late']
             ]);
             
-            return $this->view->pick('assignment/submission/grading_queue');
+            return $this->view->pick('assignment/grading-list');
             
         } catch (\Exception $e) {
             if ($this->request->isAjax()) {
-                return $this->jsonError(['msg' => '获取批改队列失败: ' . $e->getMessage()]);
+                return $this->jsonError(['msg' => '获取批改列表失败: ' . $e->getMessage()]);
             }
             
-            $this->flashSession->error('获取批改队列失败: ' . $e->getMessage());
+            $this->flashSession->error('获取批改列表失败: ' . $e->getMessage());
             return $this->response->redirect('/admin/assignment/list');
         }
     }
