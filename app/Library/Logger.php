@@ -32,7 +32,19 @@ class Logger
 
         $level = $config->get('env') != ENV_DEV ? $config->path('log.level') : PhLogger::DEBUG;
 
+        // 确保日志目录存在且有正确权限
+        $logDir = dirname($path);
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+
+        // 创建日志文件
         $logger = new FileLogger($path);
+
+        // 设置日志文件权限为666（所有用户可读写）
+        if (file_exists($path)) {
+            @chmod($path, 0666);
+        }
 
         $logger->setLogLevel($level);
 
