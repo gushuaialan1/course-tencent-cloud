@@ -218,18 +218,24 @@ class DataBoard extends Service
     }
 
     /**
-     * 获取总浏览量（基于课程浏览量）
+     * 获取总浏览量（基于课程学员数）
      *
      * @return int
      */
     protected function getPageViewCount()
     {
-        $result = CourseModel::sum([
-            'column' => 'view_count',
-            'conditions' => 'deleted = 0',
+        // 使用 user_count + fake_user_count 作为浏览量指标
+        $courses = CourseModel::find([
+            'conditions' => 'published = 1 AND deleted = 0',
+            'columns' => 'user_count, fake_user_count',
         ]);
 
-        return $result ? (int)$result : 0;
+        $total = 0;
+        foreach ($courses as $course) {
+            $total += ($course->user_count + $course->fake_user_count);
+        }
+
+        return $total;
     }
 
     /**
