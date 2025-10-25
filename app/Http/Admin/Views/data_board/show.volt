@@ -78,7 +78,7 @@
                             <i class="layui-icon {{ stat.icon }} kg-stat-icon {{ stat.color }}"></i>
                         </div>
                         <div class="kg-stat-value">
-                            {{ stat.display_value|number_format }}<span class="kg-stat-unit">{{ stat.unit }}</span>
+                            {{ stat.display_value }}<span class="kg-stat-unit">{{ stat.unit }}</span>
                         </div>
                         {% if stat.description %}
                             <div class="kg-stat-desc">{{ stat.description }}</div>

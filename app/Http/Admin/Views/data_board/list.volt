@@ -48,13 +48,13 @@
                         {{ stat.stat_name }}
                     </td>
                     <td>
-                        <span class="layui-badge layui-bg-blue">{{ stat.real_value|number_format }}</span>
+                        <span class="layui-badge layui-bg-blue">{{ stat.real_value }}</span>
                     </td>
                     <td>
-                        <span class="layui-badge layui-bg-orange">{{ stat.virtual_value|number_format }}</span>
+                        <span class="layui-badge layui-bg-orange">{{ stat.virtual_value }}</span>
                     </td>
                     <td>
-                        <span class="layui-badge layui-bg-green">{{ stat.display_value|number_format }}</span>
+                        <span class="layui-badge layui-bg-green">{{ stat.display_value }}</span>
                     </td>
                     <td>{{ stat.unit }}</td>
                     <td>{{ stat.sort_order }}</td>

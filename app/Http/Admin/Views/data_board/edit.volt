@@ -40,7 +40,7 @@
         <div class="layui-form-item">
             <label class="layui-form-label">真实数据</label>
             <div class="layui-input-block">
-                <input type="text" class="layui-input layui-disabled" value="{{ stat.real_value|number_format }}" disabled>
+                <input type="text" class="layui-input layui-disabled" value="{{ stat.real_value }}" disabled>
                 <div class="layui-form-mid layui-word-aux">系统自动统计，点击"刷新"按钮更新</div>
             </div>
         </div>
@@ -56,8 +56,8 @@
         <div class="layui-form-item">
             <label class="layui-form-label">最终显示值</label>
             <div class="layui-input-block">
-                <input type="text" class="layui-input layui-disabled" value="{{ stat.display_value|number_format }}" disabled>
-                <div class="layui-form-mid layui-word-aux">真实数据 + 虚拟增量 = {{ stat.real_value|number_format }} + {{ stat.virtual_value|number_format }} = {{ stat.display_value|number_format }}</div>
+                <input type="text" class="layui-input layui-disabled" value="{{ stat.display_value }}" disabled>
+                <div class="layui-form-mid layui-word-aux">真实数据 + 虚拟增量 = {{ stat.real_value }} + {{ stat.virtual_value }} = {{ stat.display_value }}</div>
             </div>
         </div>
 
