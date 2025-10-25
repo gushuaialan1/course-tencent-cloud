@@ -16,11 +16,14 @@
     </div>
 
     <style>
+        body {
+            background: #f5f5f5;
+        }
         .kg-dashboard-header {
             text-align: center;
             padding: 40px 20px 30px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: -20px -20px 30px;
+            margin: 0;
             position: relative;
             overflow: hidden;
         }
@@ -207,20 +210,22 @@
         var $ = layui.jquery;
 
         $('#share-btn').on('click', function() {
-            var shareUrl = window.location.origin + '/admin/data_board/show';
+            var shareUrl = window.location.origin + '/data_board/public';
             
             layer.open({
                 type: 1,
                 title: '分享数据看板',
-                area: ['500px', '200px'],
+                area: ['550px', '240px'],
                 content: '<div style="padding: 20px;">' +
-                    '<p style="margin-bottom: 15px;">复制以下链接分享给他人：</p>' +
+                    '<p style="margin-bottom: 15px; color: #666;">复制以下链接分享给他人（无需登录）：</p>' +
                     '<div class="layui-input-inline" style="width: 100%;">' +
                     '<input type="text" id="share-url-input" class="layui-input" value="' + shareUrl + '" readonly>' +
                     '</div>' +
                     '<div style="margin-top: 15px; text-align: center;">' +
-                    '<button class="layui-btn layui-btn-sm" id="copy-url-btn">复制链接</button>' +
+                    '<button class="layui-btn layui-btn-sm layui-btn-normal" id="copy-url-btn"><i class="layui-icon layui-icon-file"></i> 复制链接</button>' +
+                    '<button class="layui-btn layui-btn-sm" id="preview-url-btn"><i class="layui-icon layui-icon-find"></i> 预览</button>' +
                     '</div>' +
+                    '<p style="margin-top: 12px; font-size: 12px; color: #999; text-align: center;">链接可直接访问，无需登录权限</p>' +
                     '</div>',
                 success: function() {
                     $('#copy-url-btn').on('click', function() {
@@ -228,6 +233,9 @@
                         input.select();
                         document.execCommand('copy');
                         layer.msg('链接已复制到剪贴板', {icon: 1, time: 1500});
+                    });
+                    $('#preview-url-btn').on('click', function() {
+                        window.open(shareUrl, '_blank');
                     });
                 }
             });
