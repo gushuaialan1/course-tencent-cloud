@@ -3,19 +3,64 @@
 {% block content %}
 
     <div class="kg-nav">
-        <div class="kg-nav-left">
-            <span class="layui-breadcrumb">
-                <a><cite>数据看板</cite></a>
-            </span>
-        </div>
-        <div class="kg-nav-right">
+        <div class="kg-nav-right" style="position: absolute; right: 20px; top: 10px;">
             <button class="layui-btn layui-btn-sm layui-btn-normal" id="share-btn">
                 <i class="layui-icon layui-icon-share"></i>分享
             </button>
         </div>
     </div>
 
+    <div class="kg-dashboard-header">
+        <h1 class="kg-dashboard-title">{{ board_title|default('数据看板') }}</h1>
+        <p class="kg-dashboard-subtitle">实时展示平台核心数据指标</p>
+    </div>
+
     <style>
+        .kg-dashboard-header {
+            text-align: center;
+            padding: 40px 20px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: -20px -20px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .kg-dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        .kg-dashboard-title {
+            font-size: 42px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 0 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            letter-spacing: 3px;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(to right, #fff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShine 3s ease-in-out infinite;
+        }
+        @keyframes titleShine {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        .kg-dashboard-subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+            margin: 0;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
         .kg-stats-container {
             padding: 20px;
         }

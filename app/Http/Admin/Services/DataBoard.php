@@ -12,6 +12,7 @@ use App\Models\User as UserModel;
 use App\Models\Learning as LearningModel;
 use App\Models\Review as ReviewModel;
 use App\Models\DataBoardStat as DataBoardStatModel;
+use App\Models\Setting as SettingModel;
 use App\Repos\Course as CourseRepo;
 
 class DataBoard extends Service
@@ -291,6 +292,46 @@ class DataBoard extends Service
         }
 
         return $result;
+    }
+
+    /**
+     * 获取看板标题
+     *
+     * @return string
+     */
+    public function getBoardTitle()
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.title'],
+        ]);
+
+        return $setting ? $setting->item_value : '数据看板';
+    }
+
+    /**
+     * 更新看板标题
+     *
+     * @param string $title
+     * @return bool
+     */
+    public function updateBoardTitle($title)
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.title'],
+        ]);
+
+        if ($setting) {
+            $setting->item_value = $title;
+            return $setting->save();
+        } else {
+            $setting = new SettingModel();
+            $setting->item_key = 'data_board.title';
+            $setting->item_value = $title;
+            $setting->item_name = '数据看板标题';
+            return $setting->create();
+        }
     }
 }
 

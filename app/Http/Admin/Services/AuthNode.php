@@ -1540,6 +1540,12 @@ class AuthNode extends Service
                             'type' => 'button',
                             'route' => 'admin.data_board.refresh_single',
                         ],
+                        [
+                            'id' => '6-3-7',
+                            'title' => '更新标题',
+                            'type' => 'button',
+                            'route' => 'admin.data_board.update_title',
+                        ],
                     ],
                 ],
             ],

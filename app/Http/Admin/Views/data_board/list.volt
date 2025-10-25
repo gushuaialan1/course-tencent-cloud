@@ -19,6 +19,31 @@
     </div>
 </div>
 
+<div class="layui-card" style="margin-bottom: 20px;">
+    <div class="layui-card-header">
+        <i class="layui-icon layui-icon-set-fill"></i> 看板标题设置
+    </div>
+    <div class="layui-card-body">
+        <form class="layui-form" id="title-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 100px;">标题内容</label>
+                <div class="layui-input-block" style="margin-left: 130px;">
+                    <input type="text" name="board_title" id="board_title" class="layui-input" value="{{ board_title|default('数据看板') }}" placeholder="请输入看板标题">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 100px;"></label>
+                <div class="layui-input-block" style="margin-left: 130px;">
+                    <button type="button" class="layui-btn layui-btn-sm" id="save-title-btn">
+                        <i class="layui-icon layui-icon-ok"></i>保存标题
+                    </button>
+                    <span class="layui-word-aux">修改后将在数据看板页面显示</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="layui-card">
     <div class="layui-card-header">
         <i class="layui-icon layui-icon-list"></i> 统计项列表

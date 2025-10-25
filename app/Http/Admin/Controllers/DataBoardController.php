@@ -24,9 +24,11 @@ class DataBoardController extends Controller
         $service = new DataBoardService();
 
         $stats = $service->getStats();
+        $boardTitle = $service->getBoardTitle();
 
         $this->view->pick('data_board/show');
         $this->view->setVar('stats', $stats);
+        $this->view->setVar('board_title', $boardTitle);
     }
 
     /**
@@ -39,9 +41,11 @@ class DataBoardController extends Controller
         $service = new DataBoardService();
 
         $stats = $service->getStatsForEdit();
+        $boardTitle = $service->getBoardTitle();
 
         $this->view->pick('data_board/list');
         $this->view->setVar('stats', $stats);
+        $this->view->setVar('board_title', $boardTitle);
     }
 
     /**
@@ -121,6 +125,28 @@ class DataBoardController extends Controller
         }
 
         return $this->jsonError(['msg' => '刷新失败']);
+    }
+
+    /**
+     * 更新看板标题
+     * 
+     * @Post("/update_title", name="admin.data_board.update_title")
+     */
+    public function updateTitleAction()
+    {
+        $service = new DataBoardService();
+
+        $boardTitle = $this->request->getPost('board_title', 'string');
+
+        if (empty($boardTitle)) {
+            return $this->jsonError(['msg' => '标题不能为空']);
+        }
+
+        if ($service->updateBoardTitle($boardTitle)) {
+            return $this->jsonSuccess(['msg' => '保存成功']);
+        }
+
+        return $this->jsonError(['msg' => '保存失败']);
     }
 }
 
