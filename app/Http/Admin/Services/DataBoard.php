@@ -9,7 +9,7 @@ namespace App\Http\Admin\Services;
 
 use App\Models\Course as CourseModel;
 use App\Models\User as UserModel;
-use App\Models\CourseLearning as CourseLearningModel;
+use App\Models\Learning as LearningModel;
 use App\Models\Review as ReviewModel;
 use App\Models\DataBoardStat as DataBoardStatModel;
 use App\Repos\Course as CourseRepo;
@@ -245,7 +245,7 @@ class DataBoard extends Service
      */
     protected function getLearningCount()
     {
-        return CourseLearningModel::count([
+        return LearningModel::count([
             'conditions' => 'deleted = 0',
         ]);
     }
