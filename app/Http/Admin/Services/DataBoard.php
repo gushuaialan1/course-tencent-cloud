@@ -310,6 +310,21 @@ class DataBoard extends Service
     }
 
     /**
+     * 获取看板副标题
+     *
+     * @return string
+     */
+    public function getBoardSubtitle()
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.subtitle'],
+        ]);
+
+        return $setting ? $setting->item_value : '实时展示平台核心数据指标';
+    }
+
+    /**
      * 更新看板标题
      *
      * @param string $title
@@ -330,6 +345,31 @@ class DataBoard extends Service
             $setting->item_key = 'data_board.title';
             $setting->item_value = $title;
             $setting->item_name = '数据看板标题';
+            return $setting->create();
+        }
+    }
+
+    /**
+     * 更新看板副标题
+     *
+     * @param string $subtitle
+     * @return bool
+     */
+    public function updateBoardSubtitle($subtitle)
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.subtitle'],
+        ]);
+
+        if ($setting) {
+            $setting->item_value = $subtitle;
+            return $setting->save();
+        } else {
+            $setting = new SettingModel();
+            $setting->item_key = 'data_board.subtitle';
+            $setting->item_value = $subtitle;
+            $setting->item_name = '数据看板副标题';
             return $setting->create();
         }
     }

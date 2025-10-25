@@ -26,16 +26,22 @@
     <div class="layui-card-body">
         <form class="layui-form" id="title-form">
             <div class="layui-form-item">
-                <label class="layui-form-label" style="width: 100px;">标题内容</label>
+                <label class="layui-form-label" style="width: 100px;">主标题</label>
                 <div class="layui-input-block" style="margin-left: 130px;">
-                    <input type="text" name="board_title" id="board_title" class="layui-input" value="{{ board_title|default('数据看板') }}" placeholder="请输入看板标题">
+                    <input type="text" name="board_title" id="board_title" class="layui-input" value="{{ board_title|default('数据看板') }}" placeholder="请输入看板主标题">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 100px;">副标题</label>
+                <div class="layui-input-block" style="margin-left: 130px;">
+                    <input type="text" name="board_subtitle" id="board_subtitle" class="layui-input" value="{{ board_subtitle|default('实时展示平台核心数据指标') }}" placeholder="请输入看板副标题">
                 </div>
             </div>
             <div class="layui-form-item">
                 <label class="layui-form-label" style="width: 100px;"></label>
                 <div class="layui-input-block" style="margin-left: 130px;">
                     <button type="button" class="layui-btn layui-btn-sm" id="save-title-btn">
-                        <i class="layui-icon layui-icon-ok"></i>保存标题
+                        <i class="layui-icon layui-icon-ok"></i>保存设置
                     </button>
                     <span class="layui-word-aux">修改后将在数据看板页面显示</span>
                 </div>

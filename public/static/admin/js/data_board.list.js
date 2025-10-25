@@ -3,22 +3,27 @@ layui.use(['layer', 'jquery'], function () {
     var $ = layui.jquery;
     var layer = layui.layer;
 
-    // 保存标题
+    // 保存标题和副标题
     $('#save-title-btn').on('click', function () {
         var title = $('#board_title').val();
+        var subtitle = $('#board_subtitle').val();
+        
         if (!title) {
-            layer.msg('标题不能为空', {icon: 2});
+            layer.msg('主标题不能为空', {icon: 2});
             return;
         }
         
         $.ajax({
             type: 'POST',
             url: '/admin/data_board/update_title',
-            data: {board_title: title},
+            data: {
+                board_title: title,
+                board_subtitle: subtitle
+            },
             dataType: 'json',
             success: function (res) {
                 if (res.code === 0) {
-                    layer.msg('标题保存成功', {icon: 1, time: 1500});
+                    layer.msg('保存成功', {icon: 1, time: 1500});
                 } else {
                     layer.msg(res.msg || '保存失败', {icon: 2});
                 }

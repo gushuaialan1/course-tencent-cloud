@@ -12,7 +12,7 @@
 
     <div class="kg-dashboard-header">
         <h1 class="kg-dashboard-title">{{ board_title|default('数据看板') }}</h1>
-        <p class="kg-dashboard-subtitle">实时展示平台核心数据指标</p>
+        <p class="kg-dashboard-subtitle">{{ board_subtitle|default('实时展示平台核心数据指标') }}</p>
     </div>
 
     <style>
@@ -107,20 +107,24 @@
         .kg-stat-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             margin-bottom: 18px;
+            min-height: 40px;
         }
         .kg-stat-title {
             font-size: 14px;
             color: #666;
             font-weight: 500;
             letter-spacing: 0.5px;
+            line-height: 40px;
         }
         .kg-stat-icon {
             font-size: 40px;
             opacity: 0.15;
             transition: all .3s ease;
             color: var(--card-color);
+            line-height: 1;
+            flex-shrink: 0;
         }
         .kg-stat-value {
             font-size: 36px;

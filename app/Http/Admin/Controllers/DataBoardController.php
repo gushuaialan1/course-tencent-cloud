@@ -25,10 +25,12 @@ class DataBoardController extends Controller
 
         $stats = $service->getStats();
         $boardTitle = $service->getBoardTitle();
+        $boardSubtitle = $service->getBoardSubtitle();
 
         $this->view->pick('data_board/show');
         $this->view->setVar('stats', $stats);
         $this->view->setVar('board_title', $boardTitle);
+        $this->view->setVar('board_subtitle', $boardSubtitle);
     }
 
     /**
@@ -42,10 +44,12 @@ class DataBoardController extends Controller
 
         $stats = $service->getStatsForEdit();
         $boardTitle = $service->getBoardTitle();
+        $boardSubtitle = $service->getBoardSubtitle();
 
         $this->view->pick('data_board/list');
         $this->view->setVar('stats', $stats);
         $this->view->setVar('board_title', $boardTitle);
+        $this->view->setVar('board_subtitle', $boardSubtitle);
     }
 
     /**
@@ -128,7 +132,7 @@ class DataBoardController extends Controller
     }
 
     /**
-     * 更新看板标题
+     * 更新看板标题和副标题
      * 
      * @Post("/update_title", name="admin.data_board.update_title")
      */
@@ -137,12 +141,16 @@ class DataBoardController extends Controller
         $service = new DataBoardService();
 
         $boardTitle = $this->request->getPost('board_title', 'string');
+        $boardSubtitle = $this->request->getPost('board_subtitle', 'string');
 
         if (empty($boardTitle)) {
-            return $this->jsonError(['msg' => '标题不能为空']);
+            return $this->jsonError(['msg' => '主标题不能为空']);
         }
 
-        if ($service->updateBoardTitle($boardTitle)) {
+        $titleResult = $service->updateBoardTitle($boardTitle);
+        $subtitleResult = $service->updateBoardSubtitle($boardSubtitle);
+
+        if ($titleResult && $subtitleResult) {
             return $this->jsonSuccess(['msg' => '保存成功']);
         }
 
