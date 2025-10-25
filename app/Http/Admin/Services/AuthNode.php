@@ -1499,6 +1499,49 @@ class AuthNode extends Service
                         ],
                     ],
                 ],
+                [
+                    'id' => '6-3',
+                    'title' => '数据看板',
+                    'type' => 'menu',
+                    'children' => [
+                        [
+                            'id' => '6-3-1',
+                            'title' => '数据展示',
+                            'type' => 'menu',
+                            'route' => 'admin.data_board.show',
+                        ],
+                        [
+                            'id' => '6-3-2',
+                            'title' => '数据管理',
+                            'type' => 'menu',
+                            'route' => 'admin.data_board.list',
+                        ],
+                        [
+                            'id' => '6-3-3',
+                            'title' => '编辑统计项',
+                            'type' => 'button',
+                            'route' => 'admin.data_board.edit',
+                        ],
+                        [
+                            'id' => '6-3-4',
+                            'title' => '更新统计项',
+                            'type' => 'button',
+                            'route' => 'admin.data_board.update',
+                        ],
+                        [
+                            'id' => '6-3-5',
+                            'title' => '刷新统计',
+                            'type' => 'button',
+                            'route' => 'admin.data_board.refresh',
+                        ],
+                        [
+                            'id' => '6-3-6',
+                            'title' => '刷新单项',
+                            'type' => 'button',
+                            'route' => 'admin.data_board.refresh_single',
+                        ],
+                    ],
+                ],
             ],
         ];
     }
