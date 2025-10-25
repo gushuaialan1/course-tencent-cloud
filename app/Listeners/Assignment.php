@@ -32,8 +32,7 @@ class Assignment extends Listener
      * 作业提交后
      */
     public function afterSubmit(PhEvent $event, $source, SubmissionModel $submission)
-    {
-        // 自动评分 - 使用新的 GradingService
+    {        // 自动评分 - 使用新的 GradingService
         try {
             $gradingService = new \App\Services\Assignment\GradingService();
             $gradingService->autoGrade($submission->id);
