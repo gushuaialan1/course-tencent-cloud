@@ -245,9 +245,7 @@ class DataBoard extends Service
      */
     protected function getLearningCount()
     {
-        return LearningModel::count([
-            'conditions' => 'deleted = 0',
-        ]);
+        return LearningModel::count();
     }
 
     /**
