@@ -432,6 +432,13 @@
 
 {% block link_js %}
 <script>
+// 立即执行测试
+alert('JavaScript 正在执行！如果看到这个弹窗，说明 JS 可以运行');
+console.log('======================================');
+console.log('🚀 批改详情页面 JavaScript 初始化开始');
+console.log('当前时间:', new Date().toLocaleString());
+console.log('======================================');
+
 // 全局错误捕获
 window.addEventListener('error', function(e){
     console.error('🔴 全局错误:', e.message, e.filename, e.lineno, e.colno);
