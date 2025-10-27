@@ -323,7 +323,7 @@ class DataBoardCourse extends Service
     }
 
     /**
-     * 获取课程时长（转换为小时，保留1位小数）
+     * 获取课程时长（转换为小时）
      */
     protected function getDuration($courseId)
     {
@@ -336,8 +336,8 @@ class DataBoardCourse extends Service
         $attrs = is_string($course->attrs) ? json_decode($course->attrs, true) : $course->attrs;
         $durationSeconds = $attrs['duration'] ?? 0;
         
-        // 转换为小时并四舍五入到1位小数，再转回整数（乘以10存储）
-        return round($durationSeconds / 3600, 1) * 10;
+        // 转换为小时并四舍五入到整数
+        return round($durationSeconds / 3600);
     }
 
     /**
@@ -382,7 +382,8 @@ class DataBoardCourse extends Service
             'column' => 'score',
         ]);
 
-        return $result ? round($result, 1) * 10 : 0; // 乘以10存储为整数
+        // 四舍五入到整数
+        return $result ? round($result) : 0;
     }
 
     /**
