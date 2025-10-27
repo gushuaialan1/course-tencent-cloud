@@ -9,6 +9,7 @@ namespace App\Http\Admin\Controllers;
 
 use App\Http\Admin\Services\User as UserService;
 use App\Models\Role as RoleModel;
+use App\Library\Utils\Password as PasswordUtil;
 
 /**
  * @RoutePrefix("/admin/user")
@@ -340,12 +341,10 @@ class UserController extends Controller
                     $account->phone = $phone;
                     $account->email = $email;
                     
-                    // 通过DI容器获取random和security服务
-                    $random = $this->getDI()->getShared('random');
-                    $security = $this->getDI()->getShared('security');
-                    
-                    $account->salt = $random->base64Safe();
-                    $account->password = $security->hash($password . $account->salt);
+                    // 使用项目的密码工具类生成salt和hash密码
+                    $salt = PasswordUtil::salt();
+                    $account->salt = $salt;
+                    $account->password = PasswordUtil::hash($password, $salt);
 
                     if (!$account->create()) {
                         throw new \Exception("第{$lineNumber}行：创建账号失败");
