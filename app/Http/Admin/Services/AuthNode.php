@@ -1289,6 +1289,18 @@ class AuthNode extends Service
                             'type' => 'button',
                             'route' => 'admin.user.online',
                         ],
+                        [
+                            'id' => '4-1-6',
+                            'title' => '下载导入模板',
+                            'type' => 'button',
+                            'route' => 'admin.user.download_template',
+                        ],
+                        [
+                            'id' => '4-1-7',
+                            'title' => '批量导入用户',
+                            'type' => 'button',
+                            'route' => 'admin.user.batch_import',
+                        ],
                     ],
                 ],
                 [

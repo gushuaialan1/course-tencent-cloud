@@ -14,6 +14,12 @@
             </span>
         </div>
         <div class="kg-nav-right">
+            <a class="layui-btn layui-btn-sm layui-btn-normal" href="{{ url({'for':'admin.user.download_template'}) }}">
+                <i class="layui-icon layui-icon-download-circle"></i>下载模板
+            </a>
+            <button class="layui-btn layui-btn-sm layui-btn-warm" id="batch-import-btn">
+                <i class="layui-icon layui-icon-upload"></i>批量导入
+            </button>
             <a class="layui-btn layui-btn-sm" href="{{ add_url }}">
                 <i class="layui-icon layui-icon-add-1"></i>添加用户
             </a>
@@ -113,10 +119,11 @@
 
     <script>
 
-        layui.define(['jquery', 'layer'], function () {
+        layui.define(['jquery', 'layer', 'upload'], function () {
 
             var $ = layui.jquery;
             var layer = layui.layer;
+            var upload = layui.upload;
 
             $('.kg-online').on('click', function () {
                 var url = $(this).data('url');
@@ -126,6 +133,33 @@
                     area: ['800px', '600px'],
                     content: url
                 });
+            });
+
+            // 批量导入功能
+            upload.render({
+                elem: '#batch-import-btn',
+                url: '{{ url({"for":"admin.user.batch_import"}) }}',
+                accept: 'file',
+                exts: 'csv',
+                before: function(obj){
+                    layer.load();
+                },
+                done: function(res){
+                    layer.closeAll('loading');
+                    if(res.code === 0) {
+                        layer.msg('成功导入 ' + res.data.success_count + ' 个用户' + 
+                                  (res.data.fail_count > 0 ? '，失败 ' + res.data.fail_count + ' 个' : ''), 
+                                  {icon: 1, time: 3000}, function(){
+                            location.reload();
+                        });
+                    } else {
+                        layer.alert(res.msg || '导入失败', {icon: 2});
+                    }
+                },
+                error: function(){
+                    layer.closeAll('loading');
+                    layer.msg('上传失败，请稍后重试', {icon: 2});
+                }
             });
 
         });
