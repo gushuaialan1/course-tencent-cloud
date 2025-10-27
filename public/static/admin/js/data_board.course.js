@@ -90,6 +90,21 @@ layui.use(['layer', 'jquery', 'form'], function() {
         });
     }
 
+    // 字数统计功能
+    function updateIntroLength() {
+        var intro = $('#course_intro').val();
+        var length = intro.length;
+        $('#intro-length').text('已输入 ' + length + ' 字');
+    }
+    
+    // 监听简介输入
+    $('#course_intro').on('input', updateIntroLength);
+    
+    // 页面加载时更新一次字数
+    if ($('#course_intro').length > 0) {
+        updateIntroLength();
+    }
+
     // 保存课程看板设置（标题、副标题、简介）
     $('#save-intro-btn').on('click', function() {
         var title = $('#course_title').val();

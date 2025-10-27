@@ -25,7 +25,7 @@ class DataBoardCourse extends Service
         'learning_count' => ['name' => '课程学习人数', 'unit' => '人', 'icon' => 'layui-icon-group', 'color' => 'blue', 'sort' => 1, 'desc' => '学习过该课程的总人数'],
         'view_count' => ['name' => '课程浏览量', 'unit' => '次', 'icon' => 'layui-icon-chart', 'color' => 'green', 'sort' => 2, 'desc' => '课程的总浏览量'],
         'chapter_count' => ['name' => '课程章节数', 'unit' => '章', 'icon' => 'layui-icon-template-1', 'color' => 'orange', 'sort' => 3, 'desc' => '课程的章节总数'],
-        'duration' => ['name' => '课程时长', 'unit' => '小时', 'icon' => 'layui-icon-time', 'color' => 'red', 'sort' => 4, 'desc' => '课程的总时长'],
+        'duration' => ['name' => '课程时长', 'unit' => '分钟', 'icon' => 'layui-icon-time', 'color' => 'red', 'sort' => 4, 'desc' => '课程的总时长（分钟）'],
         'assignment_count' => ['name' => '课程作业数量', 'unit' => '个', 'icon' => 'layui-icon-form', 'color' => 'cyan', 'sort' => 5, 'desc' => '课程的作业总数'],
         'avg_score' => ['name' => '课程作业平均分', 'unit' => '分', 'icon' => 'layui-icon-rate', 'color' => 'purple', 'sort' => 6, 'desc' => '所有作业的平均分数'],
     ];
@@ -324,7 +324,7 @@ class DataBoardCourse extends Service
     }
 
     /**
-     * 获取课程时长（转换为小时）
+     * 获取课程时长（转换为分钟）
      */
     protected function getDuration($courseId)
     {
@@ -355,8 +355,8 @@ class DataBoardCourse extends Service
             }
         }
 
-        // 转换为小时并四舍五入到整数
-        return round($durationSeconds / 3600);
+        // 转换为分钟并四舍五入到整数
+        return round($durationSeconds / 60);
     }
 
     /**

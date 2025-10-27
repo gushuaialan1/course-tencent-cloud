@@ -90,8 +90,11 @@
             <div class="layui-form-item layui-form-text">
                 <label class="layui-form-label" style="width: 100px;">课程简介</label>
                 <div class="layui-input-block" style="margin-left: 130px;">
-                    <textarea name="course_intro" id="course_intro" class="layui-textarea" placeholder="请输入课程简介" rows="4">{{ course_intro }}</textarea>
-                    <div class="layui-word-aux" style="margin-top: 5px;">简介将在课程看板页面显示，未设置时自动从课程信息获取</div>
+                    <textarea name="course_intro" id="course_intro" class="layui-textarea" placeholder="请输入课程简介" rows="8" style="resize: vertical; min-height: 120px;">{{ course_intro }}</textarea>
+                    <div class="layui-word-aux" style="margin-top: 5px;">
+                        简介将在课程看板页面显示，未设置时自动从课程信息获取
+                        <span id="intro-length" style="margin-left: 10px; color: #999;"></span>
+                    </div>
                 </div>
             </div>
             <div class="layui-form-item">
