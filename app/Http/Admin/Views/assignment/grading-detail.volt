@@ -152,7 +152,7 @@
                         
                         {% if content|length > 0 %}
                             {% for index, question in content %}
-                            <div class="question-item" data-question-index="{{ index }}">
+                            <div class="question-item" data-question-index="{{ index }}" data-question-id="{{ question.id }}">
                                 <div class="question-header">
                                     <span>
                                         <span class="question-type">{{ question.type }}</span>
@@ -185,18 +185,19 @@
                                 <div class="answer-section">
                                     <div class="answer-label">学生答案：</div>
                                     <div class="user-answer">
-                                        {% if userContent[index] is defined %}
+                                        {% if userContent[question.id] is defined %}
                                             {% if question.type == 'choice' %}
-                                                {% if userContent[index] is iterable and not (userContent[index] is string) %}
-                                                    {{ userContent[index]|join(', ') }}
+                                                {% if userContent[question.id] is iterable and not (userContent[question.id] is string) %}
+                                                    {{ userContent[question.id]|join(', ') }}
                                                 {% else %}
-                                                    {{ userContent[index] }}
+                                                    {{ userContent[question.id] }}
                                                 {% endif %}
                                             {% elseif question.type == 'file' or question.type == 'upload' %}
                                                 {# 文件类型题目 #}
                                                 <?php
                                                 $fileList = [];
-                                                $answer = $userContent[$index];
+                                                $questionId = $question['id'];
+                                                $answer = isset($userContent[$questionId]) ? $userContent[$questionId] : null;
                                                 if (is_string($answer)) {
                                                     try {
                                                         $fileList = json_decode($answer, true);
@@ -242,37 +243,37 @@
                                                     <span style="color: #999;">未上传文件</span>
                                                 {% endif %}
                                             {% else %}
-                                                {{ userContent[index] }}
+                                                {{ userContent[question.id] }}
                                             {% endif %}
                                         {% else %}
                                             <span style="color: #999;">未作答</span>
                                         {% endif %}
                                     </div>
 
-                                    {% if referenceAnswer[index] is defined %}
+                                    {% if referenceAnswer[question.id] is defined %}
                                     <div style="margin-top: 10px;">
                                         <div class="answer-label">参考答案：</div>
                                         <div class="correct-answer">
                                             {% if question.type == 'choice' %}
-                                                {% if referenceAnswer[index] is iterable and not (referenceAnswer[index] is string) %}
-                                                    {{ referenceAnswer[index]|join(', ') }}
+                                                {% if referenceAnswer[question.id] is iterable and not (referenceAnswer[question.id] is string) %}
+                                                    {{ referenceAnswer[question.id]|join(', ') }}
                                                 {% else %}
-                                                    {{ referenceAnswer[index] }}
+                                                    {{ referenceAnswer[question.id] }}
                                                 {% endif %}
                                             {% else %}
-                                                {{ referenceAnswer[index] }}
+                                                {{ referenceAnswer[question.id] }}
                                             {% endif %}
                                         </div>
                                     </div>
                                     {% endif %}
 
                                     <!-- 分题评分 -->
-                                    {% if question.type == 'essay' or question.type == 'upload' %}
+                                    {% if question.type == 'essay' or question.type == 'upload' or question.type == 'file' %}
                                     <div class="score-input-group">
                                         <span>得分：</span>
                                         <input type="number" 
                                                class="layui-input question-score" 
-                                               name="question_scores[{{ index }}]" 
+                                               name="question_scores[{{ question.id }}]" 
                                                max="{{ question.score|default(0) }}" 
                                                min="0" 
                                                step="0.5" 
@@ -460,8 +461,8 @@ layui.use(['form', 'layer'], function(){
             // 收集分题评分详情
             var gradeDetails = {};
             $('.question-score').each(function(){
-                var questionIndex = $(this).closest('.question-item').data('question-index');
-                gradeDetails[questionIndex] = {
+                var questionId = $(this).closest('.question-item').data('question-id');
+                gradeDetails[questionId] = {
                     score: parseFloat($(this).val()) || 0
                 };
             });

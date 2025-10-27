@@ -329,7 +329,13 @@ layui.use(['jquery', 'layer', 'form', 'element', 'upload'], function () {
             // 文件题
             var fileVal = $('input[name="answer_' + questionId + '"]').val();
             if (fileVal && fileVal.trim() !== '') {
-                answers[questionId] = fileVal.trim();
+                // fileVal 已经是 JSON 字符串，需要解析成对象
+                try {
+                    answers[questionId] = JSON.parse(fileVal.trim());
+                } catch(e) {
+                    // 如果解析失败，保持原值
+                    answers[questionId] = fileVal.trim();
+                }
             }
         });
 
