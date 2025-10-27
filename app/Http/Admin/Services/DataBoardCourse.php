@@ -68,10 +68,12 @@ class DataBoardCourse extends Service
      */
     public function getCourseTitle($courseId)
     {
-        // 先尝试从设置表获取
+        // 每个课程独立存储标题
+        $key = 'data_board.course_title.' . $courseId;
+        
         $setting = SettingModel::findFirst([
             'conditions' => 'item_key = :key:',
-            'bind' => ['key' => 'data_board.course_title'],
+            'bind' => ['key' => $key],
         ]);
 
         if ($setting && !empty($setting->item_value)) {
@@ -88,15 +90,22 @@ class DataBoardCourse extends Service
      */
     public function updateCourseTitle($title)
     {
+        $courseId = $this->getCurrentCourseId();
+        if (!$courseId) {
+            return false;
+        }
+        
+        $key = 'data_board.course_title.' . $courseId;
+        
         $setting = SettingModel::findFirst([
             'conditions' => 'item_key = :key:',
-            'bind' => ['key' => 'data_board.course_title'],
+            'bind' => ['key' => $key],
         ]);
 
         if (!$setting) {
             $setting = new SettingModel();
-            $setting->item_key = 'data_board.course_title';
-            $setting->item_name = '数据看板-课程主标题';
+            $setting->item_key = $key;
+            $setting->item_name = '数据看板-课程主标题-' . $courseId;
         }
 
         $setting->item_value = $title;
@@ -108,9 +117,16 @@ class DataBoardCourse extends Service
      */
     public function getCourseSubtitle()
     {
+        $courseId = $this->getCurrentCourseId();
+        if (!$courseId) {
+            return '课程数据实时展示';
+        }
+        
+        $key = 'data_board.course_subtitle.' . $courseId;
+        
         $setting = SettingModel::findFirst([
             'conditions' => 'item_key = :key:',
-            'bind' => ['key' => 'data_board.course_subtitle'],
+            'bind' => ['key' => $key],
         ]);
 
         return $setting ? $setting->item_value : '课程数据实时展示';
@@ -121,15 +137,22 @@ class DataBoardCourse extends Service
      */
     public function updateCourseSubtitle($subtitle)
     {
+        $courseId = $this->getCurrentCourseId();
+        if (!$courseId) {
+            return false;
+        }
+        
+        $key = 'data_board.course_subtitle.' . $courseId;
+        
         $setting = SettingModel::findFirst([
             'conditions' => 'item_key = :key:',
-            'bind' => ['key' => 'data_board.course_subtitle'],
+            'bind' => ['key' => $key],
         ]);
 
         if (!$setting) {
             $setting = new SettingModel();
-            $setting->item_key = 'data_board.course_subtitle';
-            $setting->item_name = '数据看板-课程副标题';
+            $setting->item_key = $key;
+            $setting->item_name = '数据看板-课程副标题-' . $courseId;
         }
 
         $setting->item_value = $subtitle;
@@ -141,10 +164,12 @@ class DataBoardCourse extends Service
      */
     public function getCourseIntro($courseId)
     {
-        // 先尝试从设置表获取
+        // 每个课程独立存储简介
+        $key = 'data_board.course_intro.' . $courseId;
+        
         $setting = SettingModel::findFirst([
             'conditions' => 'item_key = :key:',
-            'bind' => ['key' => 'data_board.course_intro'],
+            'bind' => ['key' => $key],
         ]);
 
         if ($setting && !empty($setting->item_value)) {
@@ -161,15 +186,22 @@ class DataBoardCourse extends Service
      */
     public function updateCourseIntro($intro)
     {
+        $courseId = $this->getCurrentCourseId();
+        if (!$courseId) {
+            return false;
+        }
+        
+        $key = 'data_board.course_intro.' . $courseId;
+        
         $setting = SettingModel::findFirst([
             'conditions' => 'item_key = :key:',
-            'bind' => ['key' => 'data_board.course_intro'],
+            'bind' => ['key' => $key],
         ]);
 
         if (!$setting) {
             $setting = new SettingModel();
-            $setting->item_key = 'data_board.course_intro';
-            $setting->item_name = '数据看板-课程简介';
+            $setting->item_key = $key;
+            $setting->item_name = '数据看板-课程简介-' . $courseId;
         }
 
         $setting->item_value = $intro;
