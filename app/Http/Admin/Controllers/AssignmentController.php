@@ -477,7 +477,7 @@ class AssignmentController extends Controller
             $output = fopen('php://output', 'w');
 
             // 写入CSV表头
-            fputcsv($output, ['学生ID', '学生姓名', '课程名称', '作业标题', '成绩']);
+            fputcsv($output, ['学生ID', '学生姓名', '课程ID', '课程名称', '作业ID', '作业标题', '成绩']);
 
             // 写入数据
             foreach ($submissions as $submission) {
@@ -489,7 +489,9 @@ class AssignmentController extends Controller
                 fputcsv($output, [
                     $user ? $user->id : $submission->user_id,
                     $user ? $user->name : '-',
+                    $course ? $course->id : ($assignment ? $assignment->course_id : '-'),
                     $course ? $course->title : '-',
+                    $assignment ? $assignment->id : $submission->assignment_id,
                     $assignment ? $assignment->title : '-',
                     $submission->score
                 ]);
