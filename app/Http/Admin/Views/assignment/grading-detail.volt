@@ -153,25 +153,16 @@
                         <!-- 临时调试 -->
                         <div style="background: #ffffcc; padding: 10px; margin: 10px 0; border: 1px solid #ff9800;">
                             <strong>调试信息：</strong><br>
-                            题目数量: {{ content|length }}<br>
                             <?php 
+                            echo '题目数量: ' . count($content) . '<br>';
+                            echo 'content类型: ' . gettype($content) . '<br>';
                             echo 'userContent类型: ' . gettype($userContent) . '<br>';
-                            echo 'userContent内容: <pre>';
+                            echo '<br><strong>content内容:</strong><pre>';
+                            print_r($content);
+                            echo '</pre>';
+                            echo '<br><strong>userContent内容:</strong><pre>';
                             print_r($userContent);
                             echo '</pre>';
-                            if (!empty($content)) {
-                                echo '第一个题目ID: ' . ($content[0]['id'] ?? '未定义') . '<br>';
-                                $firstQuestionId = $content[0]['id'] ?? null;
-                                if ($firstQuestionId) {
-                                    echo "尝试访问 userContent['{$firstQuestionId}']: ";
-                                    var_dump(isset($userContent[$firstQuestionId]));
-                                    if (isset($userContent[$firstQuestionId])) {
-                                        echo '<pre>';
-                                        print_r($userContent[$firstQuestionId]);
-                                        echo '</pre>';
-                                    }
-                                }
-                            }
                             ?>
                         </div>
                         
