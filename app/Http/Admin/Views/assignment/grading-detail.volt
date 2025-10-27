@@ -199,13 +199,6 @@
                                                 $questionId = $question->id;
                                                 $answer = isset($userContent[$questionId]) ? $userContent[$questionId] : null;
                                                 
-                                                // ===== 调试信息开始 =====
-                                                echo '<div style="background: #fff3cd; border: 2px solid #ffc107; padding: 15px; margin: 10px 0; border-radius: 5px;">';
-                                                echo '<strong style="color: #856404;">🔍 调试信息：</strong><br>';
-                                                echo '<strong>题目ID:</strong> ' . htmlspecialchars($questionId) . '<br>';
-                                                echo '<strong>原始答案类型:</strong> ' . gettype($answer) . '<br>';
-                                                echo '<strong>原始答案内容:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($answer, true)) . '</pre>';
-                                                
                                                 if (is_string($answer)) {
                                                     try {
                                                         $decoded = json_decode($answer, true);
@@ -213,23 +206,16 @@
                                                             $fileList = $decoded;
                                                         }
                                                     } catch (\Exception $e) {
-                                                        echo '<strong style="color: red;">JSON解码错误:</strong> ' . htmlspecialchars($e->getMessage()) . '<br>';
                                                         $fileList = [];
                                                     }
                                                 } elseif (is_array($answer)) {
                                                     $fileList = $answer;
                                                 }
                                                 
-                                                echo '<strong>展平前 fileList:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($fileList, true)) . '</pre>';
-                                                
                                                 // 处理嵌套数组结构: [[{...}]] -> [{...}]
                                                 if (!empty($fileList) && is_array($fileList[0]) && isset($fileList[0][0])) {
                                                     $fileList = $fileList[0];
-                                                    echo '<strong style="color: green;">✓ 检测到嵌套数组，已展平</strong><br>';
                                                 }
-                                                
-                                                echo '<strong>最终 fileList:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($fileList, true)) . '</pre>';
-                                                echo '<strong>fileList 数量:</strong> ' . count($fileList) . '<br>';
                                                 
                                                 // 将数组元素转换为对象，以便 Volt 模板可以用对象语法访问
                                                 foreach ($fileList as $key => $item) {
@@ -237,47 +223,32 @@
                                                         $fileList[$key] = (object)$item;
                                                     }
                                                 }
-                                                echo '<strong style="color: green;">✓ 已将数组元素转换为对象</strong><br>';
-                                                
-                                                echo '</div>';
-                                                // ===== 调试信息结束 =====
                                                 ?>
                                                 {% if fileList %}
                                                     <div class="uploaded-files-list">
                                                         {% for file in fileList %}
-                                                            <?php
-                                                            echo '<div style="background: #e7f3ff; border: 1px solid #2196F3; padding: 10px; margin: 5px 0;">';
-                                                            echo '<strong>循环内 file 类型:</strong> ' . gettype($file) . '<br>';
-                                                            echo '<strong>循环内 file 内容:</strong> <pre>' . htmlspecialchars(print_r($file, true)) . '</pre>';
-                                                            if (is_array($file)) {
-                                                                echo '<strong>file["name"]:</strong> ' . (isset($file['name']) ? htmlspecialchars($file['name']) : 'NOT SET') . '<br>';
-                                                                echo '<strong>file["url"]:</strong> ' . (isset($file['url']) ? htmlspecialchars($file['url']) : 'NOT SET') . '<br>';
-                                                                echo '<strong>file["size"]:</strong> ' . (isset($file['size']) ? $file['size'] : 'NOT SET') . '<br>';
-                                                            }
-                                                            echo '</div>';
-                                                            ?>
                                                             <div style="padding: 8px; margin: 5px 0; background: #F5F5F5; border-radius: 2px; display: flex; align-items: center; gap: 10px;">
                                                                 <i class="layui-icon layui-icon-file" style="color: #16BAAA; font-size: 18px;"></i>
                                                                 <div style="flex: 1;">
                                                                     {% if file.url %}
-                                                                        <a href="{{ file.url }}" target="_blank" style="color: #1E9FFF; text-decoration: none; font-weight: bold;">
+                                                                        <a href="{{ file.url }}" style="color: #1E9FFF; text-decoration: none; font-weight: bold;">
                                                                             {{ file.name }}
                                                                         </a>
                                                                     {% else %}
                                                                         <span style="font-weight: bold;">{{ file.name }}</span>
                                                                     {% endif %}
-                                                    {% if file.size %}
-                                                        <?php 
-                                                        $fileSize = is_array($file) ? $file['size'] : (is_object($file) ? $file->size : 0);
-                                                        $fileSizeKb = round($fileSize / 1024, 2); 
-                                                        ?>
-                                                        <span style="color: #999; font-size: 12px; margin-left: 10px;">
-                                                            ({{ fileSizeKb }} KB)
-                                                        </span>
-                                                    {% endif %}
+                                                                    {% if file.size %}
+                                                                        <?php 
+                                                                        $fileSize = is_object($file) ? $file->size : 0;
+                                                                        $fileSizeKb = round($fileSize / 1024, 2); 
+                                                                        ?>
+                                                                        <span style="color: #999; font-size: 12px; margin-left: 10px;">
+                                                                            ({{ fileSizeKb }} KB)
+                                                                        </span>
+                                                                    {% endif %}
                                                                 </div>
                                                                 {% if file.url %}
-                                                                    <a href="{{ file.url }}" class="layui-btn layui-btn-xs" target="_blank" download>
+                                                                    <a href="{{ file.url }}" class="layui-btn layui-btn-xs" download>
                                                                         <i class="layui-icon layui-icon-download-circle"></i> 下载
                                                                     </a>
                                                                 {% endif %}
