@@ -145,11 +145,10 @@
                 <div class="layui-card" style="margin-top: 15px;">
                     <div class="layui-card-header">学生答题详情</div>
                     <div class="layui-card-body">
-                        {% set assignmentData = assignment.getContentData() %}
-                        {% set content = assignmentData.questions %}
+                        {% set content = assignment.questions is defined ? assignment.questions : [] %}
                         {% set submissionData = submission.getContentData() %}
-                        {% set userContent = submissionData.answers %}
-                        {% set referenceAnswer = assignment.getReferenceAnswerData() %}
+                        {% set userContent = submissionData.answers is defined ? submissionData.answers : [] %}
+                        {% set referenceAnswer = assignment.reference_answer is defined ? assignment.reference_answer : [] %}
                         
                         {% if content|length > 0 %}
                             {% for index, question in content %}
