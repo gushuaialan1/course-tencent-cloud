@@ -412,7 +412,7 @@
 
                     <div class="layui-form-item">
                         <div class="layui-input-block">
-                            <button type="button" class="layui-btn layui-btn-fluid" lay-submit lay-filter="submit-grade">
+                            <button type="button" class="layui-btn layui-btn-fluid" id="btn-submit-grade">
                                 <i class="layui-icon layui-icon-ok"></i>提交批改
                             </button>
                             {% if assignment.grade_mode == 'auto' %}
@@ -491,15 +491,32 @@ layui.use(['form', 'layer'], function(){
         });
     });
 
-    // 提交批改表单
-    console.log('🟡 开始绑定表单提交事件 submit(submit-grade)');
+    // 提交批改表单 - 改用直接绑定按钮点击事件
+    console.log('🟡 开始绑定提交按钮点击事件');
     
-    form.on('submit(submit-grade)', function(data){
-        console.log('🔵 表单提交事件触发');
-        console.log('表单数据:', data.field);
+    $('#btn-submit-grade').on('click', function(){
+        console.log('🔵 提交按钮被点击');
         
-        // 立即阻止表单默认提交
-        var formData = data.field;
+        // 验证必填字段
+        var score = $('#total-score').val();
+        if(!score || score === ''){
+            layer.msg('请输入总分', {icon: 2});
+            return false;
+        }
+        
+        // 收集表单数据
+        var formData = {
+            score: score,
+            feedback: $('textarea[name="feedback"]').val()
+        };
+        
+        // 如果有混合评分模式的手动评分
+        var manualScore = $('#manual-score').val();
+        if(manualScore){
+            formData.manual_score = manualScore;
+        }
+        
+        console.log('表单数据:', formData);
         
         layer.confirm('确定要提交批改吗？提交后学生将收到成绩通知', function(index){
             console.log('✅ 用户点击了确认');
@@ -568,13 +585,10 @@ layui.use(['form', 'layer'], function(){
             console.log('❌ 用户点击了取消');
             layer.close(index);
         });
-        
-        console.log('🔴 返回false，阻止表单默认提交');
-        return false; // 阻止表单自动提交
     });
     
     console.log('✅ 所有事件监听器绑定完成');
-    console.log('页面上的提交按钮:', $('button[lay-filter="submit-grade"]').length);
+    console.log('页面上的提交按钮:', $('#btn-submit-grade').length);
 });
 
 console.log('🟢 页面 JavaScript 执行完成，等待 Layui 模块加载...');
