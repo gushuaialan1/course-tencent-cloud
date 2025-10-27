@@ -147,28 +147,8 @@
                     <div class="layui-card-body">
                         {% set content = assignment.questions is defined ? assignment.questions : [] %}
                         {% set submissionData = submission.getContentData() %}
-                        {% set userContent = submissionData.answers is defined ? submissionData.answers : [] %}
+                        {% set userContent = submissionData['answers'] is defined ? submissionData['answers'] : [] %}
                         {% set referenceAnswer = assignment.reference_answer is defined ? assignment.reference_answer : [] %}
-                        
-                        <!-- 临时调试 -->
-                        <div style="background: #ffffcc; padding: 10px; margin: 10px 0; border: 1px solid #ff9800;">
-                            <strong>调试信息：</strong><br>
-                            <?php 
-                            echo '题目数量: ' . count($content) . '<br>';
-                            echo 'content类型: ' . gettype($content) . '<br>';
-                            echo 'submissionData类型: ' . gettype($submissionData) . '<br>';
-                            echo 'userContent类型: ' . gettype($userContent) . '<br>';
-                            echo '<br><strong>submission->content原始值:</strong><pre>';
-                            echo htmlspecialchars($submission->content);
-                            echo '</pre>';
-                            echo '<br><strong>submissionData内容:</strong><pre>';
-                            print_r($submissionData);
-                            echo '</pre>';
-                            echo '<br><strong>userContent内容:</strong><pre>';
-                            print_r($userContent);
-                            echo '</pre>';
-                            ?>
-                        </div>
                         
                         {% if content|length > 0 %}
                             {% for index, question in content %}
@@ -216,7 +196,7 @@
                                                 {# 文件类型题目 #}
                                                 <?php
                                                 $fileList = [];
-                                                $questionId = $question['id'];
+                                                $questionId = $question->id;
                                                 $answer = isset($userContent[$questionId]) ? $userContent[$questionId] : null;
                                                 if (is_string($answer)) {
                                                     try {
@@ -244,12 +224,12 @@
                                                                     {% else %}
                                                                         <span style="font-weight: bold;">{{ file.name }}</span>
                                                                     {% endif %}
-                                                                    {% if file.size %}
-                                                                        <?php $fileSizeKb = round($file['size'] / 1024, 2); ?>
-                                                                        <span style="color: #999; font-size: 12px; margin-left: 10px;">
-                                                                            ({{ fileSizeKb }} KB)
-                                                                        </span>
-                                                                    {% endif %}
+                                                    {% if file.size %}
+                                                        <?php $fileSizeKb = round($file->size / 1024, 2); ?>
+                                                        <span style="color: #999; font-size: 12px; margin-left: 10px;">
+                                                            ({{ fileSizeKb }} KB)
+                                                        </span>
+                                                    {% endif %}
                                                                 </div>
                                                                 {% if file.url %}
                                                                     <a href="{{ file.url }}" class="layui-btn layui-btn-xs" target="_blank" download>
