@@ -550,8 +550,12 @@ layui.use(['form', 'layer'], function(){
                 type: 'POST',
                 data: postData,
                 dataType: 'json',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 beforeSend: function(xhr){
                     console.log('📤 正在发送AJAX请求...');
+                    console.log('CSRF Token:', $('meta[name="csrf-token"]').attr('content'));
                 },
                 success: function(res){
                     console.log('✅ AJAX成功响应:', res);
