@@ -381,6 +381,9 @@ layui.use(['jquery', 'layer', 'form', 'element', 'upload'], function () {
                 layer.closeAll('loading');
                 $uploadBtn.remove();
                 
+                // 调试：打印返回数据
+                console.log('Upload response:', res);
+                
                 if (res.code === 0 && res.data) {
                     // 添加到已上传列表
                     uploadedFiles.push({
@@ -400,12 +403,16 @@ layui.use(['jquery', 'layer', 'form', 'element', 'upload'], function () {
                     
                     layer.msg('上传成功', { icon: 1 });
                 } else {
-                    layer.msg(res.msg || '上传失败', { icon: 2 });
+                    // 显示详细错误信息
+                    var errorMsg = res.msg || res.message || '上传失败';
+                    console.error('Upload failed:', res);
+                    layer.msg(errorMsg, { icon: 2 });
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
                 layer.closeAll('loading');
                 $uploadBtn.remove();
+                console.error('Upload error:', xhr.responseText);
                 layer.msg('上传失败，请重试', { icon: 2 });
             }
         });
