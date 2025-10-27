@@ -35,7 +35,7 @@ layui.use(['layer', 'jquery'], function () {
     });
 
     // 刷新全部真实数据
-    $('#refresh-all-btn').on('click', function () {
+    $('#refresh-all-btn, #refresh-all-btn2').on('click', function () {
         layer.confirm('确认要刷新全部统计项的真实数据吗？', function (index) {
             $.ajax({
                 type: 'POST',

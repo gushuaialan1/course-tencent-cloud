@@ -11,13 +11,21 @@
     </div>
     <div class="kg-nav-right">
         <a class="layui-btn layui-btn-sm layui-btn-normal" href="{{ url({'for':'admin.data_board.show'}) }}">
-            <i class="layui-icon layui-icon-chart"></i>查看看板
+            <i class="layui-icon layui-icon-chart"></i>查看全局看板
         </a>
-        <button class="layui-btn layui-btn-sm" id="refresh-all-btn">
-            <i class="layui-icon layui-icon-refresh"></i>刷新全部真实数据
-        </button>
+        <a class="layui-btn layui-btn-sm layui-btn-warm" href="{{ url({'for':'admin.data_board.show_course'}) }}">
+            <i class="layui-icon layui-icon-chart-screen"></i>查看课程看板
+        </a>
     </div>
 </div>
+
+<div class="layui-tab layui-tab-brief" lay-filter="data-board-tab">
+    <ul class="layui-tab-title">
+        <li class="layui-this">全局统计</li>
+        <li><a href="{{ url({'for':'admin.data_board.course'}) }}">课程统计</a></li>
+    </ul>
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
 
 <div class="layui-card" style="margin-bottom: 20px;">
     <div class="layui-card-header">
@@ -113,6 +121,25 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="layui-card" style="margin-top: 20px;">
+    <div class="layui-card-header">
+        <i class="layui-icon layui-icon-tips"></i> 操作提示
+    </div>
+    <div class="layui-card-body">
+        <div class="layui-text">
+            <ul>
+                <li>点击<button class="layui-btn layui-btn-xs" id="refresh-all-btn2"><i class="layui-icon layui-icon-refresh"></i>刷新全部真实数据</button>可刷新所有统计项的真实数据</li>
+                <li>虚拟增量值会和真实数据相加，得到最终显示值</li>
+                <li>主标题和副标题会在数据看板展示页面显示</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        </div>
     </div>
 </div>
 

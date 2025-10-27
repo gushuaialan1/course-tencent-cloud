@@ -7,6 +7,8 @@
 
 namespace App\Http\Home\Services;
 
+use App\Models\Course as CourseModel;
+use App\Models\DataBoardCourseStat as CourseStatModel;
 use App\Models\DataBoardStat as DataBoardStatModel;
 use App\Models\Setting as SettingModel;
 

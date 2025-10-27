@@ -35,5 +35,44 @@ class DataBoardController extends Controller
             'title' => $this->getDI()->getShared('config')->get('site.title', '在线教育平台')
         ]);
     }
+
+    /**
+     * 公开访问的课程数据看板页面
+     * 
+     * @Get("/course", name="home.data_board.course")
+     */
+    public function courseAction()
+    {
+        $service = new \App\Http\Home\Services\DataBoardCourse();
+        $globalService = new DataBoardService();
+
+        $courseId = $service->getCurrentCourseId();
+        
+        if (!$courseId) {
+            $this->view->pick('data_board/course_empty');
+            return;
+        }
+
+        $courseInfo = $service->getCourseInfo($courseId);
+        if (!$courseInfo) {
+            $this->view->pick('data_board/course_empty');
+            return;
+        }
+
+        $stats = $service->getPublicStats($courseId);
+        $courseIntro = $service->getCourseIntro($courseId);
+        $boardTitle = $globalService->getBoardTitle();
+        $boardSubtitle = $globalService->getBoardSubtitle();
+
+        $this->view->pick('data_board/course_public');
+        $this->view->setVar('course_info', $courseInfo);
+        $this->view->setVar('stats', $stats);
+        $this->view->setVar('course_intro', $courseIntro);
+        $this->view->setVar('board_title', $boardTitle);
+        $this->view->setVar('board_subtitle', $boardSubtitle);
+        $this->view->setVar('site_info', [
+            'title' => $this->getDI()->getShared('config')->get('site.title', '在线教育平台')
+        ]);
+    }
 }
 
