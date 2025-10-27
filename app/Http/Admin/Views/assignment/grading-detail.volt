@@ -230,6 +230,15 @@
                                                 
                                                 echo '<strong>最终 fileList:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($fileList, true)) . '</pre>';
                                                 echo '<strong>fileList 数量:</strong> ' . count($fileList) . '<br>';
+                                                
+                                                // 将数组元素转换为对象，以便 Volt 模板可以用对象语法访问
+                                                foreach ($fileList as $key => $item) {
+                                                    if (is_array($item)) {
+                                                        $fileList[$key] = (object)$item;
+                                                    }
+                                                }
+                                                echo '<strong style="color: green;">✓ 已将数组元素转换为对象</strong><br>';
+                                                
                                                 echo '</div>';
                                                 // ===== 调试信息结束 =====
                                                 ?>
