@@ -339,8 +339,13 @@ class UserController extends Controller
                     $account = new \App\Models\Account();
                     $account->phone = $phone;
                     $account->email = $email;
-                    $account->salt = $this->random->base64Safe();
-                    $account->password = $this->security->hash($password . $account->salt);
+                    
+                    // 通过DI容器获取random和security服务
+                    $random = $this->getDI()->getShared('random');
+                    $security = $this->getDI()->getShared('security');
+                    
+                    $account->salt = $random->base64Safe();
+                    $account->password = $security->hash($password . $account->salt);
 
                     if (!$account->create()) {
                         throw new \Exception("第{$lineNumber}行：创建账号失败");
