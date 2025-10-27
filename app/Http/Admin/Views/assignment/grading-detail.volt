@@ -430,7 +430,7 @@
 
 {% endblock %}
 
-{% block link_js %}
+{% block inline_js %}
 <script>
 console.log('======================================');
 console.log('🚀 批改详情页面 JavaScript 初始化开始');
@@ -539,8 +539,11 @@ layui.use(['form', 'layer'], function(){
             }
             console.log('准备提交的数据:', postData);
             
-            var ajaxUrl = '{{ url({"for":"admin.assignment.submission.grade", "id": submission.id}) }}';
+            var ajaxUrl = '{{ url({"for":"admin.assignment.submission.do_grade"}) }}';
             console.log('AJAX URL:', ajaxUrl);
+            
+            // 添加提交ID到POST数据中
+            postData.submission_id = submissionId;
             
             $.ajax({
                 url: ajaxUrl,
