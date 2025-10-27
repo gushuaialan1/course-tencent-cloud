@@ -504,46 +504,37 @@ layui.use(['form', 'layer'], function(){
             return false;
         }
         
+        // 收集分题评分详情
+        var grading = {};
+        $('.question-score').each(function(){
+            var questionId = $(this).closest('.question-item').data('question-id');
+            var questionScore = parseFloat($(this).val()) || 0;
+            grading[questionId] = {
+                score: questionScore
+            };
+        });
+        console.log('分题评分详情:', grading);
+        
         // 收集表单数据
-        var formData = {
-            score: score,
-            feedback: $('textarea[name="feedback"]').val()
-        };
+        var feedback = $('textarea[name="feedback"]').val();
         
-        // 如果有混合评分模式的手动评分
-        var manualScore = $('#manual-score').val();
-        if(manualScore){
-            formData.manual_score = manualScore;
-        }
-        
-        console.log('表单数据:', formData);
+        console.log('总分:', score);
+        console.log('反馈:', feedback);
         
         layer.confirm('确定要提交批改吗？提交后学生将收到成绩通知', function(index){
             console.log('✅ 用户点击了确认');
             layer.close(index);
             layer.msg('提交中...', {icon: 16, shade: 0.3, time: 0});
             
-            // 收集分题评分详情
-            var gradeDetails = {};
-            $('.question-score').each(function(){
-                var questionId = $(this).closest('.question-item').data('question-id');
-                gradeDetails[questionId] = {
-                    score: parseFloat($(this).val()) || 0
-                };
-            });
-            console.log('分题评分详情:', gradeDetails);
-            
-            var postData = $.extend({}, formData);
-            if(Object.keys(gradeDetails).length > 0){
-                postData.grade_details = JSON.stringify(gradeDetails);
-            }
+            var postData = {
+                submission_id: submissionId,
+                grading: JSON.stringify(grading),
+                feedback: feedback
+            };
             console.log('准备提交的数据:', postData);
             
             var ajaxUrl = '{{ url({"for":"admin.assignment.submission.do_grade"}) }}';
             console.log('AJAX URL:', ajaxUrl);
-            
-            // 添加提交ID到POST数据中
-            postData.submission_id = submissionId;
             
             $.ajax({
                 url: ajaxUrl,

@@ -169,6 +169,50 @@ class SubmissionValidator
     }
 
     /**
+     * 验证批改数据
+     * 
+     * @param array $data 批改数据，包含 submission_id 和 grading
+     * @return array ['valid' => bool, 'errors' => array]
+     */
+    public function validateGrading(array $data): array
+    {
+        $errors = [];
+        
+        // 验证 submission_id
+        if (empty($data['submission_id']) || !is_numeric($data['submission_id'])) {
+            $errors['submission_id'] = '提交ID无效';
+        }
+        
+        // 验证 grading
+        if (empty($data['grading'])) {
+            $errors['grading'] = '批改数据不能为空';
+        } elseif (!is_array($data['grading'])) {
+            $errors['grading'] = '批改数据格式错误';
+        } else {
+            // 验证每个题目的批改数据
+            foreach ($data['grading'] as $questionId => $gradeInfo) {
+                if (!is_array($gradeInfo)) {
+                    $errors[$questionId] = "题目 {$questionId} 的批改数据格式错误";
+                    continue;
+                }
+                
+                if (!isset($gradeInfo['score']) || !is_numeric($gradeInfo['score'])) {
+                    $errors[$questionId] = "题目 {$questionId} 的分数无效";
+                }
+                
+                if (isset($gradeInfo['score']) && $gradeInfo['score'] < 0) {
+                    $errors[$questionId] = "题目 {$questionId} 的分数不能为负数";
+                }
+            }
+        }
+        
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors
+        ];
+    }
+
+    /**
      * 检查值是否为空
      */
     private function isEmpty($value): bool
