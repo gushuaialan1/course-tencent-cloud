@@ -75,15 +75,34 @@ class UploadController extends Controller
     public function uploadFileAction()
     {
         try {
+            // 检查是否有文件
+            if (!$this->request->hasFiles()) {
+                return $this->jsonError(['msg' => '未检测到上传文件']);
+            }
+            
+            $files = $this->request->getUploadedFiles();
+            if (empty($files)) {
+                return $this->jsonError(['msg' => '文件列表为空']);
+            }
+            
+            $uploadedFile = $files[0];
+            
+            // 调试信息
+            $debugInfo = [
+                'name' => $uploadedFile->getName(),
+                'size' => $uploadedFile->getSize(),
+                'type' => $uploadedFile->getRealType(),
+                'temp' => $uploadedFile->getTempName(),
+            ];
+            
             $service = new StorageService();
-
             $file = $service->uploadResourceFile();
 
             if (!$file) {
-                // 记录详细日志
-                $logger = $this->getLogger('upload');
-                $logger->error('Upload resource file returned false');
-                return $this->jsonError(['msg' => '文件处理失败，请检查文件格式']);
+                return $this->jsonError([
+                    'msg' => '文件处理失败',
+                    'debug' => $debugInfo
+                ]);
             }
 
             // 获取文件访问URL
@@ -113,8 +132,6 @@ class UploadController extends Controller
             return $this->jsonError(['msg' => '文件上传失败：' . $e->getMessage()]);
         } catch (\Exception $e) {
             // 其他错误，返回详细信息
-            $logger = $this->getLogger('upload');
-            $logger->error('Upload exception: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             return $this->jsonError(['msg' => '上传失败：' . $e->getMessage()]);
         }
     }
