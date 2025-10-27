@@ -93,25 +93,27 @@ layui.use(['layer', 'jquery', 'form'], function() {
     // 字数统计功能
     function updateIntroLength() {
         var intro = $('#course_intro').val();
-        var length = intro.length;
-        $('#intro-length').text('已输入 ' + length + ' 字');
+        if (intro !== undefined) {
+            var length = intro.length;
+            $('#intro-length').text('已输入 ' + length + ' 字');
+        }
     }
     
-    // 监听简介输入
-    $('#course_intro').on('input', updateIntroLength);
+    // 使用事件委托监听简介输入
+    $(document).on('input', '#course_intro', updateIntroLength);
     
     // 页面加载时更新一次字数
     if ($('#course_intro').length > 0) {
         updateIntroLength();
     }
 
-    // 保存课程看板设置（标题、副标题、简介）
-    $('#save-intro-btn').on('click', function() {
+    // 保存课程看板设置（标题、副标题、简介）- 使用事件委托
+    $(document).on('click', '#save-intro-btn', function() {
         var title = $('#course_title').val();
         var subtitle = $('#course_subtitle').val();
         var intro = $('#course_intro').val();
         
-        if (!title) {
+        if (!title || title.trim() === '') {
             layer.msg('主标题不能为空', {icon: 2});
             return;
         }
@@ -138,16 +140,16 @@ layui.use(['layer', 'jquery', 'form'], function() {
         });
     });
 
-    // 虚拟值输入变化时自动更新显示值
-    $('.virtual-input').on('input', function() {
+    // 虚拟值输入变化时自动更新显示值 - 使用事件委托
+    $(document).on('input', '.virtual-input', function() {
         var row = $(this).closest('tr');
         var realValue = parseInt(row.find('.display-value').data('real')) || 0;
         var virtualValue = parseInt($(this).val()) || 0;
         row.find('.display-value').text(realValue + virtualValue);
     });
 
-    // 保存统计项
-    $('.save-stat-btn').on('click', function() {
+    // 保存统计项 - 使用事件委托
+    $(document).on('click', '.save-stat-btn', function() {
         var statId = $(this).data('id');
         var row = $(this).closest('tr');
         var virtualValue = row.find('.virtual-input').val();
@@ -175,8 +177,8 @@ layui.use(['layer', 'jquery', 'form'], function() {
         });
     });
 
-    // 刷新单个统计项
-    $('.refresh-course-single-btn').on('click', function() {
+    // 刷新单个统计项 - 使用事件委托
+    $(document).on('click', '.refresh-course-single-btn', function() {
         var statId = $(this).data('id');
         var btn = $(this);
         var row = btn.closest('tr');
@@ -204,8 +206,8 @@ layui.use(['layer', 'jquery', 'form'], function() {
         });
     });
 
-    // 刷新所有统计项
-    $('#refresh-course-all-btn').on('click', function() {
+    // 刷新所有统计项 - 使用事件委托
+    $(document).on('click', '#refresh-course-all-btn', function() {
         layer.confirm('确定要刷新所有课程统计项的真实数据吗？', {
             btn: ['确定', '取消']
         }, function(index) {
