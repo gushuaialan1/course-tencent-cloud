@@ -80,7 +80,10 @@ class UploadController extends Controller
             $file = $service->uploadResourceFile();
 
             if (!$file) {
-                return $this->jsonError(['msg' => '上传文件失败']);
+                // 记录详细日志
+                $logger = $this->getLogger('upload');
+                $logger->error('Upload resource file returned false');
+                return $this->jsonError(['msg' => '文件处理失败，请检查文件格式']);
             }
 
             // 获取文件访问URL
@@ -102,7 +105,16 @@ class UploadController extends Controller
                 'msg' => '上传成功'
             ]);
             
+        } catch (\InvalidArgumentException $e) {
+            // 文件类型不允许
+            return $this->jsonError(['msg' => '不支持此文件类型：' . $e->getMessage()]);
+        } catch (\RuntimeException $e) {
+            // 上传到存储失败
+            return $this->jsonError(['msg' => '文件上传失败：' . $e->getMessage()]);
         } catch (\Exception $e) {
+            // 其他错误，返回详细信息
+            $logger = $this->getLogger('upload');
+            $logger->error('Upload exception: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             return $this->jsonError(['msg' => '上传失败：' . $e->getMessage()]);
         }
     }
