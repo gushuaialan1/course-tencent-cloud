@@ -471,7 +471,11 @@ layui.use(['form', 'layer'], function(){
 
     // 提交批改表单
     form.on('submit(submit-grade)', function(data){
+        // 立即阻止表单默认提交
+        var formData = data.field;
+        
         layer.confirm('确定要提交批改吗？提交后学生将收到成绩通知', function(index){
+            layer.close(index);
             layer.msg('提交中...', {icon: 16, shade: 0.3, time: 0});
             
             // 收集分题评分详情
@@ -483,7 +487,7 @@ layui.use(['form', 'layer'], function(){
                 };
             });
             
-            var postData = data.field;
+            var postData = $.extend({}, formData);
             if(Object.keys(gradeDetails).length > 0){
                 postData.grade_details = JSON.stringify(gradeDetails);
             }
@@ -513,8 +517,6 @@ layui.use(['form', 'layer'], function(){
                     layer.msg(errorMsg, {icon: 2});
                 }
             });
-            
-            layer.close(index);
         });
         
         return false; // 阻止表单自动提交
