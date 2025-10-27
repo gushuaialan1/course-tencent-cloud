@@ -178,6 +178,55 @@
                                                 {% else %}
                                                     {{ userContent[index] }}
                                                 {% endif %}
+                                            {% elseif question.type == 'file' or question.type == 'upload' %}
+                                                {# 文件类型题目 #}
+                                                <?php
+                                                $fileList = [];
+                                                $answer = $userContent[$index];
+                                                if (is_string($answer)) {
+                                                    try {
+                                                        $fileList = json_decode($answer, true);
+                                                        if (!is_array($fileList)) {
+                                                            $fileList = [];
+                                                        }
+                                                    } catch (\Exception $e) {
+                                                        $fileList = [];
+                                                    }
+                                                } elseif (is_array($answer)) {
+                                                    $fileList = $answer;
+                                                }
+                                                ?>
+                                                {% if fileList %}
+                                                    <div class="uploaded-files-list">
+                                                        {% for file in fileList %}
+                                                            <div style="padding: 8px; margin: 5px 0; background: #F5F5F5; border-radius: 2px; display: flex; align-items: center; gap: 10px;">
+                                                                <i class="layui-icon layui-icon-file" style="color: #16BAAA; font-size: 18px;"></i>
+                                                                <div style="flex: 1;">
+                                                                    {% if file.url %}
+                                                                        <a href="{{ file.url }}" target="_blank" style="color: #1E9FFF; text-decoration: none; font-weight: bold;">
+                                                                            {{ file.name }}
+                                                                        </a>
+                                                                    {% else %}
+                                                                        <span style="font-weight: bold;">{{ file.name }}</span>
+                                                                    {% endif %}
+                                                                    {% if file.size %}
+                                                                        <?php $fileSizeKb = round($file['size'] / 1024, 2); ?>
+                                                                        <span style="color: #999; font-size: 12px; margin-left: 10px;">
+                                                                            ({{ fileSizeKb }} KB)
+                                                                        </span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                {% if file.url %}
+                                                                    <a href="{{ file.url }}" class="layui-btn layui-btn-xs" target="_blank" download>
+                                                                        <i class="layui-icon layui-icon-download-circle"></i> 下载
+                                                                    </a>
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <span style="color: #999;">未上传文件</span>
+                                                {% endif %}
                                             {% else %}
                                                 {{ userContent[index]|raw }}
                                             {% endif %}
