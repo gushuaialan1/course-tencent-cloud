@@ -20,8 +20,8 @@
     </div>
 
     <div class="kg-dashboard-header">
-        <h1 class="kg-dashboard-title">{{ course_title|default(course_info.title ~ ' - 数据看板') }}</h1>
-        <p class="kg-dashboard-subtitle">{{ course_subtitle|default('课程数据实时展示') }}</p>
+        <h1 class="kg-dashboard-title">{{ course_title }}</h1>
+        <p class="kg-dashboard-subtitle">{{ course_subtitle }}</p>
     </div>
 
     <style>

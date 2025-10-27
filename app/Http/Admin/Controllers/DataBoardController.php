@@ -180,6 +180,18 @@ class DataBoardController extends Controller
             $courseIntro = $courseService->getCourseIntro($currentCourseId);
             $courseTitle = $courseService->getCourseTitle($currentCourseId);
             $courseSubtitle = $courseService->getCourseSubtitle();
+            
+            // 如果标题为空，自动初始化并保存到数据库
+            if (empty($courseTitle)) {
+                $courseTitle = $courseInfo['title'] . ' - 数据看板';
+                $courseService->updateCourseTitle($courseTitle);
+            }
+            
+            // 如果副标题为空，自动初始化并保存到数据库
+            if (empty($courseSubtitle)) {
+                $courseSubtitle = '课程数据实时展示';
+                $courseService->updateCourseSubtitle($courseSubtitle);
+            }
         }
 
         $this->view->pick('data_board/course');
@@ -359,6 +371,14 @@ class DataBoardController extends Controller
         $courseIntro = $courseService->getCourseIntro($courseId);
         $courseTitle = $courseService->getCourseTitle($courseId);
         $courseSubtitle = $courseService->getCourseSubtitle();
+        
+        // 确保标题和副标题有默认值
+        if (empty($courseTitle)) {
+            $courseTitle = $courseInfo['title'] . ' - 数据看板';
+        }
+        if (empty($courseSubtitle)) {
+            $courseSubtitle = '课程数据实时展示';
+        }
 
         $this->view->pick('data_board/show_course');
         $this->view->setVar('course_info', $courseInfo);

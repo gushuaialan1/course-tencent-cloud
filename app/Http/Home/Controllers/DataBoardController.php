@@ -62,6 +62,14 @@ class DataBoardController extends Controller
         $courseIntro = $service->getCourseIntro($courseId);
         $courseTitle = $service->getCourseTitle($courseId);
         $courseSubtitle = $service->getCourseSubtitle();
+        
+        // 确保标题和副标题有默认值
+        if (empty($courseTitle)) {
+            $courseTitle = $courseInfo['title'] . ' - 数据看板';
+        }
+        if (empty($courseSubtitle)) {
+            $courseSubtitle = '课程数据实时展示';
+        }
 
         $this->view->pick('data_board/course_public');
         $this->view->setVar('course_info', $courseInfo);

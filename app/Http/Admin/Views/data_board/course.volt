@@ -77,14 +77,14 @@
             <div class="layui-form-item">
                 <label class="layui-form-label" style="width: 100px;">主标题</label>
                 <div class="layui-input-block" style="margin-left: 130px;">
-                    <input type="text" name="course_title" id="course_title" class="layui-input" value="{{ course_title|default(course_info.title ~ ' - 数据看板') }}" placeholder="请输入看板主标题">
+                    <input type="text" name="course_title" id="course_title" class="layui-input" value="{{ course_title }}" placeholder="请输入看板主标题">
                     <div class="layui-word-aux" style="margin-top: 5px;">默认为"课程名称 - 数据看板"</div>
                 </div>
             </div>
             <div class="layui-form-item">
                 <label class="layui-form-label" style="width: 100px;">副标题</label>
                 <div class="layui-input-block" style="margin-left: 130px;">
-                    <input type="text" name="course_subtitle" id="course_subtitle" class="layui-input" value="{{ course_subtitle|default('课程数据实时展示') }}" placeholder="请输入看板副标题">
+                    <input type="text" name="course_subtitle" id="course_subtitle" class="layui-input" value="{{ course_subtitle }}" placeholder="请输入看板副标题">
                 </div>
             </div>
             <div class="layui-form-item layui-form-text">
