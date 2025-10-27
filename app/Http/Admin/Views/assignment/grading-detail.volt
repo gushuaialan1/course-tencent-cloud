@@ -156,9 +156,13 @@
                             <?php 
                             echo '题目数量: ' . count($content) . '<br>';
                             echo 'content类型: ' . gettype($content) . '<br>';
+                            echo 'submissionData类型: ' . gettype($submissionData) . '<br>';
                             echo 'userContent类型: ' . gettype($userContent) . '<br>';
-                            echo '<br><strong>content内容:</strong><pre>';
-                            print_r($content);
+                            echo '<br><strong>submission->content原始值:</strong><pre>';
+                            echo htmlspecialchars($submission->content);
+                            echo '</pre>';
+                            echo '<br><strong>submissionData内容:</strong><pre>';
+                            print_r($submissionData);
                             echo '</pre>';
                             echo '<br><strong>userContent内容:</strong><pre>';
                             print_r($userContent);
