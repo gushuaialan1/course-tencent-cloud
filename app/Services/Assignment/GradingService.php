@@ -152,21 +152,44 @@ class GradingService extends Service
             throw new \Exception('当前状态不允许批改');
         }
 
+        // 加载作业获取题目信息
+        $assignment = $submission->assignment;
+        if (!$assignment) {
+            throw new \Exception('关联作业不存在');
+        }
+        
+        $questions = $assignment->getQuestions();
+        
+        // 创建题目ID到题目信息的映射
+        $questionMap = [];
+        foreach ($questions as $question) {
+            $questionId = $question['id'] ?? '';
+            $questionMap[$questionId] = $question;
+        }
+
         // 获取现有批改详情（标准格式）
         $gradeDetails = json_decode($submission->grade_details, true) ?: [];
 
         // 合并新的批改数据
         foreach ($grading as $questionId => $gradeData) {
-            if (isset($gradeDetails[$questionId])) {
-                // 更新已有题目的批改
-                $gradeDetails[$questionId]['earned_score'] = $gradeData['earned_score'] ?? 0;
-                $gradeDetails[$questionId]['is_correct'] = ($gradeData['earned_score'] ?? 0) >= ($gradeDetails[$questionId]['max_score'] ?? 0);
-                if (isset($gradeData['feedback'])) {
-                    $gradeDetails[$questionId]['feedback'] = $gradeData['feedback'];
-                }
-                // 标记为手动批改
-                $gradeDetails[$questionId]['auto_graded'] = false;
+            // 获取题目满分
+            $maxScore = 0;
+            if (isset($questionMap[$questionId])) {
+                $maxScore = $questionMap[$questionId]['score'] ?? 0;
+            } elseif (isset($gradeDetails[$questionId])) {
+                $maxScore = $gradeDetails[$questionId]['max_score'] ?? 0;
             }
+            
+            $earnedScore = $gradeData['earned_score'] ?? 0;
+            
+            // 更新或创建批改数据
+            $gradeDetails[$questionId] = [
+                'earned_score' => $earnedScore,
+                'max_score' => $maxScore,
+                'is_correct' => $earnedScore >= $maxScore,
+                'auto_graded' => false,
+                'feedback' => $gradeData['feedback'] ?? ''
+            ];
         }
 
         // 重新计算总分
