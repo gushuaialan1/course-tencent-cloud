@@ -278,7 +278,7 @@ class AssignmentSubmissionController extends Controller
             }
 
             // 获取作业信息
-            $assignment = $this->assignmentService->getDetail($submission['assignment_id']);
+            $assignment = $this->assignmentService->getDetail($submission->assignment_id);
 
             if ($this->request->isAjax()) {
                 return $this->jsonSuccess([
@@ -319,7 +319,7 @@ class AssignmentSubmissionController extends Controller
             }
 
             // 获取作业信息
-            $assignment = $this->assignmentService->getDetail($submission['assignment_id']);
+            $assignment = $this->assignmentService->getDetail($submission->assignment_id);
 
             $this->view->setVars([
                 'submission' => $submission,
