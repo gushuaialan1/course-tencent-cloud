@@ -199,23 +199,41 @@
                                                 $questionId = $question->id;
                                                 $answer = isset($userContent[$questionId]) ? $userContent[$questionId] : null;
                                                 
+                                                // ===== 调试信息开始 =====
+                                                echo '<div style="background: #fff3cd; border: 2px solid #ffc107; padding: 15px; margin: 10px 0; border-radius: 5px;">';
+                                                echo '<strong style="color: #856404;">🔍 调试信息：</strong><br>';
+                                                echo '<strong>题目ID:</strong> ' . htmlspecialchars($questionId) . '<br>';
+                                                echo '<strong>原始答案类型:</strong> ' . gettype($answer) . '<br>';
+                                                echo '<strong>原始答案内容:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($answer, true)) . '</pre>';
+                                                
                                                 if (is_string($answer)) {
                                                     try {
                                                         $decoded = json_decode($answer, true);
+                                                        echo '<strong>JSON解码后类型:</strong> ' . gettype($decoded) . '<br>';
+                                                        echo '<strong>JSON解码后内容:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($decoded, true)) . '</pre>';
                                                         if (is_array($decoded)) {
                                                             $fileList = $decoded;
                                                         }
                                                     } catch (\Exception $e) {
+                                                        echo '<strong style="color: red;">JSON解码错误:</strong> ' . htmlspecialchars($e->getMessage()) . '<br>';
                                                         $fileList = [];
                                                     }
                                                 } elseif (is_array($answer)) {
                                                     $fileList = $answer;
                                                 }
                                                 
+                                                echo '<strong>展平前 fileList:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($fileList, true)) . '</pre>';
+                                                
                                                 // 处理嵌套数组结构: [[{...}]] -> [{...}]
                                                 if (!empty($fileList) && is_array($fileList[0]) && isset($fileList[0][0])) {
                                                     $fileList = $fileList[0];
+                                                    echo '<strong style="color: green;">✓ 检测到嵌套数组，已展平</strong><br>';
                                                 }
+                                                
+                                                echo '<strong>最终 fileList:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($fileList, true)) . '</pre>';
+                                                echo '<strong>fileList 数量:</strong> ' . count($fileList) . '<br>';
+                                                echo '</div>';
+                                                // ===== 调试信息结束 =====
                                                 ?>
                                                 {% if fileList %}
                                                     <div class="uploaded-files-list">
