@@ -63,6 +63,79 @@ class DataBoardCourse extends Service
     }
 
     /**
+     * 获取课程看板标题
+     */
+    public function getCourseTitle($courseId)
+    {
+        // 先尝试从设置表获取
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.course_title'],
+        ]);
+
+        if ($setting && !empty($setting->item_value)) {
+            return $setting->item_value;
+        }
+
+        // 否则生成默认标题
+        $course = CourseModel::findFirst($courseId);
+        return $course ? $course->title . ' - 数据看板' : '课程数据看板';
+    }
+
+    /**
+     * 更新课程看板标题
+     */
+    public function updateCourseTitle($title)
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.course_title'],
+        ]);
+
+        if (!$setting) {
+            $setting = new SettingModel();
+            $setting->item_key = 'data_board.course_title';
+            $setting->item_name = '数据看板-课程主标题';
+        }
+
+        $setting->item_value = $title;
+        return $setting->save();
+    }
+
+    /**
+     * 获取课程看板副标题
+     */
+    public function getCourseSubtitle()
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.course_subtitle'],
+        ]);
+
+        return $setting ? $setting->item_value : '课程数据实时展示';
+    }
+
+    /**
+     * 更新课程看板副标题
+     */
+    public function updateCourseSubtitle($subtitle)
+    {
+        $setting = SettingModel::findFirst([
+            'conditions' => 'item_key = :key:',
+            'bind' => ['key' => 'data_board.course_subtitle'],
+        ]);
+
+        if (!$setting) {
+            $setting = new SettingModel();
+            $setting->item_key = 'data_board.course_subtitle';
+            $setting->item_name = '数据看板-课程副标题';
+        }
+
+        $setting->item_value = $subtitle;
+        return $setting->save();
+    }
+
+    /**
      * 获取课程简介
      */
     public function getCourseIntro($courseId)

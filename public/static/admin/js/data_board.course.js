@@ -90,14 +90,25 @@ layui.use(['layer', 'jquery', 'form'], function() {
         });
     }
 
-    // 保存课程简介
+    // 保存课程看板设置（标题、副标题、简介）
     $('#save-intro-btn').on('click', function() {
+        var title = $('#course_title').val();
+        var subtitle = $('#course_subtitle').val();
         var intro = $('#course_intro').val();
+        
+        if (!title) {
+            layer.msg('主标题不能为空', {icon: 2});
+            return;
+        }
         
         $.ajax({
             type: 'POST',
             url: '/admin/data_board/update_course_intro',
-            data: { course_intro: intro },
+            data: {
+                course_title: title,
+                course_subtitle: subtitle,
+                course_intro: intro
+            },
             dataType: 'json',
             success: function(res) {
                 if (res.code === 0) {

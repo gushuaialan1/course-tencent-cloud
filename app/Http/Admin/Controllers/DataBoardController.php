@@ -166,29 +166,29 @@ class DataBoardController extends Controller
     public function courseAction()
     {
         $courseService = new DataBoardCourseService();
-        $globalService = new DataBoardService();
 
         $currentCourseId = $courseService->getCurrentCourseId();
         $courseInfo = null;
         $stats = [];
         $courseIntro = '';
+        $courseTitle = '';
+        $courseSubtitle = '';
 
         if ($currentCourseId) {
             $courseInfo = $courseService->getCourseInfo($currentCourseId);
             $stats = $courseService->getStatsList($currentCourseId);
             $courseIntro = $courseService->getCourseIntro($currentCourseId);
+            $courseTitle = $courseService->getCourseTitle($currentCourseId);
+            $courseSubtitle = $courseService->getCourseSubtitle();
         }
-
-        $boardTitle = $globalService->getBoardTitle();
-        $boardSubtitle = $globalService->getBoardSubtitle();
 
         $this->view->pick('data_board/course');
         $this->view->setVar('current_course_id', $currentCourseId);
         $this->view->setVar('course_info', $courseInfo);
         $this->view->setVar('stats', $stats);
         $this->view->setVar('course_intro', $courseIntro);
-        $this->view->setVar('board_title', $boardTitle);
-        $this->view->setVar('board_subtitle', $boardSubtitle);
+        $this->view->setVar('course_title', $courseTitle);
+        $this->view->setVar('course_subtitle', $courseSubtitle);
     }
 
     /**
@@ -302,16 +302,27 @@ class DataBoardController extends Controller
     }
 
     /**
-     * 更新课程简介
+     * 更新课程看板设置（标题、副标题、简介）
      * 
      * @Post("/update_course_intro", name="admin.data_board.update_course_intro")
      */
     public function updateCourseIntroAction()
     {
         $service = new DataBoardCourseService();
+        
+        $title = $this->request->getPost('course_title', 'string');
+        $subtitle = $this->request->getPost('course_subtitle', 'string');
         $intro = $this->request->getPost('course_intro', 'string');
 
-        if ($service->updateCourseIntro($intro)) {
+        if (empty($title)) {
+            return $this->jsonError(['msg' => '主标题不能为空']);
+        }
+
+        $titleResult = $service->updateCourseTitle($title);
+        $subtitleResult = $service->updateCourseSubtitle($subtitle);
+        $introResult = $service->updateCourseIntro($intro);
+
+        if ($titleResult && $subtitleResult && $introResult) {
             return $this->jsonSuccess(['msg' => '保存成功']);
         }
 
@@ -326,7 +337,6 @@ class DataBoardController extends Controller
     public function showCourseAction()
     {
         $courseService = new DataBoardCourseService();
-        $globalService = new DataBoardService();
 
         $courseId = $courseService->getCurrentCourseId();
         
@@ -347,15 +357,15 @@ class DataBoardController extends Controller
         });
 
         $courseIntro = $courseService->getCourseIntro($courseId);
-        $boardTitle = $globalService->getBoardTitle();
-        $boardSubtitle = $globalService->getBoardSubtitle();
+        $courseTitle = $courseService->getCourseTitle($courseId);
+        $courseSubtitle = $courseService->getCourseSubtitle();
 
         $this->view->pick('data_board/show_course');
         $this->view->setVar('course_info', $courseInfo);
         $this->view->setVar('stats', $stats);
         $this->view->setVar('course_intro', $courseIntro);
-        $this->view->setVar('board_title', $boardTitle);
-        $this->view->setVar('board_subtitle', $boardSubtitle);
+        $this->view->setVar('course_title', $courseTitle);
+        $this->view->setVar('course_subtitle', $courseSubtitle);
     }
 }
 

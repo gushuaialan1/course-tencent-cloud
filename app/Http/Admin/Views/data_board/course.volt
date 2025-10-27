@@ -70,10 +70,23 @@
 {% if course_info %}
 <div class="layui-card" style="margin-bottom: 20px;">
     <div class="layui-card-header">
-        <i class="layui-icon layui-icon-edit"></i> 课程简介设置
+        <i class="layui-icon layui-icon-set-fill"></i> 课程看板设置
     </div>
     <div class="layui-card-body">
         <form class="layui-form" id="intro-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 100px;">主标题</label>
+                <div class="layui-input-block" style="margin-left: 130px;">
+                    <input type="text" name="course_title" id="course_title" class="layui-input" value="{{ course_title|default(course_info.title ~ ' - 数据看板') }}" placeholder="请输入看板主标题">
+                    <div class="layui-word-aux" style="margin-top: 5px;">默认为"课程名称 - 数据看板"</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="width: 100px;">副标题</label>
+                <div class="layui-input-block" style="margin-left: 130px;">
+                    <input type="text" name="course_subtitle" id="course_subtitle" class="layui-input" value="{{ course_subtitle|default('课程数据实时展示') }}" placeholder="请输入看板副标题">
+                </div>
+            </div>
             <div class="layui-form-item layui-form-text">
                 <label class="layui-form-label" style="width: 100px;">课程简介</label>
                 <div class="layui-input-block" style="margin-left: 130px;">
@@ -85,8 +98,9 @@
                 <label class="layui-form-label" style="width: 100px;"></label>
                 <div class="layui-input-block" style="margin-left: 130px;">
                     <button type="button" class="layui-btn layui-btn-sm" id="save-intro-btn">
-                        <i class="layui-icon layui-icon-ok"></i>保存简介
+                        <i class="layui-icon layui-icon-ok"></i>保存设置
                     </button>
+                    <span class="layui-word-aux">修改后将在课程看板页面显示</span>
                 </div>
             </div>
         </form>
