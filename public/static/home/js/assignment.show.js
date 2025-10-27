@@ -364,16 +364,18 @@ layui.use(['jquery', 'layer', 'form', 'element', 'upload'], function () {
         
         // 动态创建文件上传按钮
         var uploadId = 'file-upload-' + questionId + '-' + Date.now();
-        var $uploadBtn = $('<input type="file" id="' + uploadId + '" style="display:none;">');
+        var $uploadBtn = $('<input type="file" name="file" id="' + uploadId + '" style="display:none;">');
         $('body').append($uploadBtn);
         
         // 渲染上传组件
         upload.render({
             elem: '#' + uploadId,
-            url: '/upload/file', // 使用统一的上传接口
+            url: '/upload/file',
             accept: 'file',
             acceptMime: '.' + allowedTypes.replace(/,/g, ',.'),
-            size: maxSize * 1024, // 转换为KB
+            size: maxSize * 1024,
+            field: 'file', // 重要：指定字段名
+            auto: true, // 自动上传
             before: function(obj) {
                 layer.load(1, { shade: [0.3, '#000'] });
             },
@@ -418,7 +420,9 @@ layui.use(['jquery', 'layer', 'form', 'element', 'upload'], function () {
         });
         
         // 触发点击
-        $uploadBtn.click();
+        setTimeout(function() {
+            $uploadBtn.click();
+        }, 100);
     }
     
     /**
