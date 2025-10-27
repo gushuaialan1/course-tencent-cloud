@@ -9,8 +9,8 @@ namespace App\Http\Admin\Services;
 
 use App\Models\Assignment as AssignmentModel;
 use App\Models\AssignmentSubmission as SubmissionModel;
+use App\Models\Chapter as ChapterModel;
 use App\Models\Course as CourseModel;
-use App\Models\CourseChapter as ChapterModel;
 use App\Models\DataBoardCourseStat as CourseStatModel;
 use App\Models\Learning as LearningModel;
 use App\Models\Setting as SettingModel;
