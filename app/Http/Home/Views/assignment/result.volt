@@ -46,7 +46,10 @@
                         <span style="font-size: 36px; color: #999;">/ {{ assignment.max_score }}</span>
                     </div>
                     <div class="score-percentage" style="margin-top: 15px; font-size: 24px; color: #666;">
-                        得分率：{{ assignment.max_score > 0 ? (((submission.score / assignment.max_score) * 100)|round(1)) : 0 }}%
+                        <?php 
+                        $scorePercentage = $assignment['max_score'] > 0 ? round(($submission['score'] / $assignment['max_score']) * 100, 1) : 0;
+                        ?>
+                        得分率：{{ scorePercentage }}%
                     </div>
                 </div>
                 
@@ -189,7 +192,8 @@
                                                                 {% endif %}
                                                                 {% if file.size %}
                                                                     <span style="color: #999; font-size: 12px; margin-left: 10px;">
-                                                                        ({{ (file.size / 1024)|round(2) }} KB)
+                                                                        <?php $fileSizeKb = round($file['size'] / 1024, 2); ?>
+                                                                        ({{ fileSizeKb }} KB)
                                                                     </span>
                                                                 {% endif %}
                                                             </div>
@@ -279,7 +283,10 @@
                     </div>
                     <div class="stat-item" style="padding: 15px 0; text-align: center;">
                         <div style="font-size: 32px; font-weight: bold; color: #FFB800;">
-                            {{ assignment.max_score > 0 ? (((submission.score / assignment.max_score) * 100)|round(1)) : 0 }}%
+                            <?php 
+                            $scorePercentage2 = $assignment['max_score'] > 0 ? round(($submission['score'] / $assignment['max_score']) * 100, 1) : 0;
+                            ?>
+                            {{ scorePercentage2 }}%
                         </div>
                         <div style="color: #999; font-size: 13px; margin-top: 5px;">
                             得分率

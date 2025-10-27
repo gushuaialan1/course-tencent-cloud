@@ -253,7 +253,8 @@
                                                                 {% endif %}
                                                                 {% if file.size %}
                                                                     <span style="color: #999; font-size: 12px;">
-                                                                        ({{ (file.size / 1024)|round(2) }} KB)
+                                                                        <?php $fileSizeKb = round($file['size'] / 1024, 2); ?>
+                                                                        ({{ fileSizeKb }} KB)
                                                                     </span>
                                                                 {% endif %}
                                                             </div>
