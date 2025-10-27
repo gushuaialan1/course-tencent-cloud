@@ -292,7 +292,7 @@ class AssignmentSubmissionController extends Controller
                 'assignment' => $assignment
             ]);
             
-            return $this->view->pick('assignment/submission/detail');
+            return $this->view->pick('assignment/grading-detail');
             
         } catch (\Exception $e) {
             if ($this->request->isAjax()) {
@@ -326,7 +326,7 @@ class AssignmentSubmissionController extends Controller
                 'assignment' => $assignment
             ]);
             
-            return $this->view->pick('assignment/submission/grade');
+            return $this->view->pick('assignment/grading-detail');
             
         } catch (\Exception $e) {
             $this->flashSession->error('加载批改页面失败: ' . $e->getMessage());
