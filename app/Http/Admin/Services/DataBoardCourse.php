@@ -346,8 +346,11 @@ class DataBoardCourse extends Service
     protected function getAssignmentCount($courseId)
     {
         return AssignmentModel::count([
-            'conditions' => 'course_id = :course_id: AND deleted = 0',
-            'bind' => ['course_id' => $courseId],
+            'conditions' => 'course_id = :course_id: AND status = :status:',
+            'bind' => [
+                'course_id' => $courseId,
+                'status' => 'published',
+            ],
         ]);
     }
 
@@ -356,10 +359,13 @@ class DataBoardCourse extends Service
      */
     protected function getAvgScore($courseId)
     {
-        // 获取该课程的所有作业
+        // 获取该课程的所有已发布作业
         $assignments = AssignmentModel::find([
-            'conditions' => 'course_id = :course_id: AND deleted = 0',
-            'bind' => ['course_id' => $courseId],
+            'conditions' => 'course_id = :course_id: AND status = :status:',
+            'bind' => [
+                'course_id' => $courseId,
+                'status' => 'published',
+            ],
             'columns' => 'id',
         ]);
 
@@ -369,7 +375,7 @@ class DataBoardCourse extends Service
 
         $assignmentIds = array_column($assignments->toArray(), 'id');
         
-        // 获取所有已评分的提交
+        // 获取所有已评分的提交（status = 3 表示已评分）
         $result = SubmissionModel::average([
             'conditions' => 'assignment_id IN ({ids:array}) AND status = 3',
             'bind' => ['ids' => $assignmentIds],
