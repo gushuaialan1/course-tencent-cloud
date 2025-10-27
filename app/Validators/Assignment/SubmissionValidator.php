@@ -183,25 +183,25 @@ class SubmissionValidator
             $errors['submission_id'] = '提交ID无效';
         }
         
-        // 验证 grading
-        if (empty($data['grading'])) {
-            $errors['grading'] = '批改数据不能为空';
-        } elseif (!is_array($data['grading'])) {
-            $errors['grading'] = '批改数据格式错误';
-        } else {
-            // 验证每个题目的批改数据
-            foreach ($data['grading'] as $questionId => $gradeInfo) {
-                if (!is_array($gradeInfo)) {
-                    $errors[$questionId] = "题目 {$questionId} 的批改数据格式错误";
-                    continue;
-                }
-                
-                if (!isset($gradeInfo['score']) || !is_numeric($gradeInfo['score'])) {
-                    $errors[$questionId] = "题目 {$questionId} 的分数无效";
-                }
-                
-                if (isset($gradeInfo['score']) && $gradeInfo['score'] < 0) {
-                    $errors[$questionId] = "题目 {$questionId} 的分数不能为负数";
+        // 验证 grading（允许为空，因为有些作业可能不需要题目级别的批改）
+        if (isset($data['grading'])) {
+            if (!is_array($data['grading'])) {
+                $errors['grading'] = '批改数据格式错误';
+            } else {
+                // 验证每个题目的批改数据
+                foreach ($data['grading'] as $questionId => $gradeInfo) {
+                    if (!is_array($gradeInfo)) {
+                        $errors[$questionId] = "题目 {$questionId} 的批改数据格式错误";
+                        continue;
+                    }
+                    
+                    if (!isset($gradeInfo['earned_score']) || !is_numeric($gradeInfo['earned_score'])) {
+                        $errors[$questionId] = "题目 {$questionId} 的分数无效";
+                    }
+                    
+                    if (isset($gradeInfo['earned_score']) && $gradeInfo['earned_score'] < 0) {
+                        $errors[$questionId] = "题目 {$questionId} 的分数不能为负数";
+                    }
                 }
             }
         }
