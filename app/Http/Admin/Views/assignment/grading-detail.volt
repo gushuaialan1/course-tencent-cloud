@@ -510,7 +510,8 @@ layui.use(['form', 'layer'], function(){
             var questionId = $(this).closest('.question-item').data('question-id');
             var questionScore = parseFloat($(this).val()) || 0;
             grading[questionId] = {
-                score: questionScore
+                earned_score: questionScore,  // 后端期望的字段名
+                feedback: ''  // 可选的题目级别反馈
             };
         });
         console.log('分题评分详情:', grading);
