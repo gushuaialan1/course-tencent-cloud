@@ -1,12 +1,5 @@
 {% extends "templates/main.volt" %}
 
-<?php
-// 获取查看模式：view=只读查看，edit=可编辑批改
-$viewMode = $this->request->getQuery('mode', 'string', 'edit');
-$isViewMode = ($viewMode === 'view');
-$isEditMode = ($viewMode === 'edit' || $viewMode === '');
-?>
-
 {% block link_css %}
 {{ css_link('admin/css/assignment.css') }}
 <style>
@@ -114,6 +107,13 @@ $isEditMode = ($viewMode === 'edit' || $viewMode === '');
 {% endblock %}
 
 {% block content %}
+
+<?php
+// 获取查看模式：view=只读查看，edit=可编辑批改
+$viewMode = $this->request->getQuery('mode', 'string', 'edit');
+$isViewMode = ($viewMode === 'view');
+$isEditMode = ($viewMode === 'edit' || $viewMode === '');
+?>
 
 <div class="kg-nav">
     <div class="kg-nav-left">
