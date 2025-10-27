@@ -266,17 +266,25 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                 <label class="layui-form-label">允许文件类型</label>
                 <div class="layui-input-block">
                     <input type="checkbox" name="questions[${index}][allowed_types][]" value="pdf" title="PDF" checked>
-                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="doc" title="Word">
-                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="docx" title="Word">
-                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="txt" title="文本">
-                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="jpg" title="图片">
-                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="png" title="图片">
+                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="doc" title="Word(.doc)">
+                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="docx" title="Word(.docx)" checked>
+                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="txt" title="文本文件">
+                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="jpg" title="JPG图片">
+                    <input type="checkbox" name="questions[${index}][allowed_types][]" value="png" title="PNG图片">
                 </div>
             </div>
             <div class="layui-form-item">
                 <label class="layui-form-label">最大文件数量</label>
                 <div class="layui-input-block">
                     <input type="number" name="questions[${index}][max_files]" value="1" min="1" max="10" class="layui-input" style="width: 100px;">
+                    <span class="layui-word-aux">最多可上传10个文件</span>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">单文件大小限制</label>
+                <div class="layui-input-block">
+                    <input type="number" name="questions[${index}][max_size]" value="50" min="1" max="100" class="layui-input" style="width: 100px;">
+                    <span class="layui-word-aux">MB（建议不超过50MB）</span>
                 </div>
             </div>
         `;
@@ -802,6 +810,7 @@ layui.use(['layer', 'form', 'laydate', 'upload'], function () {
                     $checkbox.prop('checked', allowedTypes.indexOf($checkbox.val()) !== -1);
                 });
                 $question.find('input[name*="[max_files]"]').val(questionData.max_files || 1);
+                $question.find('input[name*="[max_size]"]').val(questionData.max_size || 50);
                 break;
         }
 
