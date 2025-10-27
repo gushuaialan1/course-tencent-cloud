@@ -134,7 +134,11 @@
                 <div class="layui-card">
                     <div class="layui-card-header">作业说明</div>
                     <div class="layui-card-body">
-                        <p>{{ assignment.instructions|default('无说明')|raw }}</p>
+                        {% if assignment.instructions %}
+                            <p>{{ assignment.instructions }}</p>
+                        {% else %}
+                            <p>无说明</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -153,13 +157,22 @@
                                 <div class="question-header">
                                     <span>
                                         <span class="question-type">{{ question.type }}</span>
-                                        题目 {{ index + 1 }}：{{ question.title|default(question.question|default('未命名题目')) }}
+                                        题目 {{ index + 1 }}：
+                                        {% if question.title %}
+                                            {{ question.title }}
+                                        {% elseif question.question %}
+                                            {{ question.question }}
+                                        {% else %}
+                                            未命名题目
+                                        {% endif %}
                                     </span>
-                                    <span style="color: #009688;">分值：{{ question.score|default(0) }}分</span>
+                                    <span style="color: #009688;">分值：{{ question.score ? question.score : 0 }}分</span>
                                 </div>
                                 
                                 <div class="question-content">
-                                    {{ question.content|default('')|raw }}
+                                    {% if question.content %}
+                                        {{ question.content }}
+                                    {% endif %}
                                     
                                     {% if question.options is defined %}
                                         <div style="margin-top: 10px;">
@@ -230,7 +243,7 @@
                                                     <span style="color: #999;">未上传文件</span>
                                                 {% endif %}
                                             {% else %}
-                                                {{ userContent[index]|raw }}
+                                                {{ userContent[index] }}
                                             {% endif %}
                                         {% else %}
                                             <span style="color: #999;">未作答</span>
@@ -248,7 +261,7 @@
                                                     {{ referenceAnswer[index] }}
                                                 {% endif %}
                                             {% else %}
-                                                {{ referenceAnswer[index]|raw }}
+                                                {{ referenceAnswer[index] }}
                                             {% endif %}
                                         </div>
                                     </div>
