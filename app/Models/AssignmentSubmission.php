@@ -464,7 +464,8 @@ class AssignmentSubmission extends Model
         return in_array($this->status, [
             self::STATUS_SUBMITTED,
             self::STATUS_AUTO_GRADED,
-            self::STATUS_GRADING
+            self::STATUS_GRADING,
+            self::STATUS_GRADED  // 允许重新批改已批改的作业
         ]);
     }
 
