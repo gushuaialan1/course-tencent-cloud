@@ -1,5 +1,12 @@
 {% extends "templates/main.volt" %}
 
+<?php
+// 获取查看模式：view=只读查看，edit=可编辑批改
+$viewMode = $this->request->getQuery('mode', 'string', 'edit');
+$isViewMode = ($viewMode === 'view');
+$isEditMode = ($viewMode === 'edit' || $viewMode === '');
+?>
+
 {% block link_css %}
 {{ css_link('admin/css/assignment.css') }}
 <style>
@@ -125,7 +132,8 @@
 
 <div class="layui-card">
     <div class="layui-card-header">
-        <i class="layui-icon layui-icon-form"></i> 批改作业：{{ assignment.title }}
+        <i class="layui-icon layui-icon-<?php echo $isViewMode ? 'file' : 'form'; ?>"></i> 
+        <?php echo $isViewMode ? '查看批改结果' : '批改作业'; ?>：{{ assignment.title }}
     </div>
     <div class="layui-card-body">
         <div class="grading-container">
@@ -364,6 +372,32 @@
                 </div>
 
                 <!-- 评分表单 -->
+                <?php if ($isViewMode && $submission->score !== null): ?>
+                    <!-- 查看模式：显示已批改的分数 -->
+                    <div class="grading-summary">
+                        <h3 style="margin-bottom: 15px;">批改结果</h3>
+                        <div class="summary-item">
+                            <span class="summary-label">得分：</span>
+                            <span class="summary-value" style="color: #5FB878; font-size: 24px; font-weight: bold;">
+                                {{ submission.score }} / {{ submission.max_score }}
+                            </span>
+                        </div>
+                        <?php if ($submission->feedback): ?>
+                        <div class="summary-item" style="display: block; border-bottom: none; padding-bottom: 0;">
+                            <span class="summary-label">批改反馈：</span>
+                            <div style="background: #f8f8f8; padding: 10px; border-radius: 3px; margin-top: 10px; white-space: pre-wrap;">{{ submission.feedback }}</div>
+                        </div>
+                        <?php endif; ?>
+                        <div style="margin-top: 20px;">
+                            <a href="{{ url({'for':'admin.assignment.grading.list'}) }}" class="layui-btn layui-btn-primary layui-btn-fluid">
+                                <i class="layui-icon layui-icon-return"></i>返回列表
+                            </a>
+                            <a href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}?mode=edit" class="layui-btn layui-btn-warm layui-btn-fluid" style="margin-top: 10px;">
+                                <i class="layui-icon layui-icon-edit"></i>重新批改
+                            </a>
+                        </div>
+                    </div>
+                <?php else: ?>
                 <form class="layui-form" id="grading-form">
                     <div class="layui-form-item">
                         <label class="layui-form-label">总分 <span style="color:red;">*</span></label>
@@ -378,6 +412,7 @@
                                    min="0"
                                    step="0.5"
                                    autocomplete="off" 
+                                   value="<?php echo $submission->score ?? ''; ?>"
                                    class="layui-input">
                             <div class="layui-form-mid layui-word-aux">满分：{{ submission.max_score }}分</div>
                         </div>
@@ -406,7 +441,7 @@
                             <textarea name="feedback" 
                                       placeholder="请输入批改意见和建议" 
                                       class="layui-textarea" 
-                                      rows="6"></textarea>
+                                      rows="6"><?php echo htmlspecialchars($submission->feedback ?? ''); ?></textarea>
                         </div>
                     </div>
 
@@ -423,6 +458,7 @@
                         </div>
                     </div>
                 </form>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -458,9 +494,11 @@ layui.use(['form', 'layer'], function(){
 
     var submissionId = {{ submission.id }};
     var gradeMode = '{{ assignment.grade_mode }}';
+    var isViewMode = <?php echo $isViewMode ? 'true' : 'false'; ?>;
     
     console.log('提交ID:', submissionId);
     console.log('评分模式:', gradeMode);
+    console.log('查看模式:', isViewMode);
 
     // 自动计算分题总分
     $('.question-score').on('input', function(){
@@ -492,9 +530,11 @@ layui.use(['form', 'layer'], function(){
     });
 
     // 提交批改表单 - 改用直接绑定按钮点击事件
-    console.log('🟡 开始绑定提交按钮点击事件');
-    
-    $('#btn-submit-grade').on('click', function(){
+    // 只有在编辑模式下才绑定提交事件
+    if (!isViewMode) {
+        console.log('🟡 开始绑定提交按钮点击事件');
+        
+        $('#btn-submit-grade').on('click', function(){
         console.log('🔵 提交按钮被点击');
         
         // 验证必填字段
@@ -585,6 +625,7 @@ layui.use(['form', 'layer'], function(){
             layer.close(index);
         });
     });
+    } // 结束 if (!isViewMode)
     
     console.log('✅ 所有事件监听器绑定完成');
     console.log('页面上的提交按钮:', $('#btn-submit-grade').length);

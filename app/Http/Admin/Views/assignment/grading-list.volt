@@ -212,12 +212,12 @@
                                 </a>
                             {% elseif submission.status == 'grading' or submission.status == 'graded' %}
                                 <!-- 批改中/已完成：显示查看+重新批改 -->
-                                <a class="layui-btn layui-btn-xs layui-btn-primary" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}">
+                                <a class="layui-btn layui-btn-xs layui-btn-primary" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}?mode=view">
                                     <i class="layui-icon layui-icon-file"></i>查看
                                 </a>
-                                <button class="layui-btn layui-btn-xs layui-btn-warm btn-regrade" data-id="{{ submission.id }}">
+                                <a class="layui-btn layui-btn-xs layui-btn-warm" href="{{ url({'for':'admin.assignment.submission.detail', 'id': submission.id}) }}?mode=edit">
                                     <i class="layui-icon layui-icon-edit"></i>重新批改
-                                </button>
+                                </a>
                             {% endif %}
                         </td>
                     </tr>
@@ -340,14 +340,6 @@ layui.use(['form', 'laypage', 'layer'], function(){
         });
     });
 
-    // 重新批改
-    $('.btn-regrade').on('click', function(){
-        var submissionId = $(this).data('id');
-        layer.confirm('确定要重新批改这个提交吗？', function(index){
-            window.location.href = '{{ url({"for":"admin.assignment.submission.detail"}) }}/' + submissionId;
-            layer.close(index);
-        });
-    });
 
     // 课程选择联动
     form.on('select(course-select)', function(data){
