@@ -268,12 +268,24 @@ class UserController extends Controller
 
                 try {
                     // 解析数据（支持不同列数）
+                    // 自动检测并转换编码（Excel默认保存为GBK编码）
                     $name = trim($row[0] ?? '');
                     $phone = trim($row[1] ?? '');
                     $password = trim($row[2] ?? '');
                     $email = trim($row[3] ?? '');
                     $gender = trim($row[4] ?? '保密');
                     $role = trim($row[5] ?? '学员');
+                    
+                    // 将GBK编码转换为UTF-8（如果需要）
+                    if (!mb_check_encoding($name, 'UTF-8')) {
+                        $name = mb_convert_encoding($name, 'UTF-8', 'GBK');
+                    }
+                    if (!mb_check_encoding($gender, 'UTF-8')) {
+                        $gender = mb_convert_encoding($gender, 'UTF-8', 'GBK');
+                    }
+                    if (!mb_check_encoding($role, 'UTF-8')) {
+                        $role = mb_convert_encoding($role, 'UTF-8', 'GBK');
+                    }
 
                     // 验证必填项
                     if (empty($name)) {
