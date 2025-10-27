@@ -209,8 +209,6 @@
                                                 if (is_string($answer)) {
                                                     try {
                                                         $decoded = json_decode($answer, true);
-                                                        echo '<strong>JSON解码后类型:</strong> ' . gettype($decoded) . '<br>';
-                                                        echo '<strong>JSON解码后内容:</strong> <pre style="background: #fff; padding: 10px; overflow: auto;">' . htmlspecialchars(print_r($decoded, true)) . '</pre>';
                                                         if (is_array($decoded)) {
                                                             $fileList = $decoded;
                                                         }
@@ -238,6 +236,17 @@
                                                 {% if fileList %}
                                                     <div class="uploaded-files-list">
                                                         {% for file in fileList %}
+                                                            <?php
+                                                            echo '<div style="background: #e7f3ff; border: 1px solid #2196F3; padding: 10px; margin: 5px 0;">';
+                                                            echo '<strong>循环内 file 类型:</strong> ' . gettype($file) . '<br>';
+                                                            echo '<strong>循环内 file 内容:</strong> <pre>' . htmlspecialchars(print_r($file, true)) . '</pre>';
+                                                            if (is_array($file)) {
+                                                                echo '<strong>file["name"]:</strong> ' . (isset($file['name']) ? htmlspecialchars($file['name']) : 'NOT SET') . '<br>';
+                                                                echo '<strong>file["url"]:</strong> ' . (isset($file['url']) ? htmlspecialchars($file['url']) : 'NOT SET') . '<br>';
+                                                                echo '<strong>file["size"]:</strong> ' . (isset($file['size']) ? $file['size'] : 'NOT SET') . '<br>';
+                                                            }
+                                                            echo '</div>';
+                                                            ?>
                                                             <div style="padding: 8px; margin: 5px 0; background: #F5F5F5; border-radius: 2px; display: flex; align-items: center; gap: 10px;">
                                                                 <i class="layui-icon layui-icon-file" style="color: #16BAAA; font-size: 18px;"></i>
                                                                 <div style="flex: 1;">
