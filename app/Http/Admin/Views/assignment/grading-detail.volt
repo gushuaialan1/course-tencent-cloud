@@ -198,17 +198,23 @@
                                                 $fileList = [];
                                                 $questionId = $question->id;
                                                 $answer = isset($userContent[$questionId]) ? $userContent[$questionId] : null;
+                                                
                                                 if (is_string($answer)) {
                                                     try {
-                                                        $fileList = json_decode($answer, true);
-                                                        if (!is_array($fileList)) {
-                                                            $fileList = [];
+                                                        $decoded = json_decode($answer, true);
+                                                        if (is_array($decoded)) {
+                                                            $fileList = $decoded;
                                                         }
                                                     } catch (\Exception $e) {
                                                         $fileList = [];
                                                     }
                                                 } elseif (is_array($answer)) {
                                                     $fileList = $answer;
+                                                }
+                                                
+                                                // 处理嵌套数组结构: [[{...}]] -> [{...}]
+                                                if (!empty($fileList) && is_array($fileList[0]) && isset($fileList[0][0])) {
+                                                    $fileList = $fileList[0];
                                                 }
                                                 ?>
                                                 {% if fileList %}
@@ -225,7 +231,10 @@
                                                                         <span style="font-weight: bold;">{{ file.name }}</span>
                                                                     {% endif %}
                                                     {% if file.size %}
-                                                        <?php $fileSizeKb = round($file->size / 1024, 2); ?>
+                                                        <?php 
+                                                        $fileSize = is_array($file) ? $file['size'] : (is_object($file) ? $file->size : 0);
+                                                        $fileSizeKb = round($fileSize / 1024, 2); 
+                                                        ?>
                                                         <span style="color: #999; font-size: 12px; margin-left: 10px;">
                                                             ({{ fileSizeKb }} KB)
                                                         </span>
