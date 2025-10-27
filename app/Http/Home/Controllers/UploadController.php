@@ -69,4 +69,42 @@ class UploadController extends Controller
         ]);
     }
 
+    /**
+     * @Post("/file", name="home.upload.file")
+     */
+    public function uploadFileAction()
+    {
+        try {
+            $service = new StorageService();
+
+            $file = $service->uploadResourceFile();
+
+            if (!$file) {
+                return $this->jsonError(['msg' => '上传文件失败']);
+            }
+
+            // 获取文件访问URL
+            $fileUrl = $service->getFileUrl($file->path);
+            
+            $data = [
+                'id' => $file->id,
+                'name' => $file->name,
+                'file_name' => $file->name,
+                'url' => $fileUrl,
+                'file_url' => $fileUrl,
+                'path' => $file->path,
+                'size' => $file->size,
+                'mime' => $file->mime,
+            ];
+
+            return $this->jsonSuccess([
+                'data' => $data,
+                'msg' => '上传成功'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->jsonError(['msg' => '上传失败：' . $e->getMessage()]);
+        }
+    }
+
 }

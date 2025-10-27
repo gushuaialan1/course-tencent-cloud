@@ -156,6 +156,52 @@
                                         {% else %}
                                             <span style="color: #999;">未作答</span>
                                         {% endif %}
+                                    {% elseif question.type == 'file' %}
+                                        {# 文件题 - 显示上传的文件列表 #}
+                                        {% if question.user_answer %}
+                                            <?php
+                                            $fileList = [];
+                                            if (is_string($question->user_answer)) {
+                                                try {
+                                                    $fileList = json_decode($question->user_answer, true);
+                                                    if (!is_array($fileList)) {
+                                                        $fileList = [];
+                                                    }
+                                                } catch (\Exception $e) {
+                                                    $fileList = [];
+                                                }
+                                            } elseif (is_array($question->user_answer)) {
+                                                $fileList = $question->user_answer;
+                                            }
+                                            ?>
+                                            {% if fileList %}
+                                                <div class="uploaded-files-list">
+                                                    {% for file in fileList %}
+                                                        <div style="padding: 10px; margin: 5px 0; background: #F5F5F5; border-radius: 2px; display: flex; align-items: center;">
+                                                            <i class="layui-icon layui-icon-file" style="color: #16BAAA; font-size: 20px; margin-right: 10px;"></i>
+                                                            <div style="flex: 1;">
+                                                                {% if file.url %}
+                                                                    <a href="{{ file.url }}" target="_blank" style="color: #333; text-decoration: none; font-weight: bold;">
+                                                                        {{ file.name }}
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span style="color: #333; font-weight: bold;">{{ file.name }}</span>
+                                                                {% endif %}
+                                                                {% if file.size %}
+                                                                    <span style="color: #999; font-size: 12px; margin-left: 10px;">
+                                                                        ({{ (file.size / 1024)|round(2) }} KB)
+                                                                    </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <span style="color: #999;">未上传文件</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span style="color: #999;">未作答</span>
+                                        {% endif %}
                                     {% else %}
                                         <div style="color: #333; line-height: 1.8; white-space: pre-wrap;">{{ question.user_answer ? question.user_answer : '未作答' }}</div>
                                     {% endif %}

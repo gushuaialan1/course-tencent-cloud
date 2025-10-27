@@ -187,27 +187,81 @@
                                     
                                 {% elseif question.type == 'file' %}
                                     {# 文件题 #}
-                                    <div class="file-upload-area">
+                                    {# 提取文件题配置 #}
+                                    <?php 
+                                    $fileConfig = [];
+                                    if (isset($question->config)) {
+                                        if (is_array($question->config)) {
+                                            $fileConfig = $question->config;
+                                        } elseif (is_object($question->config)) {
+                                            $fileConfig = (array)$question->config;
+                                        }
+                                    }
+                                    $allowedTypes = isset($fileConfig['allowed_types']) ? $fileConfig['allowed_types'] : 'pdf,doc,docx,txt,jpg,png';
+                                    $maxFiles = isset($fileConfig['max_files']) ? (int)$fileConfig['max_files'] : 1;
+                                    $maxSize = isset($fileConfig['max_size']) ? (int)$fileConfig['max_size'] : 50;
+                                    
+                                    // 处理已上传的文件（如果有）
+                                    $uploadedFileList = [];
+                                    if ($rawAnswer) {
+                                        if (is_string($rawAnswer)) {
+                                            try {
+                                                $uploadedFileList = json_decode($rawAnswer, true);
+                                                if (!is_array($uploadedFileList)) {
+                                                    $uploadedFileList = [];
+                                                }
+                                            } catch (\Exception $e) {
+                                                $uploadedFileList = [];
+                                            }
+                                        } elseif (is_array($rawAnswer)) {
+                                            $uploadedFileList = $rawAnswer;
+                                        }
+                                    }
+                                    ?>
+                                    <div class="file-upload-area" 
+                                         data-question-id="{{ question.id }}"
+                                         data-allowed-types="{{ allowedTypes }}"
+                                         data-max-files="{{ maxFiles }}"
+                                         data-max-size="{{ maxSize }}">
                                         <button type="button" 
                                                 class="layui-btn layui-btn-normal layui-btn-sm" 
                                                 id="upload-btn-{{ question.id }}"
                                                 {% if assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}disabled{% endif %}>
                                             <i class="layui-icon layui-icon-upload"></i> 上传文件
                                         </button>
+                                        <span class="upload-tip" style="margin-left: 10px; color: #999; font-size: 12px;">
+                                            支持 {{ allowedTypes }}，最多 {{ maxFiles }} 个，每个不超过 {{ maxSize }}MB
+                                        </span>
                                         <input type="hidden" 
                                                name="answer_{{ question.id }}" 
-                                               value="{% if rawAnswer %}{{ rawAnswer }}{% endif %}" 
+                                               value="{% if rawAnswer %}{% if rawAnswer is iterable %}{{ rawAnswer|json_encode }}{% else %}{{ rawAnswer }}{% endif %}{% endif %}" 
                                                lay-filter="question-{{ question.id }}">
                                         <div class="file-preview" id="file-preview-{{ question.id }}" style="margin-top: 10px;">
-                                            {% if rawAnswer %}
-                                                <div class="file-item" style="padding: 8px 12px; background: #fff; border: 1px solid #E6E6E6; border-radius: 2px; display: inline-block;">
-                                                    <i class="layui-icon layui-icon-file"></i>
-                                                    <span>{{ rawAnswer }}</span>
-                                                    {% if not (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}
-                                                        <a href="javascript:;" class="remove-file" style="color: #FF5722; margin-left: 10px;">删除</a>
-                                                    {% endif %}
+                                            {# 如果已有上传的文件且已提交，在这里静态显示 #}
+                                            {% if uploadedFileList and assignment.submission and (assignment.submission.status == 'auto_graded' or assignment.submission.status == 'graded' or assignment.submission.status == 'submitted' or assignment.submission.status == 'grading') %}
+                                                <div class="uploaded-files-list">
+                                                    {% for file in uploadedFileList %}
+                                                        <div style="padding: 10px 12px; margin: 5px 0; background: #fff; border: 1px solid #E6E6E6; border-radius: 2px; display: flex; align-items: center;">
+                                                            <i class="layui-icon layui-icon-file" style="color: #16BAAA; font-size: 20px; margin-right: 8px;"></i>
+                                                            <div style="flex: 1;">
+                                                                {% if file.url %}
+                                                                    <a href="{{ file.url }}" target="_blank" style="color: #333; text-decoration: none; display: block; font-size: 14px; margin-bottom: 3px;">
+                                                                        {{ file.name }}
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span style="color: #333; font-size: 14px; display: block; margin-bottom: 3px;">{{ file.name }}</span>
+                                                                {% endif %}
+                                                                {% if file.size %}
+                                                                    <span style="color: #999; font-size: 12px;">
+                                                                        ({{ (file.size / 1024)|round(2) }} KB)
+                                                                    </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
                                                 </div>
                                             {% endif %}
+                                            {# 草稿状态下的文件预览会由 JavaScript 动态更新 #}
                                         </div>
                                     </div>
                                 {% endif %}
