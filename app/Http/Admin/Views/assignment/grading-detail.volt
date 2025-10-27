@@ -150,6 +150,31 @@
                         {% set userContent = submissionData.answers is defined ? submissionData.answers : [] %}
                         {% set referenceAnswer = assignment.reference_answer is defined ? assignment.reference_answer : [] %}
                         
+                        <!-- 临时调试 -->
+                        <div style="background: #ffffcc; padding: 10px; margin: 10px 0; border: 1px solid #ff9800;">
+                            <strong>调试信息：</strong><br>
+                            题目数量: {{ content|length }}<br>
+                            <?php 
+                            echo 'userContent类型: ' . gettype($userContent) . '<br>';
+                            echo 'userContent内容: <pre>';
+                            print_r($userContent);
+                            echo '</pre>';
+                            if (!empty($content)) {
+                                echo '第一个题目ID: ' . ($content[0]['id'] ?? '未定义') . '<br>';
+                                $firstQuestionId = $content[0]['id'] ?? null;
+                                if ($firstQuestionId) {
+                                    echo "尝试访问 userContent['{$firstQuestionId}']: ";
+                                    var_dump(isset($userContent[$firstQuestionId]));
+                                    if (isset($userContent[$firstQuestionId])) {
+                                        echo '<pre>';
+                                        print_r($userContent[$firstQuestionId]);
+                                        echo '</pre>';
+                                    }
+                                }
+                            }
+                            ?>
+                        </div>
+                        
                         {% if content|length > 0 %}
                             {% for index, question in content %}
                             <div class="question-item" data-question-index="{{ index }}" data-question-id="{{ question.id }}">
