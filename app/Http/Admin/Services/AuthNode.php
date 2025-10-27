@@ -511,6 +511,12 @@ class AuthNode extends Service
                             'type' => 'button',
                             'route' => 'admin.assignment.grading.batch',
                         ],
+                        [
+                            'id' => '1-9-18',
+                            'title' => '成绩导出',
+                            'type' => 'button',
+                            'route' => 'admin.assignment.export_grades',
+                        ],
                     ],
                 ],
                 [

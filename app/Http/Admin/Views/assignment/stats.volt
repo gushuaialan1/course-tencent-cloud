@@ -10,6 +10,9 @@
         </span>
     </div>
     <div class="kg-nav-right">
+        <a class="layui-btn layui-btn-sm layui-btn-normal" href="{{ url({'for':'admin.assignment.export_grades'}) }}">
+            <i class="layui-icon layui-icon-export"></i>成绩导出
+        </a>
         <a class="layui-btn layui-btn-sm" href="{{ url({'for':'admin.assignment.list'}) }}">
             <i class="layui-icon layui-icon-return"></i>返回列表
         </a>

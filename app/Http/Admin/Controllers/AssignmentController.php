@@ -445,4 +445,62 @@ class AssignmentController extends Controller
             return $this->jsonError(['msg' => '获取统计信息失败: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * 导出所有作业成绩
+     * 
+     * @Get("/export_grades", name="admin.assignment.export_grades")
+     */
+    public function exportGradesAction()
+    {
+        try {
+            // 查询所有已批改的作业提交记录
+            $submissions = \App\Models\AssignmentSubmission::find([
+                'conditions' => 'delete_time = 0 AND status IN (:graded:, :auto_graded:) AND score IS NOT NULL',
+                'bind' => [
+                    'graded' => \App\Models\AssignmentSubmission::STATUS_GRADED,
+                    'auto_graded' => \App\Models\AssignmentSubmission::STATUS_AUTO_GRADED
+                ],
+                'order' => 'id ASC'
+            ]);
+
+            // 设置CSV文件头
+            header('Content-Type: text/csv; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="assignment_grades_' . date('YmdHis') . '.csv"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+
+            // 输出UTF-8 BOM（确保Excel正确识别中文）
+            echo "\xEF\xBB\xBF";
+
+            // 打开PHP输出流
+            $output = fopen('php://output', 'w');
+
+            // 写入CSV表头
+            fputcsv($output, ['学生ID', '学生姓名', '课程名称', '作业标题', '成绩']);
+
+            // 写入数据
+            foreach ($submissions as $submission) {
+                // 获取关联数据
+                $assignment = $submission->assignment;
+                $user = $submission->user;
+                $course = $assignment ? $assignment->course : null;
+
+                fputcsv($output, [
+                    $user ? $user->id : $submission->user_id,
+                    $user ? $user->name : '-',
+                    $course ? $course->title : '-',
+                    $assignment ? $assignment->title : '-',
+                    $submission->score
+                ]);
+            }
+
+            fclose($output);
+            exit;
+
+        } catch (\Exception $e) {
+            $this->flashSession->error('导出失败: ' . $e->getMessage());
+            return $this->response->redirect('/admin/assignment/stats');
+        }
+    }
 }
