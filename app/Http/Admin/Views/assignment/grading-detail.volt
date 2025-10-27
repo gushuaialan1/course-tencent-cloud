@@ -141,8 +141,10 @@
                 <div class="layui-card" style="margin-top: 15px;">
                     <div class="layui-card-header">学生答题详情</div>
                     <div class="layui-card-body">
-                        {% set content = assignment.getContentData() %}
-                        {% set userContent = submission.content %}
+                        {% set assignmentData = assignment.getContentData() %}
+                        {% set content = assignmentData.questions %}
+                        {% set submissionData = submission.getContentData() %}
+                        {% set userContent = submissionData.answers %}
                         {% set referenceAnswer = assignment.getReferenceAnswerData() %}
                         
                         {% if content|length > 0 %}
