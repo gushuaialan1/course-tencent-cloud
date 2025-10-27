@@ -432,13 +432,30 @@
 
 {% block link_js %}
 <script>
+// 全局错误捕获
+window.addEventListener('error', function(e){
+    console.error('🔴 全局错误:', e.message, e.filename, e.lineno, e.colno);
+});
+
+console.log('🟢 页面 JavaScript 开始执行');
+console.log('Layui 对象:', typeof layui);
+
 layui.use(['form', 'layer'], function(){
+    console.log('🟢 Layui form 和 layer 模块加载完成');
+    
     var form = layui.form;
     var layer = layui.layer;
     var $ = layui.jquery;
+    
+    console.log('form 对象:', typeof form);
+    console.log('layer 对象:', typeof layer);
+    console.log('$ 对象:', typeof $);
 
     var submissionId = {{ submission.id }};
     var gradeMode = '{{ assignment.grade_mode }}';
+    
+    console.log('提交ID:', submissionId);
+    console.log('评分模式:', gradeMode);
 
     // 自动计算分题总分
     $('.question-score').on('input', function(){
@@ -470,6 +487,8 @@ layui.use(['form', 'layer'], function(){
     });
 
     // 提交批改表单
+    console.log('🟡 开始绑定表单提交事件 submit(submit-grade)');
+    
     form.on('submit(submit-grade)', function(data){
         console.log('🔵 表单提交事件触发');
         console.log('表单数据:', data.field);
@@ -548,7 +567,12 @@ layui.use(['form', 'layer'], function(){
         console.log('🔴 返回false，阻止表单默认提交');
         return false; // 阻止表单自动提交
     });
+    
+    console.log('✅ 所有事件监听器绑定完成');
+    console.log('页面上的提交按钮:', $('button[lay-filter="submit-grade"]').length);
 });
+
+console.log('🟢 页面 JavaScript 执行完成，等待 Layui 模块加载...');
 </script>
 {% endblock %}
 
