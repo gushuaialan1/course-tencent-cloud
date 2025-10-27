@@ -11,6 +11,7 @@ use App\Models\Assignment as AssignmentModel;
 use App\Models\AssignmentSubmission as SubmissionModel;
 use App\Models\Chapter as ChapterModel;
 use App\Models\Course as CourseModel;
+use App\Models\CourseUser as CourseUserModel;
 use App\Models\DataBoardCourseStat as CourseStatModel;
 use App\Models\Learning as LearningModel;
 use App\Models\Setting as SettingModel;
@@ -289,12 +290,12 @@ class DataBoardCourse extends Service
     }
 
     /**
-     * 获取学习人数
+     * 获取学习人数（统计加入该课程的用户数）
      */
     protected function getLearningCount($courseId)
     {
-        return LearningModel::count([
-            'conditions' => 'course_id = :course_id:',
+        return CourseUserModel::count([
+            'conditions' => 'course_id = :course_id: AND deleted = 0',
             'bind' => ['course_id' => $courseId],
         ]);
     }
@@ -332,10 +333,28 @@ class DataBoardCourse extends Service
             return 0;
         }
 
-        // attrs字段中可能包含duration（秒），转换为小时
-        $attrs = is_string($course->attrs) ? json_decode($course->attrs, true) : $course->attrs;
-        $durationSeconds = $attrs['duration'] ?? 0;
-        
+        $durationSeconds = 0;
+
+        // 方式1：尝试从attrs字段获取duration（秒）
+        if (!empty($course->attrs)) {
+            $attrs = is_string($course->attrs) ? json_decode($course->attrs, true) : $course->attrs;
+            if (isset($attrs['duration']) && $attrs['duration'] > 0) {
+                $durationSeconds = $attrs['duration'];
+            }
+        }
+
+        // 方式2：如果attrs中没有，从所有已学用户的平均学习时长计算
+        if ($durationSeconds == 0) {
+            $result = CourseUserModel::average([
+                'conditions' => 'course_id = :course_id: AND deleted = 0 AND duration > 0',
+                'bind' => ['course_id' => $courseId],
+                'column' => 'duration',
+            ]);
+            if ($result) {
+                $durationSeconds = $result;
+            }
+        }
+
         // 转换为小时并四舍五入到整数
         return round($durationSeconds / 3600);
     }
